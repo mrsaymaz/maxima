@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the pre-recorded English voice clips used by listening tasks and the Wordex.
 
-Voice: Kokoro-82M v1.0 (Apache-2.0), British English speaker "bf_emma", rendered offline with
+Voice: Kokoro-82M v1.0 (Apache-2.0), speaker "af_heart", rendered offline with
 sherpa-onnx. Model download (not stored in this repository):
   https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
 
@@ -10,8 +10,9 @@ Usage:
   python3 scripts/build-voice.py render MODEL_DIR JOBS.json WAV_DIR
   python3 scripts/build-voice.py encode WAV_DIR dist/assets/voice
 
-"render" adds pronunciations for unit words missing from the British lexicon (compounds such as
-"headteacher" are composed from their parts). "encode" trims silence, normalises loudness and
+"render" adds pronunciations for unit words missing from the lexicon (compounds such as
+"headteacher" are composed from their parts). af_heart was chosen over the British voices after an offline
+Whisper transcription check: it was recognised correctly far more often on the hardest unit words. "encode" trims silence, normalises loudness and
 writes mono 24 kHz MP3 clips plus manifest.json.
 """
 import json, os, re, subprocess, sys, wave
@@ -45,37 +46,65 @@ def jobs(out):
     print(len(items), 'clips')
 
 
-def extended_lexicon(model):
-    """Copies the British lexicon and adds unit words it lacks."""
-    path = os.path.join(model, 'lexicon-gb-en-maxima.txt')
+def extended_lexicon(model, accent='us'):
+    """Copies the lexicon and adds unit words it lacks: compounds, plurals, possessives and letter names."""
+    source = os.path.join(model, f'lexicon-{accent}-en.txt')
+    path = os.path.join(model, f'lexicon-{accent}-en-maxima.txt')
     lex = {}
-    for line in open(os.path.join(model, 'lexicon-gb-en.txt'), encoding='utf8'):
+    for line in open(source, encoding='utf8'):
         parts = line.rstrip('\n').split(' ')
         if parts and parts[0] and parts[0] not in lex:
             lex[parts[0]] = parts[1:]
     second = lambda ph: ['ˌ' if x == 'ˈ' else x for x in ph]
-    comp = lambda a, b: lex[a] + second(lex[b])
-    extra = {
-        'headteacher': comp('head', 'teacher'), 'grandparents': comp('grand', 'parents'),
-        'sunhat': comp('sun', 'hat'), "chef's": lex['chef'] + ['s'],
-        'instructions': lex['instruction'] + ['z'], 'hometown': comp('home', 'town'),
-        'pawprint': comp('paw', 'print'), 'composter': lex['compost'] + ['ə'],
-        'tissues': lex['tissue'] + ['z'], 'guesthouse': comp('guest', 'house'),
-        'tv': second(lex['t']) + lex['v'], 'usb': second(lex['u']) + second(lex['s']) + lex['b'],
-    }
+
+    def plural(ph):
+        last = ph[-1] if ph else ''
+        if last in ('s', 'z', 'ʃ', 'ʒ', 'ʧ', 'ʤ'):
+            return ph + ['ɪ', 'z']
+        return ph + (['s'] if last in ('p', 't', 'k', 'f', 'θ') else ['z'])
+
+    def guess(word):
+        if word in lex:
+            return lex[word]
+        if word.endswith("'s") and word[:-2] in lex:
+            return lex[word[:-2]] + ['s']
+        for cut in (1, 2):
+            base = word[:-cut]
+            if word.endswith('s') and base in lex:
+                return plural(lex[base])
+        for i in range(len(word) - 2, 1, -1):
+            a, b = word[:i], word[i:]
+            if a in lex and (b in lex or (b.endswith('s') and b[:-1] in lex)):
+                return lex[a] + second(lex[b] if b in lex else plural(lex[b[:-1]]))
+        if len(word) <= 3 and all(c in lex for c in word):
+            return [p for i, c in enumerate(word) for p in (lex[c] if i == len(word) - 1 else second(lex[c]))]
+        return None
+
+    data = json.load(open(os.path.join(ROOT, 'dist/data/expedition-language.json'), encoding='utf8'))
+    words = {w for u in data['units'] for v in u['vocabulary'] for w in re.split(r"[\s-]+", v['en'].lower()) if w}
+    words |= {'please', 'bring', 'and'}
+    extra = {}
+    for w in sorted(words):
+        w = re.sub(r"[^a-z']", '', w)
+        if w and w not in lex:
+            ph = guess(w)
+            if not ph:
+                raise SystemExit(f'no pronunciation for {w}')
+            extra[w] = ph
     with open(path, 'w', encoding='utf8') as f:
-        f.write(open(os.path.join(model, 'lexicon-gb-en.txt'), encoding='utf8').read())
+        f.write(open(source, encoding='utf8').read())
         for word, ph in extra.items():
             f.write(word + ' ' + ' '.join(ph) + '\n')
+    print('added pronunciations:', ', '.join(f'{k} /{"".join(v)}/' for k, v in extra.items()))
     return path
 
 
-def render(model, jobs_path, out, voice='bf_emma', speed=0.9):
+def render(model, jobs_path, out, voice='af_heart', speed=0.9):
     import sherpa_onnx
     cfg = sherpa_onnx.OfflineTtsConfig(model=sherpa_onnx.OfflineTtsModelConfig(
         kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(
             model=model + '/model.onnx', voices=model + '/voices.bin', tokens=model + '/tokens.txt',
-            data_dir=model + '/espeak-ng-data', lexicon=extended_lexicon(model), lang='en-gb'),
+            data_dir=model + '/espeak-ng-data', lexicon=extended_lexicon(model, 'gb' if voice.startswith('b') else 'us'), lang='en-gb' if voice.startswith('b') else 'en-us'),
         num_threads=4), max_num_sentences=1)
     tts = sherpa_onnx.OfflineTts(cfg)
     os.makedirs(out, exist_ok=True)
@@ -131,7 +160,7 @@ def encode(src, dest):
             fragments[frag] = name + '.mp3'
         else:
             words[names.get(name, name).rstrip('.').lower()] = name + '.mp3'
-    manifest = {'voice': 'Kokoro-82M v1.0 · bf_emma (British English)', 'license': 'Apache-2.0',
+    manifest = {'voice': 'Kokoro-82M v1.0 · af_heart', 'license': 'Apache-2.0',
                 'fragments': fragments, 'words': dict(sorted(words.items()))}
     json.dump(manifest, open(os.path.join(dest, 'manifest.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
     print(len(words), 'words', len(fragments), 'fragments')

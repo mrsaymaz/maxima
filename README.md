@@ -1,8 +1,20 @@
 # Maxima · by Mr. Saymaz
 
-Version 0.23.0 · Touch and Awareness
+Version 0.24.0 · S-tier polish
 
-## Touch and Awareness release
+## S-tier polish release
+
+**Game feel.** A low chase camera keeps the creature in the lower third and leans toward the next goal; combat framing always shows both the creature and its rival. The trail and grass are textured with ragged, swaying grass edges, height-graded fog, a gradient sky, soft toon shading and rim lights. The High preset adds bloom and per-arena colour grading. On phones the 3D view is full screen under a thin control dock. Hits freeze for a few frames and shake the camera, damage numbers float up, coins fly to the counter, correct answers burst with a chime, landings squash, and Android phones vibrate.
+
+**Audio.** Four original music loops (each arena plus camp) with an action layer that rises during fights and trials; recorded sound effects (Kenney CC0 kits and soundfont chimes); and a pre-recorded English voice for all 783 unit words, so listening tasks sound the same on every device.
+
+**Core loop.** A run is one chapter of about 5–8 minutes: four tasks, one rival group, one trial and a reward chest; five runs cover all twenty formats. Levels are earned through spaced repetition of each word and sentence, missed items come back later in the run, and every mistake shows the right answer, its Turkish meaning and a one-line reason. New: a Wordex collection book, three daily quests, a gentle streak where rest days never break it, hats, coat colours and camp decorations, and a first launch that goes from creature picker to the first task in about 20 seconds.
+
+**Animation.** The nineteen forms without a skeleton now flap, step, bob, ripple and sway through a vertex-shader motion layer. Professional rigging of these forms is still the recommended next art task.
+
+See `docs/S-TIER-v0.24.md` for details, validation and what still needs real devices and human listening.
+
+## Previous Touch and Awareness release
 
 Jump and attack now trigger on their own pointerdown events, independently of a held joystick. Compatibility clicks are suppressed and pointer cancellation/outside release is cleaned up. Every visible nearby rival now activates independently with solid-aware line checks; multiple enemies can warn and attack together. Auto-aim retains a nearby active focus, and projectiles can damage any exposed intersected rival. See `docs/TOUCH-AWARENESS-v0.23.md` for the fix, rules and device-verification limits.
 

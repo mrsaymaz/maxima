@@ -1,0 +1,28 @@
+{
+ "license": "Original compositions; rendered with FluidR3_GM (MIT)",
+ "tracks": {
+  "whisperwood": {
+   "loop": 83.4783,
+   "bpm": 92,
+   "base": "whisperwood-base.mp3",
+   "action": "whisperwood-action.mp3"
+  },
+  "skyreach": {
+   "loop": 91.4286,
+   "bpm": 84,
+   "base": "skyreach-base.mp3",
+   "action": "skyreach-action.mp3"
+  },
+  "stormglass": {
+   "loop": 101.0526,
+   "bpm": 76,
+   "base": "stormglass-base.mp3",
+   "action": "stormglass-action.mp3"
+  },
+  "camp": {
+   "loop": 48.0,
+   "bpm": 80,
+   "base": "camp-base.mp3"
+  }
+ }
+}

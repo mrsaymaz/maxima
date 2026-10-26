@@ -1,0 +1,71 @@
+{
+ "license": "Kenney starter-kit sound effects (CC0); chimes rendered from FluidR3_GM (MIT)",
+ "cues": {
+  "step": [
+   "step-0.mp3",
+   "step-1.mp3",
+   "step-2.mp3",
+   "step-3.mp3",
+   "step-4.mp3",
+   "step-5.mp3"
+  ],
+  "jump": [
+   "jump.mp3"
+  ],
+  "land": [
+   "land.mp3"
+  ],
+  "coin": [
+   "coin.mp3"
+  ],
+  "break": [
+   "break.mp3"
+  ],
+  "hurt": [
+   "hurt.mp3"
+  ],
+  "impact": [
+   "impact.mp3"
+  ],
+  "defeat": [
+   "defeat.mp3"
+  ],
+  "place": [
+   "place-a.mp3",
+   "place-b.mp3",
+   "place-c.mp3",
+   "place-d.mp3"
+  ],
+  "repair": [
+   "repair-a.mp3",
+   "repair-b.mp3"
+  ],
+  "select": [
+   "select.mp3"
+  ],
+  "correct": [
+   "correct.mp3"
+  ],
+  "pair": [
+   "pair.mp3"
+  ],
+  "wrong": [
+   "wrong.mp3"
+  ],
+  "reward": [
+   "reward.mp3"
+  ],
+  "chest": [
+   "chest.mp3"
+  ],
+  "quest": [
+   "quest.mp3"
+  ],
+  "coinTick": [
+   "coin-tick.mp3"
+  ],
+  "deliver": [
+   "deliver.mp3"
+  ]
+ }
+}
