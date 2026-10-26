@@ -77,8 +77,8 @@ body.onboarding .topbar .top-actions{opacity:.6}
 .play-status .status-growth i{display:block;height:100%;background:linear-gradient(90deg,#7fe0a6,#f3d47f)}
 
 /* Better mistakes: the right answer, Turkish meaning and a short reason, shown over the task. */
-.correction-card{position:fixed;z-index:9;left:calc(12px + var(--safe-left,0px));right:calc(12px + var(--safe-right,0px));top:calc(var(--play-head,56px) + var(--safe-top,0px) + 6px);margin:0 auto;max-width:460px;background:#fff8e6;color:#2a3b2f;border-radius:14px;padding:10px 13px;box-shadow:0 10px 30px #04161a55;border-left:5px solid #e0894f;animation:correction-in .28s cubic-bezier(.2,.9,.3,1.2);pointer-events:none}
-@keyframes correction-in{from{transform:translateY(-10px) scale(.96);opacity:0}}
+.correction-card{position:fixed;z-index:24;left:calc(12px + var(--safe-left,0px));right:calc(12px + var(--safe-right,0px));bottom:calc(var(--task-dock,104px) + var(--safe-bottom,0px) + 8px);margin:0 auto;max-width:460px;background:#fff8e6;color:#2a3b2f;border-radius:14px;padding:10px 13px;box-shadow:0 10px 30px #04161a55;border-left:5px solid #e0894f;animation:correction-in .28s cubic-bezier(.2,.9,.3,1.2);pointer-events:none}
+@keyframes correction-in{from{transform:translateY(10px) scale(.96);opacity:0}}
 .correction-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .correction-top span{font-weight:800;color:#b5532a;font-size:13px}
 .correction-top small{font-size:10px;color:#6c7a66}
@@ -135,7 +135,7 @@ body.onboarding .topbar .top-actions{opacity:.6}
 .camp-card{border-radius:24px 24px 0 0;padding:14px 16px calc(14px + var(--safe-bottom,0px));gap:9px;border-bottom:0}
 .camp-head strong{font-size:23px}
 .onboard-title h1{font-size:27px}
-.correction-card{top:calc(var(--play-head,56px) + var(--safe-top,0px) + 2px)}
+
 }
 @media(max-height:520px) and (orientation:landscape){.camp-layout{inset:64px auto 8px 12px;width:360px;max-height:none}.camp-card{border-radius:18px}.onboard-title{display:none}.onboard-panel{margin-right:12px;margin-left:auto}}
 .shop-items>button{display:flex;align-items:center;gap:10px;width:100%;min-height:47px;padding:9px 11px;background:#274c3e;border:1px solid #bacf9e55;border-radius:8px;font-size:13px;text-align:left;color:#f5ecd4}

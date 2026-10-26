@@ -7,7 +7,7 @@ function add(parent,geometry,material,x=0,y=0,z=0){const m=new T.Mesh(geometry,m
 export function makeChest(){
  const g=new T.Group(),wood=mat('#8a5a2e'),dark=mat('#5b3a1d'),gold=mat('#f2c55a',{metalness:.55,roughness:.32,emissive:'#7a5212',emissiveIntensity:.25}),glow=new T.MeshBasicMaterial({color:'#ffe9a6',transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending});
  add(g,new T.BoxGeometry(1.1,.62,.74),wood,0,.31,0);for(const x of[-.5,.5])add(g,new T.BoxGeometry(.09,.66,.8),gold,x,.33,0);add(g,new T.BoxGeometry(1.16,.08,.8),dark,0,.04,0);
- const lid=new T.Group();lid.position.set(0,.62,-.37);g.add(lid);const top=add(lid,new T.CylinderGeometry(.37,.37,1.1,14,1,false,0,Math.PI),wood,0,0,.37);top.rotation.z=Math.PI/2;top.rotation.y=Math.PI/2;for(const x of[-.5,.5]){const band=add(lid,new T.CylinderGeometry(.39,.39,.09,14,1,false,0,Math.PI),gold,x,0,.37);band.rotation.z=Math.PI/2;band.rotation.y=Math.PI/2;}
+ const lid=new T.Group();lid.position.set(0,.62,-.37);g.add(lid);const top=add(lid,new T.CylinderGeometry(.37,.37,1.1,14,1,false,0,Math.PI),wood,0,0,.37);top.rotation.z=Math.PI/2;for(const x of[-.5,.5]){const band=add(lid,new T.CylinderGeometry(.39,.39,.09,14,1,false,0,Math.PI),gold,x,0,.37);band.rotation.z=Math.PI/2;}
  add(g,new T.BoxGeometry(.2,.24,.08),gold,0,.56,.4);
  const light=add(g,new T.SphereGeometry(.42,16,10),glow,0,.7,0);light.castShadow=false;light.scale.set(1.2,.6,.8);
  const beam=add(g,new T.CylinderGeometry(.05,.5,3.2,16,1,true),new T.MeshBasicMaterial({color:'#fff1b8',transparent:true,opacity:.22,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}),0,2.1,0);beam.castShadow=false;

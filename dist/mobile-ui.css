@@ -63,7 +63,7 @@ body.playing:not(.in-task) .fork-actions button{width:56px;height:56px;backgroun
 body.playing:not(.in-task) .topbar{background:none}
 body.playing:not(.cinematic):not(.in-task){background:#0b2620}
 body.playing:not(.in-task) .vignette{background:linear-gradient(0deg,#061a1659,transparent 16%,transparent 86%,#061a1673)}
-body.playing:not(.in-task) #toast{bottom:calc(var(--play-dock) + 40px + var(--safe-bottom));left:50%;right:auto;transform:translate(-50%,6px);max-width:calc(100% - 32px);max-height:none;padding:7px 14px;border-radius:14px;background:#0d2f27e6;color:#fff4d6;font-size:12px;line-height:16px;box-shadow:0 6px 18px #03151240}
+body.playing:not(.in-task) #toast{top:calc(58px + var(--safe-top));bottom:auto;left:50%;right:auto;transform:translate(-50%,6px);max-width:calc(100% - 32px);max-height:none;padding:7px 14px;border-radius:14px;background:#0d2f27e6;color:#fff4d6;font-size:12px;line-height:16px;box-shadow:0 6px 18px #03151240}
 body.playing:not(.in-task) #toast.toast-shown{transform:translate(-50%,0)}
 body.playing:not(.in-task).hud-notice .traversal-hint{visibility:visible}
 }
