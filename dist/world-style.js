@@ -135,8 +135,8 @@ export function skyDome(){
  const mesh=new T.Mesh(new T.SphereGeometry(180,32,16),material);mesh.renderOrder=-10;mesh.frustumCulled=false;mesh.userData.sky=uniforms;return mesh;
 }
 
-// Element-coloured rim on the partner so it reads clearly against any arena.
+// Element-coloured rim on the partner so it reads clearly against any arena, plus an optional coat tint.
 export function creatureRim(model,color='#d6f4df'){
- const rim={value:new T.Color(color)};model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m?.isMeshStandardMaterial||m.userData.rim)continue;m.userData.rim=rim;m.onBeforeCompile=shader=>{shader.uniforms.uRim=rim;shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uRim;').replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n\t{ float creatureFacing = saturate( dot( geometryNormal, geometryViewDir ) ); reflectedLight.indirectDiffuse += uRim * pow( 1.0 - creatureFacing, 2.4 ) * 0.5; }');};m.customProgramCacheKey=()=>'maxima-creature-rim';m.needsUpdate=true;}});
- return rim;
+ const rim={value:new T.Color(color)},tint={value:new T.Vector4(1,1,1,0)};model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m?.isMeshStandardMaterial||m.userData.rim)continue;m.userData.rim=rim;m.onBeforeCompile=shader=>{shader.uniforms.uRim=rim;shader.uniforms.uTint=tint;shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uRim;\nuniform vec4 uTint;').replace('#include <map_fragment>','#include <map_fragment>\n\t{ float coatLuma = dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ); diffuseColor.rgb = mix( diffuseColor.rgb, min( uTint.rgb * coatLuma * 1.9, vec3( 1.0 ) ), uTint.a ); }').replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n\t{ float creatureFacing = saturate( dot( geometryNormal, geometryViewDir ) ); reflectedLight.indirectDiffuse += uRim * pow( 1.0 - creatureFacing, 2.4 ) * 0.5; }');};m.customProgramCacheKey=()=>'maxima-creature-rim-v2';m.needsUpdate=true;}});
+ return{rim,tint};
 }

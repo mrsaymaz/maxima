@@ -6,7 +6,7 @@ export const FORM_HEIGHTS=[.65,.75,.85,.96,1.08,1.22,1.38,1.55,1.74,1.95,2.18];
 export const CREATURE_RADII=[.24,.27,.30,.34,.38,.43,.49,.55,.62,.70,.78];
 export function cameraSettings(level,mobile=false,view='explore'){
  const height=FORM_HEIGHTS[level]??FORM_HEIGHTS[0],growth=(height-FORM_HEIGHTS[0])/(FORM_HEIGHTS[10]-FORM_HEIGHTS[0]);
- const values=view==='home'?[1.8+1.9*growth,2.7+2.8*growth]:view==='focus'?[1.3+1.6*growth,2.8+3.0*growth]:view==='battle'?[3.6+1.8*growth,5.4+2.7*growth]:[1.0+1.25*growth,3.05+2.9*growth];
+ const values=view==='home'?[.95+1.3*growth,3.1+3.0*growth]:view==='focus'?[1.3+1.6*growth,2.8+3.0*growth]:view==='battle'?[3.6+1.8*growth,5.4+2.7*growth]:[1.0+1.25*growth,3.05+2.9*growth];
  // Exploration sits low and further back, aimed ahead of the creature so it occupies the lower third and the route stays visible.
  return{height,radius:CREATURE_RADII[level]??CREATURE_RADII[0],cameraY:values[0]*(mobile?1.06:1),cameraZ:values[1]*(mobile?1.04:1),targetY:height*.6,leadZ:view==='explore'?-.45:0,lookAhead:view==='explore'?3.3+3.2*growth:0,lookY:height*(mobile?.86:.78),homeOffsetX:mobile?0:-(1.1+.75*growth)};
 }

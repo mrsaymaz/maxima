@@ -1,7 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../dist/vendor/three.module.min.js';
-import {freshJourney,freshExpedition} from '../dist/expedition.js';
+import{freshJourney,freshExpedition as freshCurrentExpedition}from'../dist/expedition.js';
+// These mechanics tests use the legacy week layout (rivals in chapters 1, 3 and 5; extra trials in chapters 2 and 4), which older saves keep.
+const freshExpedition=(...a)=>Object.assign(freshCurrentExpedition(...a),{adventureVersion:1});
 import {sectionsFor,courseCoordinates,localPoint} from '../dist/traversal-layout.js';
 import {boulderPose,movingPose,gustState,crystalState} from '../dist/path-trials-layout.js';
 import {makeTrialScenery,updateTrialScenery} from '../dist/path-trial-props.js';
