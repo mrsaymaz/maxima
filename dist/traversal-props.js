@@ -12,7 +12,7 @@ function merge(root){
 }
 function joinGeometry(geometries){const p=[],n=[];for(const original of geometries){const g=original.index?original.toNonIndexed():original;for(const v of g.attributes.position.array)p.push(v);for(const v of g.attributes.normal.array)n.push(v);if(g!==original)g.dispose();}const out=new T.BufferGeometry();out.setAttribute('position',new T.Float32BufferAttribute(p,3));out.setAttribute('normal',new T.Float32BufferAttribute(n,3));return out;}
 
-export function makeTraversalScenery(section,{mode='relaxed'}={}){
+export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
  if(!section||!['coins','rocks','plants','steps'].includes(section.kind))throw new Error('Unknown traversal section');
  const group=new T.Group();group.name='traversal-'+section.kind;
  const palette=PALETTES[section.area]||PALETTES[0],geometries=new Map();
@@ -27,7 +27,7 @@ export function makeTraversalScenery(section,{mode='relaxed'}={}){
  const at=(s,l=0)=>localPoint(section,s,l);
  const placeBox=(w,h,d,mat,s,l,y)=>{const p=at(s,l),o=mesh(box(w,h,d),mat,p.x,y,p.z,fixed);o.rotation.y=yaw;return o;};
 
- if(section.index%3===0){const vertices=[];for(let i=0;i<12;i++){const a=.4+3.4*i/12,b=.4+3.4*(i+1)/12,ha=approachHeight(section,a)+.033,hb=approachHeight(section,b)+.033,pts=[at(a,-3.2),at(a,3.2),at(b,3.2),at(b,-3.2)],v=pts.map((p,k)=>[p.x,k<2?ha:hb,p.z]);for(const k of[0,1,2,0,2,3])vertices.push(...v[k]);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const rise=mesh(geo,m.top,0,0,0,fixed);rise.name='approach-rise';}
+ if(section.index%3===0){const vertices=[];for(let i=0;i<12;i++){const a=.4+3.4*i/12,b=.4+3.4*(i+1)/12,ha=approachHeight(section,a)+.033,hb=approachHeight(section,b)+.033,pts=[at(a,-3.2),at(a,3.2),at(b,3.2),at(b,-3.2)],v=pts.map((p,k)=>[p.x,k<2?ha:hb,p.z]);for(const k of[0,1,2,0,2,3])vertices.push(...v[k]);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const rise=mesh(geo,ground||m.top,0,0,0,fixed);rise.name='approach-rise';}
  if(section.kind==='rocks'||section.trial?.kind==='bonus'){
  if(section.kind==='rocks'){
   const pool=section.pool,length=pool.to-pool.from,center=(pool.from+pool.to)/2;

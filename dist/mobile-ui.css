@@ -43,3 +43,27 @@ body.playing.in-task .mechanism-tools p{overflow-y:auto;display:block;-webkit-li
 
 /* Both thumbs remain independent: no pan/pinch recognition over game controls. */
 body.playing .play-dock,body.playing .play-dock button{touch-action:none}.play-dock button.pressed{transform:translateY(2px) scale(.96);filter:brightness(1.15)}
+
+/* Thin overlay dock: exploration renders full-screen and the controls float over the lower edge of the 3D view. */
+@media(max-width:759px),(pointer:coarse){
+body.playing:not(.cinematic):not(.in-task){--play-dock:84px}
+body.playing:not(.cinematic):not(.in-task) #world{top:0!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:100dvh!important}
+body.playing:not(.in-task) .play-dock{height:calc(var(--play-dock) + var(--safe-bottom));background:linear-gradient(to top,#08201bb8,#08201b59 58%,#08201b00);border-top:0}
+body.playing:not(.in-task) .play-dock .traversal-hint{top:auto;bottom:calc(var(--play-dock) + 2px + var(--safe-bottom));left:16px;right:16px;max-height:34px;padding:3px 10px;font-size:12px;color:#fff7df;text-shadow:0 1px 3px #031512,0 0 8px #031512cc}
+body.playing:not(.in-task) .play-dock .traversal-hint:empty{display:none}
+body.playing:not(.in-task) .play-dock .joystick{left:14px;bottom:calc(6px + var(--safe-bottom));width:76px;height:76px;background:#0d2f2733;border-color:#f2e9c766;backdrop-filter:blur(2px)}
+body.playing:not(.in-task) .play-dock #joystick-thumb{left:19px;top:19px;width:36px;height:36px;background:#f3e6bdaa}
+body.playing:not(.in-task) .play-dock .jump-button,body.playing:not(.in-task) .play-dock .attack-button{bottom:calc(10px + var(--safe-bottom));width:56px;height:56px;background:#12392fb3;border-color:#f6dfaccc;box-shadow:0 4px 14px #03151240}
+body.playing:not(.in-task) .play-dock .jump-button{right:12px}
+body.playing:not(.in-task) .play-dock .attack-button{right:76px}
+body.playing:not(.in-task) .play-dock .context-action{bottom:calc(14px + var(--safe-bottom))}
+body.playing:not(.in-task) .play-dock .context-action button{height:44px;box-shadow:0 4px 14px #03151240}
+body.playing:not(.in-task) .fork-actions{bottom:calc(10px + var(--safe-bottom))}
+body.playing:not(.in-task) .fork-actions button{width:56px;height:56px;background:#12392fb3}
+body.playing:not(.in-task) .topbar{background:none}
+body.playing:not(.cinematic):not(.in-task){background:#0b2620}
+body.playing:not(.in-task) .vignette{background:linear-gradient(0deg,#061a1659,transparent 16%,transparent 86%,#061a1673)}
+body.playing:not(.in-task) #toast{bottom:calc(var(--play-dock) + 40px + var(--safe-bottom));left:50%;right:auto;transform:translate(-50%,6px);max-width:calc(100% - 32px);max-height:none;padding:7px 14px;border-radius:14px;background:#0d2f27e6;color:#fff4d6;font-size:12px;line-height:16px;box-shadow:0 6px 18px #03151240}
+body.playing:not(.in-task) #toast.toast-shown{transform:translate(-50%,0)}
+body.playing:not(.in-task).hud-notice .traversal-hint{visibility:visible}
+}
