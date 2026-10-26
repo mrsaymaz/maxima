@@ -1,0 +1,361 @@
+{
+  "scope": "Structural checks and bank size; not semantic or curriculum certification",
+  "units": 44,
+  "vocabularyRecords": 1053,
+  "questionRecords": 927,
+  "flags": [],
+  "summary": [
+    {
+      "unit": "g5u1",
+      "vocabulary": 23,
+      "questionRecords": 20,
+      "distinctQuestionPrompts": 20,
+      "distinctAnswers": 20,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u2",
+      "vocabulary": 20,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u3",
+      "vocabulary": 45,
+      "questionRecords": 29,
+      "distinctQuestionPrompts": 29,
+      "distinctAnswers": 29,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u4",
+      "vocabulary": 25,
+      "questionRecords": 20,
+      "distinctQuestionPrompts": 20,
+      "distinctAnswers": 20,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u5",
+      "vocabulary": 24,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u6",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u7",
+      "vocabulary": 21,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u8",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u9",
+      "vocabulary": 18,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g5u10",
+      "vocabulary": 15,
+      "questionRecords": 12,
+      "distinctQuestionPrompts": 12,
+      "distinctAnswers": 12,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u1",
+      "vocabulary": 25,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u2",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u3",
+      "vocabulary": 24,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u4",
+      "vocabulary": 27,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u5",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u6",
+      "vocabulary": 26,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u7",
+      "vocabulary": 25,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u8",
+      "vocabulary": 20,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u9",
+      "vocabulary": 17,
+      "questionRecords": 12,
+      "distinctQuestionPrompts": 12,
+      "distinctAnswers": 12,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g6u10",
+      "vocabulary": 34,
+      "questionRecords": 30,
+      "distinctQuestionPrompts": 30,
+      "distinctAnswers": 30,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u1",
+      "vocabulary": 19,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u2",
+      "vocabulary": 21,
+      "questionRecords": 20,
+      "distinctQuestionPrompts": 20,
+      "distinctAnswers": 20,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u3",
+      "vocabulary": 24,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u4",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u5",
+      "vocabulary": 28,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u6",
+      "vocabulary": 19,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u7",
+      "vocabulary": 23,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u8",
+      "vocabulary": 29,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u9",
+      "vocabulary": 28,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u10",
+      "vocabulary": 22,
+      "questionRecords": 20,
+      "distinctQuestionPrompts": 20,
+      "distinctAnswers": 20,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u11",
+      "vocabulary": 19,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g7u12",
+      "vocabulary": 20,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u1",
+      "vocabulary": 23,
+      "questionRecords": 20,
+      "distinctQuestionPrompts": 20,
+      "distinctAnswers": 20,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u2",
+      "vocabulary": 62,
+      "questionRecords": 41,
+      "distinctQuestionPrompts": 41,
+      "distinctAnswers": 41,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u3",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u4",
+      "vocabulary": 22,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u5",
+      "vocabulary": 16,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u6",
+      "vocabulary": 21,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u7",
+      "vocabulary": 23,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u8",
+      "vocabulary": 20,
+      "questionRecords": 20,
+      "distinctQuestionPrompts": 20,
+      "distinctAnswers": 20,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u9",
+      "vocabulary": 21,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u10",
+      "vocabulary": 24,
+      "questionRecords": 21,
+      "distinctQuestionPrompts": 21,
+      "distinctAnswers": 21,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u11",
+      "vocabulary": 24,
+      "questionRecords": 16,
+      "distinctQuestionPrompts": 16,
+      "distinctAnswers": 16,
+      "level10PracticeSets": 220
+    },
+    {
+      "unit": "g8u12",
+      "vocabulary": 24,
+      "questionRecords": 16,
+      "distinctQuestionPrompts": 16,
+      "distinctAnswers": 16,
+      "level10PracticeSets": 220
+    }
+  ]
+}

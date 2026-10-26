@@ -1,0 +1,324 @@
+{
+  "sourceActivityRecords": 4805,
+  "units": [
+    {
+      "id": "g5u1",
+      "vocabulary": 24,
+      "sentences": 35,
+      "questions": 20,
+      "uniqueQuestionAnswers": 20
+    },
+    {
+      "id": "g5u2",
+      "vocabulary": 21,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g5u3",
+      "vocabulary": 45,
+      "sentences": 63,
+      "questions": 29,
+      "uniqueQuestionAnswers": 29
+    },
+    {
+      "id": "g5u4",
+      "vocabulary": 25,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 20
+    },
+    {
+      "id": "g5u5",
+      "vocabulary": 24,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g5u6",
+      "vocabulary": 22,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g5u7",
+      "vocabulary": 21,
+      "sentences": 33,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g5u8",
+      "vocabulary": 22,
+      "sentences": 31,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g5u9",
+      "vocabulary": 18,
+      "sentences": 25,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g5u10",
+      "vocabulary": 15,
+      "sentences": 16,
+      "questions": 12,
+      "uniqueQuestionAnswers": 12
+    },
+    {
+      "id": "g6u1",
+      "vocabulary": 25,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u2",
+      "vocabulary": 23,
+      "sentences": 33,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u3",
+      "vocabulary": 24,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u4",
+      "vocabulary": 27,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u5",
+      "vocabulary": 23,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u6",
+      "vocabulary": 27,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u7",
+      "vocabulary": 25,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u8",
+      "vocabulary": 20,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g6u9",
+      "vocabulary": 17,
+      "sentences": 16,
+      "questions": 12,
+      "uniqueQuestionAnswers": 12
+    },
+    {
+      "id": "g6u10",
+      "vocabulary": 35,
+      "sentences": 54,
+      "questions": 30,
+      "uniqueQuestionAnswers": 30
+    },
+    {
+      "id": "g7u1",
+      "vocabulary": 20,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u2",
+      "vocabulary": 22,
+      "sentences": 35,
+      "questions": 20,
+      "uniqueQuestionAnswers": 20
+    },
+    {
+      "id": "g7u3",
+      "vocabulary": 24,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u4",
+      "vocabulary": 22,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u5",
+      "vocabulary": 28,
+      "sentences": 45,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u6",
+      "vocabulary": 19,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u7",
+      "vocabulary": 23,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u8",
+      "vocabulary": 29,
+      "sentences": 44,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u9",
+      "vocabulary": 28,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u10",
+      "vocabulary": 22,
+      "sentences": 34,
+      "questions": 20,
+      "uniqueQuestionAnswers": 20
+    },
+    {
+      "id": "g7u11",
+      "vocabulary": 19,
+      "sentences": 25,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g7u12",
+      "vocabulary": 20,
+      "sentences": 25,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u1",
+      "vocabulary": 24,
+      "sentences": 34,
+      "questions": 20,
+      "uniqueQuestionAnswers": 20
+    },
+    {
+      "id": "g8u2",
+      "vocabulary": 63,
+      "sentences": 93,
+      "questions": 42,
+      "uniqueQuestionAnswers": 41
+    },
+    {
+      "id": "g8u3",
+      "vocabulary": 23,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u4",
+      "vocabulary": 23,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u5",
+      "vocabulary": 17,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u6",
+      "vocabulary": 22,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u7",
+      "vocabulary": 23,
+      "sentences": 34,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u8",
+      "vocabulary": 20,
+      "sentences": 34,
+      "questions": 20,
+      "uniqueQuestionAnswers": 20
+    },
+    {
+      "id": "g8u9",
+      "vocabulary": 22,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u10",
+      "vocabulary": 24,
+      "sentences": 35,
+      "questions": 21,
+      "uniqueQuestionAnswers": 21
+    },
+    {
+      "id": "g8u11",
+      "vocabulary": 9,
+      "sentences": 6,
+      "questions": 12,
+      "uniqueQuestionAnswers": 12
+    },
+    {
+      "id": "g8u12",
+      "vocabulary": 9,
+      "sentences": 6,
+      "questions": 12,
+      "uniqueQuestionAnswers": 12
+    }
+  ],
+  "totals": {
+    "vocabulary": 1038,
+    "sentences": 1520,
+    "questions": 921
+  },
+  "deduplicated": {},
+  "dropped": {
+    "vocabulary_missing_translation": 16
+  },
+  "pictures": 218,
+  "issues": []
+}

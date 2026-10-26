@@ -1,0 +1,18 @@
+import * as T from './vendor/three.module.min.js';import{elementalAttack}from'./elemental-attacks.js';
+// Bounded pooled objects, shared geometry/materials; update never allocates GPU resources.
+export class ElementalFX{
+ constructor(scene){this.scene=scene;this.root=new T.Group();this.root.name='elemental-projectiles';scene.add(this.root);this.pool=new Map();this.bursts=[];this.materials=new Map();this.geometries={orb:new T.IcosahedronGeometry(.16,1),shard:new T.OctahedronGeometry(.18,0),ring:new T.TorusGeometry(.18,.018,4,18,Math.PI*1.7),leaf:new T.SphereGeometry(.09,5,3)};this.cast=null;}
+ material(partner,accent=false){const key=partner+accent;if(!this.materials.has(key)){const s=elementalAttack(partner);this.materials.set(key,new T.MeshBasicMaterial({color:accent?s.accent:s.color,transparent:true,opacity:.9,depthWrite:false}));}return this.materials.get(key);}
+ make(partner){const spec=elementalAttack(partner),group=new T.Group();group.userData={element:spec.element,partner};const add=(geo,accent=false)=>{const m=new T.Mesh(this.geometries[geo],this.material(partner,accent));group.add(m);return m;};
+ if(spec.element==='air'){for(let i=0;i<3;i++){const m=add('ring',i===1);m.position.z=-i*.15;m.rotation.z=i*2.1;m.scale.setScalar(1-i*.18);}}
+ else if(spec.element==='fire'){add('orb',true);for(let i=0;i<3;i++){const m=add('shard');m.position.z=-.15-i*.13;m.scale.set(.8-i*.15,.8-i*.15,1.4);}}
+ else if(spec.element==='nature'){const core=add('shard',true);core.scale.set(.85,.8,1.6);for(let i=0;i<3;i++){const m=add('leaf');m.position.set(Math.cos(i*2.1)*.16,Math.sin(i*2.1)*.16,-.12);m.scale.set(.45,1.5,1);m.rotation.z=i*2.1;}}
+ else{const core=add('orb');core.scale.set(.85,.85,1.6);for(let i=0;i<2;i++){const m=add('ring',true);m.rotation.x=Math.PI/2;m.position.z=-i*.18;m.scale.setScalar(1-i*.2);}}
+ this.root.add(group);return group;}
+ impact(p,kind){if(kind==='miss')return;this.bursts.push({group:this.make(p.partner),age:0,x:p.x,y:p.y,z:p.z});while(this.bursts.length>4){const old=this.bursts.shift();this.root.remove(old.group);}}
+ update(dt,projectiles=[],attack=null,player=null,visible=true,effects='medium'){this.root.visible=visible;if(!visible)return;const ids=new Set(projectiles.map(p=>p.id));for(const [id,g]of this.pool)if(!ids.has(id)){this.root.remove(g);this.pool.delete(id);}for(const p of projectiles){let g=this.pool.get(p.id);if(!g){g=this.make(p.partner);this.pool.set(p.id,g);}g.position.set(p.x,p.y,p.z);g.rotation.set(0,p.heading,0);for(const [i,m]of g.children.entries())m.rotation.z+=dt*(p.element==='water'?-7:7)*(i+1);}
+ if(attack?.ranged&&!attack.hit&&player){if(!this.cast||this.cast.userData.partner!==attack.partner){if(this.cast)this.root.remove(this.cast);this.cast=this.make(attack.partner);}const spec=elementalAttack(attack.partner),t=Math.min(1,attack.age/spec.windup);this.cast.visible=true;this.cast.position.set(player.x+Math.sin(attack.heading)*.3,player.y,player.z+Math.cos(attack.heading)*.3);this.cast.rotation.set(0,attack.heading,attack.age*4);this.cast.scale.setScalar(.3+.65*t);}else if(this.cast)this.cast.visible=false;
+ this.bursts=this.bursts.filter(b=>{b.age+=dt;if(b.age>.32){this.root.remove(b.group);return false;}b.group.visible=effects!=='low';b.group.position.set(b.x,b.y,b.z);b.group.scale.setScalar(1+b.age*3);b.group.rotation.z+=dt*5;return true;});}
+ clear(){for(const g of this.pool.values())this.root.remove(g);this.pool.clear();for(const b of this.bursts)this.root.remove(b.group);this.bursts=[];if(this.cast){this.root.remove(this.cast);this.cast=null;}}
+ dispose(){this.clear();this.scene.remove(this.root);Object.values(this.geometries).forEach(g=>g.dispose());this.materials.forEach(m=>m.dispose());}
+}

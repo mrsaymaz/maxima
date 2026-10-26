@@ -1,0 +1,695 @@
+{
+  "rigged": 25,
+  "unrigged": 19,
+  "forms": [
+    {
+      "partner": "hufflepuff",
+      "level": 0,
+      "skeletal": true,
+      "joints": 28,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.039568568163008515,
+        "minHeightRatio": 0.9979232372415171,
+        "maxHeightRatio": 1.0144670769237603
+      },
+      "limitations": "Supplied skin retained; no foot IK."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 1,
+      "skeletal": true,
+      "joints": 17,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.05179065342725771,
+        "minHeightRatio": 0.9976469862827987,
+        "maxHeightRatio": 1.0110213800253334
+      },
+      "limitations": "One foreleg has only one supplied bone: conservative whole-leg swing/lift, no independent elbow/paw articulation."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 2,
+      "skeletal": true,
+      "joints": 33,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.05681689357498852,
+        "minHeightRatio": 0.9949227573956975,
+        "maxHeightRatio": 1.0251069006738975
+      },
+      "limitations": "Original upright stance retained: hindfoot stepping and forearm swing, not a forced four-paw stance. Generated skeleton and rest stance are asymmetric."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 3,
+      "skeletal": true,
+      "joints": 26,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.05371393889532524,
+        "minHeightRatio": 0.9993535163740663,
+        "maxHeightRatio": 1.0212101147018118
+      },
+      "limitations": "Original upright stance retained: hindfoot stepping and forearm swing, not a forced four-paw stance. Generated head hierarchy parents both forelegs, so isolated head nod is omitted."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 4,
+      "skeletal": true,
+      "joints": 24,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.04081375928633284,
+        "minHeightRatio": 0.9880631829303964,
+        "maxHeightRatio": 1.016242705529632
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 5,
+      "skeletal": true,
+      "joints": 19,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.060788586678633544,
+        "minHeightRatio": 0.9979428052197159,
+        "maxHeightRatio": 1.01217048765068
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 6,
+      "skeletal": true,
+      "joints": 31,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.04383626666751208,
+        "minHeightRatio": 0.9991250514489248,
+        "maxHeightRatio": 1.010803476233547
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 7,
+      "skeletal": true,
+      "joints": 35,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.029657399775849132,
+        "minHeightRatio": 0.9961049092232278,
+        "maxHeightRatio": 1.0050029958710467
+      },
+      "limitations": "Generated duplicate influences overlap some paws. Small motion retained; independent foot locking needs a corrected skin."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 8,
+      "skeletal": true,
+      "joints": 31,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.04609030797973707,
+        "minHeightRatio": 0.9799458020223859,
+        "maxHeightRatio": 1.012637041740664
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 9,
+      "skeletal": true,
+      "joints": 34,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.041688852034459586,
+        "minHeightRatio": 0.9968424666778679,
+        "maxHeightRatio": 1.0094967418884178
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 10,
+      "skeletal": true,
+      "joints": 34,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.04603372129626718,
+        "minHeightRatio": 0.996336528771954,
+        "maxHeightRatio": 1.0145699218037065
+      },
+      "limitations": "One supplied foreleg is a single joint and some ground vertices weight directly to root. Conservative whole-leg motion retained."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 0,
+      "skeletal": true,
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.07983448796539153,
+        "minHeightRatio": 0.9984596762066332,
+        "maxHeightRatio": 1.0256666661419052
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 1,
+      "skeletal": true,
+      "joints": 31,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.07637366751975207,
+        "minHeightRatio": 0.9963527298073932,
+        "maxHeightRatio": 1.0168266317649972
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 2,
+      "skeletal": true,
+      "joints": 38,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.0632774455802765,
+        "minHeightRatio": 0.9941036646416381,
+        "maxHeightRatio": 1.008350858493275
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 3,
+      "skeletal": true,
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.07357855838810433,
+        "minHeightRatio": 0.9925188020177037,
+        "maxHeightRatio": 1.0253258668632095
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 4,
+      "skeletal": true,
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.07469600828699408,
+        "minHeightRatio": 0.9995242783886926,
+        "maxHeightRatio": 1.0361601828363782
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 5,
+      "skeletal": true,
+      "joints": 34,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.061415302468428766,
+        "minHeightRatio": 0.9987336512381022,
+        "maxHeightRatio": 1.0270011109312331
+      },
+      "limitations": "One supplied hind chain is reversed/truncated: that weighted paw uses a small whole-region swing/lift without an invented knee. The head and mane are split across generated joints; head motion is deliberately very small."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 6,
+      "skeletal": true,
+      "joints": 78,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.05893185388776251,
+        "minHeightRatio": 0.9955299132707229,
+        "maxHeightRatio": 1.0084838167419914
+      },
+      "limitations": "Humanoid-named auto-rig on a four-paw creature. Hand/finger weights are retained as forepaws, clavicle/wing and finger joints stay at rest; no human upright stance is imposed."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 7,
+      "skeletal": true,
+      "joints": 78,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.057002226657212295,
+        "minHeightRatio": 0.9914009058303315,
+        "maxHeightRatio": 1.0040838926405693
+      },
+      "limitations": "Irregular humanoid-named auto-rig: a toe weights one forepaw, while an arm chain influences a rear paw and part of a wing. These regions use very small conservative swings; full four-paw foot locking cannot be recovered without re-rigging."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 8,
+      "skeletal": true,
+      "joints": 40,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.07890977691274505,
+        "minHeightRatio": 0.9866641949778878,
+        "maxHeightRatio": 1.0224077397806728
+      },
+      "limitations": "Procedural conservative four-paw stepping on a generated asymmetric skeleton. No re-rigging, foot IK, authored wing flapping or guaranteed foot locking at fast travel speeds."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 9,
+      "skeletal": true,
+      "joints": 79,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.0614042818239548,
+        "minHeightRatio": 0.9791051406087735,
+        "maxHeightRatio": 1.014753680044396
+      },
+      "limitations": "Humanoid-named auto-rig with four grounded paws, broad wing weights and one additional neutral joint. Wing/finger/twist joints are preserved at rest; the conservative gait is not an authored foot-locked animation."
+    },
+    {
+      "partner": "gryffindor",
+      "level": 10,
+      "skeletal": true,
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.046984307188494924,
+        "minHeightRatio": 0.9977970644197952,
+        "maxHeightRatio": 1.0105890874026
+      },
+      "limitations": "The generated head hierarchy also parents forepaws and wing regions. Independent head animation is omitted; runtime overlays should use the torso/limb metadata rather than guessing Head_0."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 0,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 1,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 2,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 3,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 4,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 5,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 6,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 7,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 8,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 9,
+      "skeletal": true,
+      "joints": 78,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.04911739770240037,
+        "minHeightRatio": 0.9869218887288024,
+        "maxHeightRatio": 1.0104743309700635
+      },
+      "limitations": "Conservative two-foot stepping and tiny wing/neck movements on the supplied generated bird rig. No foot IK, authored flight or fast-travel foot-lock guarantee."
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 10,
+      "skeletal": true,
+      "joints": 79,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.04354914159811668,
+        "minHeightRatio": 0.9943666137286109,
+        "maxHeightRatio": 1.0022515402983032
+      },
+      "limitations": "Conservative two-foot stepping and tiny wing/neck movements on the supplied generated bird rig. No foot IK, authored flight or fast-travel foot-lock guarantee."
+    },
+    {
+      "partner": "slytherin",
+      "level": 0,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 1,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 2,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 3,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 4,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 5,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 6,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 7,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 8,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 9,
+      "skeletal": false,
+      "reason": "Source has no skeleton or skin weights."
+    },
+    {
+      "partner": "slytherin",
+      "level": 10,
+      "skeletal": true,
+      "joints": 22,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samples": 25,
+        "maxDisplacementInHeights": 0.0405947297562348,
+        "minHeightRatio": 0.9988578932545026,
+        "maxHeightRatio": 1.0004873972121788
+      },
+      "limitations": "Conservative coil, neck and three-head sway on the supplied 22-joint rig. No authored travelling slither or deformation polish."
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "source": "1d899abbccff7f5d08ef0e8e1f1e8c155f50eb2f",
+  "forms": {
+    "hufflepuff-0": {
+      "payloadBytes": 1211400,
+      "payloadSHA256": "9cdf6766f48c8660437123d23b76663d1d71ad35cae28a9e71b84c7627ae68c6",
+      "structureSHA256": "4fa7d971af2b27c86ad0279310fe7a3bd367a04b6d46696ebfe8c63f75b0cf88"
+    },
+    "hufflepuff-1": {
+      "payloadBytes": 879656,
+      "payloadSHA256": "eb1e5e18b75cdb56f72084c1031cb9750ebfbb29355d95624eefc696402d4e29",
+      "structureSHA256": "4feee321a51847a1322b9b8adc7b0f142884ef8351b34120e63b49ea952ca84e"
+    },
+    "hufflepuff-2": {
+      "payloadBytes": 1464680,
+      "payloadSHA256": "3e2d5ca165f5e4061f01d612ee5c28a594b44647c024c001633e69ede781c00c",
+      "structureSHA256": "2366663b5857f244c83cbdf2ecfd17df0d9dc3bfbc77fa3a3656724274acadb9"
+    },
+    "hufflepuff-3": {
+      "payloadBytes": 901348,
+      "payloadSHA256": "3acd2d173cd8cc121167439ef29381055e5d67cc5c4d52356ba445b1768738b6",
+      "structureSHA256": "89477f0dd25211b41e5b0a0fa135181d0bcaefadce648be577ab380921de8f53"
+    },
+    "hufflepuff-4": {
+      "payloadBytes": 1521932,
+      "payloadSHA256": "1a23c69357122dc7dc97e6a76f81b3766940243def911a5b21abe0f62475eaaf",
+      "structureSHA256": "058746de25bc94241781168b5e36423b0d270f8db8c64a37144347fc9beaf4d9"
+    },
+    "hufflepuff-5": {
+      "payloadBytes": 1636076,
+      "payloadSHA256": "15fc6df2ce7dccaaba14e7e2e1d18bcdc45303e8a99a269de374729194ee0238",
+      "structureSHA256": "5996807a6a9e8c63483753c596e3a7b6ca631a40aca1913b61a9d0aac4bc4894"
+    },
+    "hufflepuff-6": {
+      "payloadBytes": 1767200,
+      "payloadSHA256": "b9b7657e7ed87b724ed3992c5a6982f425c5ac4fc9328d1e929b1c358d36e780",
+      "structureSHA256": "33bceb68f3e2ebc92f27e3b75c39034629461d4cc2a9e6d2a71b3eb16f1948a0"
+    },
+    "hufflepuff-7": {
+      "payloadBytes": 1741740,
+      "payloadSHA256": "024fa5cb457c396429eecc690a2f377d60463df7d35988ad5f3767c77cae431b",
+      "structureSHA256": "0d4341104c42022d027f8bfc9019c4cfc91f2b4e316ae82727a46900a5c969d7"
+    },
+    "hufflepuff-8": {
+      "payloadBytes": 1700656,
+      "payloadSHA256": "3a0cd8770ef867e1dd58feabb0ae03d027b29eb2be6a668195461431e97e512e",
+      "structureSHA256": "d35c3b56564bdf2fe1aa6e609c551501fd193fb0bb252c7174946cd61591fe1e"
+    },
+    "hufflepuff-9": {
+      "payloadBytes": 1744624,
+      "payloadSHA256": "03d2e993fea3f41b9da1c46fe5cb46f1e5152ee3c2ab1f0bf7f7aa21eb6fed08",
+      "structureSHA256": "bdbc3b31bf26155483256aab67e27b267f68f6fa9d35c30fdcde5379122e71ce"
+    },
+    "hufflepuff-10": {
+      "payloadBytes": 1761000,
+      "payloadSHA256": "1da0eeca2aa32025fc2926aa81aad149f8b853edba5f1582522001bf3f4d87eb",
+      "structureSHA256": "4c26c39c540c95757e07727ee292df6834a4200c4e89e28c4e78cca02c22563a"
+    },
+    "gryffindor-0": {
+      "payloadBytes": 1025172,
+      "payloadSHA256": "aed500f02b7444ac1a43c7766167c4ddfd60a5eb89b86e5d206dc718c239c5c3",
+      "structureSHA256": "5256b81a29cd33a1d332255eb30efad95606525c0e62ad2a81f565d4eeb6465e"
+    },
+    "gryffindor-1": {
+      "payloadBytes": 982608,
+      "payloadSHA256": "cb4dd6cfe5bcb6482c75400e001de8bc323d1b1e95154e2b2e3316b6a88a2ad8",
+      "structureSHA256": "5b44e2d3201dc8db2798ca3dd83bbb3375245b2421d28af0dd1405d6f2c517a8"
+    },
+    "gryffindor-2": {
+      "payloadBytes": 1743520,
+      "payloadSHA256": "92017cd5085cf3cebd4f83ee81f804d0d6cecd1f476148f5a36e12aba1dcd568",
+      "structureSHA256": "cc95a5ca7a5088e0107b798a32dc1af3206d1b697b75d5f6cc610e1ade79410c"
+    },
+    "gryffindor-3": {
+      "payloadBytes": 1017116,
+      "payloadSHA256": "8a52055f9b83264aea0424293a30ade9f8bc1ee894f574c67683e62a04c2daa3",
+      "structureSHA256": "4e38857cb6f61581b242b5a84f22e0526692c18255fe404d9d22174354e0bda1"
+    },
+    "gryffindor-4": {
+      "payloadBytes": 1592380,
+      "payloadSHA256": "f6e2610340d33bdcb75f6a65910643bdf467daa299ffcd86518cc43a6159ab9d",
+      "structureSHA256": "70a54ebbebb50087ba73b8ba474c023b58dd8a87cce64b2de1ba5db03c7b0ff5"
+    },
+    "gryffindor-5": {
+      "payloadBytes": 1094332,
+      "payloadSHA256": "247d19951b037ea997d89baf1c9aa9ab789ee10042b6d78dd42053bd23e4abe4",
+      "structureSHA256": "fe97f59db7c46a7a8b55ca28b4997309f8321eec76b92b6e70abfc82885bacdc"
+    },
+    "gryffindor-6": {
+      "payloadBytes": 1850676,
+      "payloadSHA256": "be030b75bcd9745f4fea7fa53afc6f58115e0b6f06a2cded150f894cea836e64",
+      "structureSHA256": "8835f02a198a6998095886fc1ad0bf2f84f2fdf2378c8df5bd2c05746925a835"
+    },
+    "gryffindor-7": {
+      "payloadBytes": 1834852,
+      "payloadSHA256": "f7b189b739a48da017440e2cab9e72b02c99dafff27ae4fcc5f2b6aac2b7483b",
+      "structureSHA256": "9d9e0c4c692cf4daee4024fc977e9b8ce6c87e34d407b7e713d4edc128b922ce"
+    },
+    "gryffindor-8": {
+      "payloadBytes": 1316116,
+      "payloadSHA256": "e57999b8aa67b6ad6e51b67323030b7c7c4105bdd59126a9e93d3deec6abd885",
+      "structureSHA256": "77c0f5556d3a40c10717c5a683a991cfdf2d4ba8d2cf55ca7c46f931965d3f3c"
+    },
+    "gryffindor-9": {
+      "payloadBytes": 1894600,
+      "payloadSHA256": "16b1218e6e1bdc6a22557e06707197e41abf6ba151a2c763dce90a5e70f54247",
+      "structureSHA256": "783d45f914cc419a6f76fbf85e4d3e0831b1d900267a7cbf4e01525c3f0fac2c"
+    },
+    "gryffindor-10": {
+      "payloadBytes": 1888724,
+      "payloadSHA256": "66386afb5fefacf713254dca0a2cca143ea84b225bc7f68901a27fdeaefa625d",
+      "structureSHA256": "6c1d8acd52f4d05a9cc265fe5d174f3462acbce76503efd170d3fc961f1a4a8b"
+    },
+    "ravenclaw-0": {
+      "payloadBytes": 1528604,
+      "payloadSHA256": "d16ae8f7af61305e7eebae8eeedf67c3dcb45cc017cd8f00075c0cdd3937fa75",
+      "structureSHA256": "4edf2b603b77224789527ec08d127123c8bd7467e20d9790703a81db7de7da73"
+    },
+    "ravenclaw-1": {
+      "payloadBytes": 1116184,
+      "payloadSHA256": "42f9755d12b9e81b5d85d59f9fc2789618b8b4c13999ca546c22d03bb15c1337",
+      "structureSHA256": "3d92634fa7682cd6a6154b2788e882ebe4c7650cce2e28cb84b85e8b87f69898"
+    },
+    "ravenclaw-2": {
+      "payloadBytes": 1619104,
+      "payloadSHA256": "3f0c49a581e740d9e1538c52516d05408fcdfd581b50ef54bf03996a42ffd15f",
+      "structureSHA256": "53a6a950dd3722ad680e388249e43f88ad2eaac2b5e8709ac04b08aca2daa5a5"
+    },
+    "ravenclaw-3": {
+      "payloadBytes": 1615948,
+      "payloadSHA256": "5396438bd176f84df608208c658777f628c8fd3ed3c7be12d06fb29647bdebd7",
+      "structureSHA256": "26911ec81acee56f71533c60dfa6ab7aae86005d3502f299d1e7fa6f4d6f8f51"
+    },
+    "ravenclaw-4": {
+      "payloadBytes": 1727372,
+      "payloadSHA256": "e4bd8f8ec46403249bdd6eddf8dc13ec8b6dda0b36cfaa6c4fd00d4b86459eff",
+      "structureSHA256": "fce937e4b87c63b0d03fe637b6fa52cf433d10658047c18869b196ac4f81d157"
+    },
+    "ravenclaw-5": {
+      "payloadBytes": 1809656,
+      "payloadSHA256": "c15df30d3645fd3cd08ff0581b21c2ce4ad7ede76045140315ac43fa47d604da",
+      "structureSHA256": "310eae8ac79baf3ebd67d69b7fc10504ba5c44c74972ef2a96d8a675d23bb8ad"
+    },
+    "ravenclaw-6": {
+      "payloadBytes": 1693224,
+      "payloadSHA256": "0fafad09087ac7f85a86bbb6efe4f247d32f18572e53c941931ea638dec06d0c",
+      "structureSHA256": "6540b4a271f762b1202ac7e6f07cbda5a2e3d05d355f86e9c701a374d96e92bf"
+    },
+    "ravenclaw-7": {
+      "payloadBytes": 1806776,
+      "payloadSHA256": "ca228d2ad516330ccf3247e83b9656ad4cc5fea8f6c4b5ac26795a914ed94d0e",
+      "structureSHA256": "fce9d4aae27f2187e0ea007c1e177e966d45e364fdaafaa9c83e36921ae9d879"
+    },
+    "ravenclaw-8": {
+      "payloadBytes": 1745412,
+      "payloadSHA256": "03d52b45501a696bdfcb30ece6890327edf978746772ae934122a6c88ed8c1b9",
+      "structureSHA256": "49d92069d99ceb58f3083a1d2921d47d4c119ad545bed766a9f1e6ace97f4dc2"
+    },
+    "ravenclaw-9": {
+      "payloadBytes": 1953476,
+      "payloadSHA256": "9ef477145f226094c34324bb1177faca77fc5db8e42401aa603a1bf836afbdba",
+      "structureSHA256": "81d1df066de59d87c7bb4805174208d927e982aefda38cbf0cdc2d7139c55aef"
+    },
+    "ravenclaw-10": {
+      "payloadBytes": 2225092,
+      "payloadSHA256": "a9815812eaa81eb6f4f2b4086a856ebd19dc23fb78294c5847b44de0c86db474",
+      "structureSHA256": "cba9170b42b540620c0c3b9f150144048ea5735f161af871138b89d174614331"
+    },
+    "slytherin-0": {
+      "payloadBytes": 710488,
+      "payloadSHA256": "1ff8726070492bbf5d8a5f02ba335ad1106f412e8a2fa5b6c64b48f78437c13e",
+      "structureSHA256": "6265abab1351e09616def93be8ef4e2c9e6dd59e9416ecb3cba225f8f433ff76"
+    },
+    "slytherin-1": {
+      "payloadBytes": 805600,
+      "payloadSHA256": "9a675e905aa8d9eeb187f8ec700fd59e633cedb986fdec6b4b8fa7210d4c909f",
+      "structureSHA256": "aea8f85397575687a38ea3f7b12ddc6e59c6863fa34bf7a9b1e6f24dddfa6b6d"
+    },
+    "slytherin-2": {
+      "payloadBytes": 1115364,
+      "payloadSHA256": "a730133ae264edc9b5f37ee5411dae841e61a0516c2ed086b0d375261f352e42",
+      "structureSHA256": "bba8ef97b2167e8d806f12b89d11138f52a42058c28179282cb92a900f09b5ab"
+    },
+    "slytherin-3": {
+      "payloadBytes": 1272128,
+      "payloadSHA256": "21cd250f30900a091996744a0d026f1db91e0b57e838aea4f64bb4e5c1faaf3e",
+      "structureSHA256": "a3787aa5260c76e367666c9a6337696ddd5f16f64e9541c82dbd02b10da9c096"
+    },
+    "slytherin-4": {
+      "payloadBytes": 1146500,
+      "payloadSHA256": "b84dfa5f2169d946e0cb0424eb605fc3a7c0e86d4cf2a9bf68721d64ea79e371",
+      "structureSHA256": "f761769704deece2abe80c0d03fa4d1e4caa249c63a09d659e8eb8fca2194579"
+    },
+    "slytherin-5": {
+      "payloadBytes": 1338604,
+      "payloadSHA256": "565d1aea605c2b0dce23789d3a90341b89e8c863d8befd50be5b8b01a432b2d2",
+      "structureSHA256": "82c21e52d17289a9921577535d136fd01ff8421b438408469772efd401f88d2d"
+    },
+    "slytherin-6": {
+      "payloadBytes": 1377780,
+      "payloadSHA256": "d31d06a71e788aa31d2f5047f1d4d80f684769c5c384a72dfca8e3b7880010ec",
+      "structureSHA256": "6e61775be5beac3cd5a046cf11122d98743803c50666b9e8a78f45d9729054aa"
+    },
+    "slytherin-7": {
+      "payloadBytes": 1464008,
+      "payloadSHA256": "4796f4eac5f314b46d787af218585f090d64d38dc0332561da3e11b0b0fb2424",
+      "structureSHA256": "96a37aeab5ba1cc87d6dc3374a4fd5c65e96556218135862f46a21075f2881af"
+    },
+    "slytherin-8": {
+      "payloadBytes": 1325380,
+      "payloadSHA256": "9478a853d22ea3e0ea94907b60b85d7ac84929992cc1ca7aefee64c9cbb8cd28",
+      "structureSHA256": "47fc7cde73c6edf685ee8c31da93602a5b3c9a985144449179abd0fd54392607"
+    },
+    "slytherin-9": {
+      "payloadBytes": 1474204,
+      "payloadSHA256": "32ab41dddd74d7ea3bdff5c98060dfdc2bb6670cf6ce6a6bb0106a80e2087eea",
+      "structureSHA256": "00146579a23cd636c19dc23d8dcf1c433e1946f7a95e9c9f551b21e8c75e6fee"
+    },
+    "slytherin-10": {
+      "payloadBytes": 1785360,
+      "payloadSHA256": "80b2001d753b3ec3d7b19eb1af55ab7ae6bd94a8b7572441d69da6ebfb5a61f4",
+      "structureSHA256": "7750102f336e3f443d6d2c358313b7e6c9ff25fefc502b05b3cfce3ff3a469bf"
+    }
+  }
+}
