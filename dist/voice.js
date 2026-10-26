@@ -16,7 +16,8 @@ export class Voice{
  stop(){for(const s of this.current)try{s.stop();}catch{}this.current=[];}
  // Plays a word, or a "Please bring … and …" request assembled from recorded parts. Resolves when finished.
  async say(text,{rate=1,onend}={}){
-  await this.load();const words=requestWords(text),parts=words?[this.manifest?.fragments?.please,...words.flatMap((w,i)=>i===words.length-1&&i>0?[this.manifest?.fragments?.and,this.file(w)]:[this.file(w)])]:[this.file(text)];
+  // Create or resume the context inside the tap itself: iPhone Safari only unlocks audio during the gesture.
+  this.ensureContext();await this.load();const words=requestWords(text),parts=words?[this.manifest?.fragments?.please,...words.flatMap((w,i)=>i===words.length-1&&i>0?[this.manifest?.fragments?.and,this.file(w)]:[this.file(w)])]:[this.file(text)];
   if(!parts.length||parts.some(p=>!p))return false;const ctx=this.ensureContext();if(!ctx)return false;this.stop();
   const buffers=await Promise.all(parts.map(p=>this.buffer(p)));let at=ctx.currentTime+.05;const gain=ctx.createGain();gain.gain.value=1;gain.connect(ctx.destination);
   this.current=buffers.map((b,i)=>{const s=ctx.createBufferSource();s.buffer=b;s.playbackRate.value=rate;s.connect(gain);s.start(at);at+=b.duration/rate+(i===0&&words?.length?.12:.08);return s;});

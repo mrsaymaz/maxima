@@ -142,3 +142,4 @@ body.onboarding .topbar .top-actions{opacity:.6}
 .shop-items>button.equipped{border-color:#ebd598;background:#355a46}
 .shop-items>button b{font-size:11px;color:#f1d49a}
 .wardrobe h3{font:22px Georgia,serif}
+@media(min-width:760px) and (pointer:fine){body.playing .play-status{left:250px}}

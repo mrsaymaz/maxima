@@ -55,7 +55,7 @@ Chromium (SwiftShader WebGL) screenshots and by objective audio analysis. Real-p
   browser's speech voice is now only a fallback when a clip is missing or audio cannot start.
   The voice was chosen by measurement: every clip was transcribed with offline Whisper (small.en) and the
   American `af_heart` speaker was recognised correctly far more often than the British speakers on the
-  hardest words. Unit words missing from the pronunciation lexicon (for example *headteacher*, *usb*,
+  hardest words (after lenient scoring, 72 of 783 clips still differ from the intended word, against 157 for the British voice; most are recognition noise on isolated words, and they are listed in `docs/voice-review.md` for a listening check). The voice has an American accent while the unit texts keep British spelling; if a British accent is required, `scripts/build-voice.py render` accepts a British speaker such as `bf_emma`. Unit words missing from the pronunciation lexicon (for example *headteacher*, *usb*,
   *noticeboard*) are composed from their parts so no word is skipped.
 
 ### Animation (`procedural-motion.js`)
@@ -115,7 +115,7 @@ choices are under "Creature, arena and mode".
 
 ## Validation
 
-- Automated tests: see the final count in the README. New tests (`tests/runs.test.mjs`) cover the run
+- Automated tests: **231 passed, 0 failed** (`npm test`). New tests (`tests/runs.test.mjs`) cover the run
   layout, chests, format rotation across evolutions, spaced repetition and cramming limits, explanations for
   every format, Wordex counts, quests, streaks and cosmetics. App tests now play real runs to the chest,
   evolve after a perfect first run and offer the guardian at the chest.
@@ -130,6 +130,8 @@ choices are under "Creature, arena and mode".
 
 - **Rigging**: the nineteen unrigged forms need a professional rig and authored walk, flap and slither clips.
 - **Listening review**: music and voice were checked objectively (key analysis, Whisper transcription), not
-  by ear. A teacher should listen to a sample of voice clips and each music loop.
+  by ear. A teacher should listen to the clips in `docs/voice-review.md`, a sample of others, and each music loop.
+- **iPhone silent switch**: Web Audio follows the ring/silent switch on iPhone, so voice and music are
+  silent while it is on. Reading support remains available in listening tasks.
 - **Phones**: frame rate on the High preset, haptics on Android, audio unlock on iPhone, and the feel of the
   new camera and dock need a real-device session (Journey journal → Graphics and performance → device report).
