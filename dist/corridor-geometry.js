@@ -1,3 +1,4 @@
+import{buildCliffs,foliageGeometry,boulderGeometry,fbm3,chunkedInstances}from'./cliff-art.js';
 import * as T from './vendor/three.module.min.js';
 import {chapterPath,pathDistance,approachPoint,CHAPTER_LENGTH,END} from './trail-layout.js';
 
@@ -147,19 +148,15 @@ export function makeCorridorEnclosure(){
  const distance=p=>Math.min(...paths.map(path=>pathDistance(p,path)));
  const radius=3.45,field=(x,z)=>distance({x,z})-radius;
  const normal=(x,z)=>{const dx=field(x+.04,z)-field(x-.04,z),dz=field(x,z+.04)-field(x,z-.04),len=Math.hypot(dx,dz)||1;return{x:dx/len,z:dz/len};};
- const height=(x,z)=>4.5+.42*Math.sin(z*.18)+.28*Math.cos(z*.53+x*.55)+(Math.abs(x)>9?.6:0);
- const buffers=[[],[],[],[]],solids=[],segments=[];
+ // Crags and dips vary the skyline so the valley shows over lower stretches of wall.
+ const height=(x,z)=>4.3+.42*Math.sin(z*.18)+.28*Math.cos(z*.53+x*.55)+(Math.abs(x)>9?.6:0)+(fbm3(x*.08,0,z*.05)-.5)*2.4;
+ const strips=[],solids=[],segments=[];
  const tri=(out,a,b,c)=>out.push(...a,...b,...c);
  const quad=(out,a,b,c,d)=>{tri(out,a,b,c);tri(out,a,c,d);};
  const availableDepth=(p,n)=>{let depth=0;for(let t=.1;t<=1.65+.001;t+=.05){if(field(p.x+n.x*t,p.z+n.z*t)<-.015)break;depth=t;}return Math.max(.03,depth);};
  const shell=(a,b)=>{
-  const an=normal(a.x,a.z),bn=normal(b.x,b.z),ha=height(a.x,a.z),hb=height(b.x,b.z),aw=availableDepth(a,an),bw=availableDepth(b,bn),offsets=[0,.18/1.65,.40/1.65,.70/1.65],levels=[0,.42,.78,1];
-  for(let l=0;l<3;l++){
-   const p=[a.x+an.x*offsets[l]*aw,ha*levels[l],a.z+an.z*offsets[l]*aw],q=[b.x+bn.x*offsets[l]*bw,hb*levels[l],b.z+bn.z*offsets[l]*bw],r=[b.x+bn.x*offsets[l+1]*bw,hb*levels[l+1],b.z+bn.z*offsets[l+1]*bw],s=[a.x+an.x*offsets[l+1]*aw,ha*levels[l+1],a.z+an.z*offsets[l+1]*aw];quad(buffers[l],p,q,r,s);
-  }
-  quad(buffers[3],[a.x+an.x*aw*.70/1.65,ha,a.z+an.z*aw*.70/1.65],[b.x+bn.x*bw*.70/1.65,hb,b.z+bn.z*bw*.70/1.65],[b.x+bn.x*bw,hb-.12,b.z+bn.z*bw],[a.x+an.x*aw,ha-.12,a.z+an.z*aw]);
-  // Back faces seal the narrow cliff shell without filling the scenic valley.
-  quad(buffers[0],[a.x+an.x*aw,0,a.z+an.z*aw],[a.x+an.x*aw,ha-.12,a.z+an.z*aw],[b.x+bn.x*bw,hb-.12,b.z+bn.z*bw],[b.x+bn.x*bw,0,b.z+bn.z*bw]);
+  const an=normal(a.x,a.z),bn=normal(b.x,b.z),ha=height(a.x,a.z),hb=height(b.x,b.z),aw=availableDepth(a,an),bw=availableDepth(b,bn);
+  strips.push({a,b,an,bn,ha,hb,aw,bw});
   const mid={x:(a.x+b.x)/2,z:(a.z+b.z)/2},n=normal(mid.x,mid.z),r=.63,c={x:mid.x+n.x*.48,z:mid.z+n.z*.48};
   // Explicit clearance check includes task approach spurs for adult radius .78.
   if(protectedRoutes.every(path=>pathDistance(c,path)>r+.78+.025))solids.push({id:'cliff-'+solids.length,kind:'cliff',shape:'circle',x:c.x,z:c.z,r,minY:0,maxY:Math.max(ha,hb)+.1});
@@ -172,10 +169,16 @@ export function makeCorridorEnclosure(){
   for(let e=0;e<4;e++){const j=(e+1)%4;if((vs[e]<0)!==(vs[j]<0)){const t=vs[e]/(vs[e]-vs[j]);hits.push({x:ps[e].x+(ps[j].x-ps[e].x)*t,z:ps[e].z+(ps[j].z-ps[e].z)*t});}}
   if(hits.length===2)shell(hits[0],hits[1]);else if(hits.length===4){shell(hits[0],hits[1]);shell(hits[2],hits[3]);}
  }
- const materials=[m.dark,m.stone,new T.MeshStandardMaterial({color:'#7f8c77',roughness:1,side:T.DoubleSide}),m.moss];
- buffers.forEach((positions,i)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.computeVertexNormals();materials[i].side=T.DoubleSide;const mesh=new T.Mesh(geo,materials[i]);mesh.name=['cliff-foot-and-back','cliff-middle','cliff-crown','continuous-moss-cap'][i];mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);});
- // Sparse faceted outcrops give the otherwise merged strips a readable rock scale.
- const sites=segments.filter(({a,b},i)=>{if(i%9)return false;const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return field(x+n.x*1.1,z+n.z*1.1)>.80;}),rocks=new T.InstancedMesh(new T.DodecahedronGeometry(1,0),m.dark,sites.length),caps=new T.InstancedMesh(new T.DodecahedronGeometry(1,0),m.moss,sites.length),o=new T.Object3D();
- sites.forEach(({a,b},i)=>{const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z),h=height(x,z);o.position.set(x+n.x*1.1,h*.47,z+n.z*1.1);o.rotation.set(.08*Math.sin(i),i*.67,.07*Math.cos(i));o.scale.set(.57,h*.52,.57);o.updateMatrix();rocks.setMatrixAt(i,o.matrix);o.position.y=h-.10;o.scale.set(.64,.19,.64);o.updateMatrix();caps.setMatrixAt(i,o.matrix);});rocks.castShadow=true;rocks.receiveShadow=true;caps.receiveShadow=true;g.add(rocks,caps);
+ const cliffs=buildCliffs(strips);for(const mesh of cliffs.meshes)g.add(mesh);
+ // Faceted outcrops at the foot of the wall, bushes along the rim and occasional trees on the crest.
+ const sites=segments.filter(({a,b},i)=>{if(i%9)return false;const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return field(x+n.x*1.1,z+n.z*1.1)>.80;}).map(({a,b})=>{const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return{x:x+n.x*1.15,z:z+n.z*1.15,size:.55+fbm3(x,1,z)*.6};});
+ const rockMaterial=new T.MeshStandardMaterial({color:'#b4ab94',vertexColors:true,roughness:.95,flatShading:true}),leafMaterial=new T.MeshStandardMaterial({color:'#5f8a4c',vertexColors:true,roughness:.9,flatShading:true}),barkMaterial=new T.MeshStandardMaterial({color:'#6e5641',roughness:.95});
+ const bushSpots=cliffs.rim.filter((_,i)=>i%5===0),treeSpots=cliffs.rim.filter((r,i)=>i%15===7&&r.depth>1.2),bush=foliageGeometry(2,1),crown=foliageGeometry(5,1),trunk=new T.CylinderGeometry(.09,.15,1,6),rock=boulderGeometry(3);
+ const add=list=>{for(const mesh of list)g.add(mesh);};
+ add(chunkedInstances(rock,rockMaterial,sites,(o,r,i)=>{o.position.set(r.x,r.size*.25,r.z);o.rotation.set(.2*Math.sin(i),i*.67,.15*Math.cos(i));o.scale.set(r.size*1.1,r.size*.85,r.size);},'cliff-outcrops'));
+ add(chunkedInstances(bush,leafMaterial,bushSpots,(o,r,i)=>{const k=.32+fbm3(r.x*.7,2,r.z*.7)*.45;o.position.set(r.x+r.nx*r.depth*.35,r.y+k*.35,r.z+r.nz*r.depth*.35);o.rotation.set(0,i*1.3,0);o.scale.set(k*1.3,k,k*1.2);},'rim-bushes'));
+ const trees=treeSpots.map(r=>({...r,h:1.4+fbm3(r.x*.5,4,r.z*.5)*1.6,x:r.x+r.nx*r.depth*.6,z:r.z+r.nz*r.depth*.6}));
+ add(chunkedInstances(trunk,barkMaterial,trees,(o,r,i)=>{o.rotation.set(0,i,0);o.position.set(r.x,r.y+r.h*.4,r.z);o.scale.set(1,r.h*.8,1);},'rim-tree-trunks'));
+ add(chunkedInstances(crown,leafMaterial,trees.flatMap(r=>[{...r,k:0},{...r,k:1}]),(o,r)=>{const s=(.75-r.k*.22)*r.h*.55;o.rotation.set(0,r.h*3,0);o.position.set(r.x+(r.k?.18:0),r.y+r.h*(.82+r.k*.32),r.z);o.scale.set(s,s*.9,s);},'rim-tree-crowns'));
  g.userData={solids,collidersInWorldSpace:true,pathUnionRadius:radius,segments:segments.length,wallHeight:[3.8,5.8],adultRadius:.78,protectedRoutes:protectedRoutes.length};ENCLOSURE_CACHE={key:cacheKey,group:cloneEnclosure(g)};return g;
 }

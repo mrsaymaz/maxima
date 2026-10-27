@@ -140,3 +140,39 @@ export function creatureRim(model,color='#d6f4df'){
  const rim={value:new T.Color(color)},tint={value:new T.Vector4(1,1,1,0)};model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m?.isMeshStandardMaterial||m.userData.rim)continue;m.userData.rim=rim;m.onBeforeCompile=shader=>{shader.uniforms.uRim=rim;shader.uniforms.uTint=tint;shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uRim;\nuniform vec4 uTint;').replace('#include <map_fragment>','#include <map_fragment>\n\t{ float coatLuma = dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ); diffuseColor.rgb = mix( diffuseColor.rgb, min( uTint.rgb * coatLuma * 1.9, vec3( 1.0 ) ), uTint.a ); }').replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n\t{ float creatureFacing = saturate( dot( geometryNormal, geometryViewDir ) ); reflectedLight.indirectDiffuse += uRim * pow( 1.0 - creatureFacing, 2.4 ) * 0.5; }');};m.customProgramCacheKey=()=>'maxima-creature-rim-v2';m.needsUpdate=true;}});
  return{rim,tint};
 }
+
+// Surface detail for untextured world props: world-space (triplanar) stone, wood or foliage detail and a
+// soft contact darkening near the ground, so primitive shapes read as carved stone, timber and leaves.
+function detailTexture(kind,size=128){
+ const data=new Uint8ClampedArray(size*size*4),base=fbm(size,[4,8,16],kind==='wood'?211:kind==='leaf'?337:149),fine=fbm(size,[16,32],kind==='wood'?17:53),rnd=random(kind.length*97);
+ const lum=new Float32Array(size*size);for(let y=0;y<size;y++)for(let x=0;x<size;x++){const i=y*size+x;
+  if(kind==='wood'){const g=Math.sin((x/size*18+base(x,y)*5)*Math.PI);lum[i]=.82+g*.08+(fine(x,y)-.5)*.16;}
+  else if(kind==='leaf'){lum[i]=.74+base(x,y)*.3+(fine(x,y)-.5)*.2;}
+  else{lum[i]=.76+(base(x,y)-.5)*.34+(fine(x,y)-.5)*.16;}}
+ if(kind==='stone')for(let k=0;k<26;k++){let x=rnd()*size,y=rnd()*size,a=rnd()*Math.PI*2;for(let s=0;s<22;s++){a+=(rnd()-.5)*.9;x+=Math.cos(a);y+=Math.sin(a);const i=((Math.floor(y)%size+size)%size)*size+((Math.floor(x)%size+size)%size);lum[i]-=.18;}}
+ for(let i=0;i<size*size;i++){const v=Math.max(.35,Math.min(1,lum[i]))*255;data[i*4]=data[i*4+1]=data[i*4+2]=v;data[i*4+3]=255;}
+ return texture(data,size);
+}
+let DETAIL=null;
+export function propKind(material){
+ if(!material?.isMeshStandardMaterial||material.map||material.vertexColors||material.transparent||material.userData.ground||material.userData.rim||material.userData.stylized)return null;
+ if(material.metalness>.3||material.emissiveIntensity>.2&&material.emissive?.getHex())return null;
+ const hsl={};material.color.getHSL(hsl);if(material.roughness<.4&&hsl.h>.4&&hsl.h<.6)return null;
+ if(hsl.s>.18&&hsl.h>.17&&hsl.h<.45)return'leaf';if(hsl.s>.2&&hsl.h>.03&&hsl.h<.13)return'wood';return'stone';
+}
+export function stylizeProps(root){
+ if(!root)return 0;DETAIL??={stone:detailTexture('stone'),wood:detailTexture('wood'),leaf:detailTexture('leaf')};let count=0;
+ root.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){const kind=propKind(m);if(!kind)continue;m.userData.stylized=kind;count++;const tex=DETAIL[kind],scale=kind==='wood'?1.6:kind==='leaf'?1.1:.75;
+  m.onBeforeCompile=shader=>{shader.uniforms.uDetail={value:tex};shader.uniforms.uDetailScale={value:scale};
+   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDetailPos;\nvarying vec3 vDetailNormal;').replace('#include <fog_vertex>','#include <fog_vertex>\n\t#ifdef USE_INSTANCING\n\t\tvec4 detailWorld = modelMatrix * instanceMatrix * vec4( transformed, 1.0 );\n\t\tvDetailNormal = normalize( mat3( modelMatrix ) * mat3( instanceMatrix ) * objectNormal );\n\t#else\n\t\tvec4 detailWorld = modelMatrix * vec4( transformed, 1.0 );\n\t\tvDetailNormal = normalize( mat3( modelMatrix ) * objectNormal );\n\t#endif\n\tvDetailPos = detailWorld.xyz;');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vDetailPos;\nvarying vec3 vDetailNormal;\nuniform sampler2D uDetail;\nuniform float uDetailScale;').replace('#include <map_fragment>',`#include <map_fragment>
+	{
+		vec3 bw = pow( abs( normalize( vDetailNormal ) ), vec3( 4.0 ) ); bw /= bw.x + bw.y + bw.z;
+		vec3 p = vDetailPos * uDetailScale;
+		float detail = texture2D( uDetail, p.yz ).r * bw.x + texture2D( uDetail, p.xz ).r * bw.y + texture2D( uDetail, p.xy ).r * bw.z;
+		float contact = mix( 0.62, 1.0, smoothstep( 0.0, 0.55, vDetailPos.y ) );
+		diffuseColor.rgb *= detail * 1.22 * contact;
+	}`);};
+  m.customProgramCacheKey=()=>'maxima-prop-'+kind;m.needsUpdate=true;}});
+ return count;
+}
