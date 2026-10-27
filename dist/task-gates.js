@@ -5,7 +5,7 @@ import{bevelBox,carvedCylinder,rockLump,liquidMaterial}from'./prop-art.js';
 // wither, bell flowers swing aside, a balance lifts its arm. Everything is visual; the expedition decides passage.
 // When open, nothing remains over the 5 m walkway (|x| < 2.5) higher than the ground.
 
-export const THEMED_GATES=['translation','sentence','intruder','listen-word','numbers'];
+export const THEMED_GATES=['translation','sentence','intruder','listen-word','numbers','ending','correct','spelling','listen-tr','halves'];
 const PALETTES=[
  {stone:'#a39c88',dark:'#5f5b4e',moss:'#5f8452',wood:'#8b6b4a',metal:'#c8a25a',glow:'#8ff0cf',bramble:'#5a4334',thorn:'#8f7562',leaf:'#4f7a45',petal:'#f6efff',bell:'#c7a2e6',water:'#5cabae',ink:'#2f3b33'},
  {stone:'#c9bfa2',dark:'#7a705c',moss:'#7f9a6c',wood:'#9a7a55',metal:'#d8b56a',glow:'#9fe3f2',bramble:'#6b5544',thorn:'#a08a74',leaf:'#6f9a64',petal:'#fff8e8',bell:'#9cc7ef',water:'#48a7c4',ink:'#4a4435'},
@@ -130,7 +130,86 @@ function balanceGate(k,g){
  };
 }
 
-const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate};
+
+// Fruit tree: two heavy branches reach across the path; the fruit ripens and drops, then the branches swing aside.
+function fruitTree(k,g){
+ const{m,mesh,geo,tube,mat}=k,bark=mat(new T.Color(k.p.wood).multiplyScalar(.7).getStyle()),fruitMat=mat('#8fb860',{emissive:'#f0a050',emissiveIntensity:0}),leafGeo=geo('clump',()=>{const c=new T.IcosahedronGeometry(.5,1);c.scale(1,.7,1);return c;});
+ tube([[-3.95,0,0],[-3.85,1.4,.1],[-3.95,2.8,-.05],[-4.05,3.6,0]],.34,bark,g,14);for(let i=0;i<4;i++){const r=mesh(rockLump(i+1),bark,-3.95+Math.cos(i*1.6)*.45,.12,Math.sin(i*1.6)*.45,g);r.scale.set(.3,.22,.3);}
+ for(let i=0;i<4;i++){const c=mesh(leafGeo,m.leaf,-4.15+Math.cos(i*1.7)*.5,3.75+(i%2)*.45,Math.sin(i*1.7)*.6,g);c.scale.setScalar(1.25);}
+ const fruits=[],branches=[[1.85,1],[2.55,-1]].map(([y,turn],b)=>{const pivot=new T.Group();pivot.position.set(-3.85,y,b?.15:-.1);g.add(pivot);
+  tube([[0,0,0],[2,-.25,0],[4.2,-.55-b*.1,.05],[6.2,-.75-b*.15,0]],.12-b*.02,bark,pivot,16);
+  for(let i=0;i<4;i++){const x=1.9+i*1.4,c=mesh(leafGeo,m.leaf,x,-.25-i*.14+.25,0,pivot);c.scale.set(1,.8,1);const f=mesh(geo('fruit',()=>new T.IcosahedronGeometry(.16,1)),fruitMat,x+.2,-.65-i*.14,.1,pivot);fruits.push({f,y:f.position.y,i:fruits.length});}
+  return{pivot,turn};});
+ return f=>{
+  fruitMat.color.set('#8fb860').lerp(new T.Color('#f2994a'),smooth(span(f,0,.35)));fruitMat.emissiveIntensity=.25*smooth(span(f,.1,.4));
+  for(const q of fruits){const t=span(f,.18+q.i*.045,.32+q.i*.045);q.f.position.y=q.y-smooth(t)*2.2;q.f.visible=t<1;q.f.scale.setScalar(1-t*.4);}
+  for(const b of branches){const t=smooth(span(f,.55,1));b.pivot.rotation.y=b.turn*t*Math.PI/2;b.pivot.rotation.z=t*.18;}
+ };
+}
+
+// Signposts in fog: three signs hang over a fog bank; the wrong two crumble, the fog clears and the right one points the way.
+function signposts(k,g){
+ const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,fog=mat('#f4f1e8',{transparent:true,opacity:.62,depthWrite:false,roughness:1});
+ for(const s of[-1,1]){mesh(cyl(.13,.18,2.7,8),m.wood,s*3.05,1.35,0,g);mesh(cyl(.2,.16,.12,8),m.dark,s*3.05,2.74,0,g);}
+ const rope=rod(m.ink,.018,g);stretch(rope,new T.Vector3(-3.0,2.35,0),new T.Vector3(3.0,2.35,0));
+ const arrow=geo('arrow',()=>{const b=bevelBox(1.25,.38,.09,.03),tip=new T.ConeGeometry(.27,.32,4);tip.rotateZ(-Math.PI/2);tip.rotateX(Math.PI/4);tip.scale(1,1,.33);tip.translate(.78,0,0);const pos=[...b.attributes.position.array],nor=[...b.attributes.normal.array],t2=tip.toNonIndexed();pos.push(...t2.attributes.position.array);nor.push(...t2.attributes.normal.array);const out=new T.BufferGeometry();out.setAttribute('position',new T.Float32BufferAttribute(pos,3));out.setAttribute('normal',new T.Float32BufferAttribute(nor,3));return out;});
+ const signs=[-1.7,0,1.7].map((x,i)=>{const sign=new T.Group();sign.position.set(x,1.75,.05);g.add(sign);const plank=mesh(arrow,i===1?mat(k.p.wood,{emissive:k.p.glow,emissiveIntensity:0}):m.wood,0,0,0,sign);plank.rotation.y=i===0?Math.PI:0;for(let j=0;j<3;j++)mesh(box(.22+((i+j)%2)*.16,.04,.02,.008),m.ink,-.35+j*.33,.03,.06,sign);const strings=[-.4,.4].map(dx=>{const r=rod(m.ink,.01,g);return{r,dx};});return{sign,plank,strings,x,i};});
+ const puffs=[];for(let i=0;i<9;i++){const p=mesh(geo('puff',()=>{const q=new T.SphereGeometry(.8,10,6);q.scale(1,.42,.8);return q;}),fog,-2.5+i*.62,.35+(i%2)*.1,(i%3-1)*.35,g);p.castShadow=false;puffs.push(p);}
+ return(f,time=0)=>{
+  for(const s of signs){if(s.i===1){const t=smooth(span(f,.5,1));s.sign.position.set(s.x+t*3.0,1.75+Math.sin(t*Math.PI)*.6-t*.15,.05+t*.22);s.sign.rotation.set(0,t*Math.PI/2,Math.sin(time*1.3)*.04*(1-t));s.plank.material.emissiveIntensity=.7*smooth(span(f,.35,.6));}
+   else{const t=span(f,s.i?.2:.05,s.i?.45:.3);s.sign.rotation.z=(s.i?-1:1)*smooth(t)*1.1;s.sign.position.y=1.75-smooth(t)*1.6;s.sign.scale.setScalar(Math.max(.001,1-smooth(span(t,.55,1))));s.sign.visible=t<1;}
+   for(const st of s.strings){st.r.visible=f<.5&&s.sign.visible;stretch(st.r,new T.Vector3(s.sign.position.x+st.dx,2.35,0),new T.Vector3(s.sign.position.x+st.dx,s.sign.position.y+.2,s.sign.position.z));}}
+  rope.visible=f<.55;fog.opacity=.62*(1-smooth(span(f,.25,.8)));for(const p of puffs){p.visible=f<.8;p.position.x+=Math.sin(time*.4+p.position.z)*.0008;}
+ };
+}
+
+// Mushroom ring: corrupted glowing mushrooms crowd the path; they burst one by one and the edge mushrooms heal.
+function mushroomRing(k,g){
+ const{m,mesh,cyl,geo,mat}=k,sick=mat('#8a5aa8',{emissive:'#a070d0',emissiveIntensity:.45}),stem=mat('#d9cdb8'),spot=mat('#efe6f6',{emissive:'#d8c8f0',emissiveIntensity:.3});
+ const capGeo=geo('cap',()=>{const c=new T.SphereGeometry(.5,14,8,0,Math.PI*2,0,Math.PI/2);c.scale(1,.62,1);return c;}),spotGeo=geo('spot',()=>new T.CircleGeometry(.07,8));
+ const make=(x,z,h,r,cap)=>{const grp=new T.Group();grp.position.set(x,0,z);g.add(grp);mesh(cyl(r*.24,r*.32,h,8),stem,0,h/2,0,grp);const c=mesh(capGeo,cap,0,h-.02,0,grp);c.scale.multiplyScalar(r*2);for(let j=0;j<4;j++){const a=j*1.7,d=mesh(spotGeo,spot,Math.cos(a)*r*.55,h+r*.35+(j%2)*r*.08,Math.sin(a)*r*.55,grp);d.lookAt(new T.Vector3(Math.cos(a)*r*4,h+r*2,Math.sin(a)*r*4).add(grp.position));}return grp;};
+ const big=[[-1.9,.2,1.25,.75],[-.7,-.35,1.7,.95],[.6,.25,1.4,.85],[1.8,-.25,1.1,.7],[-.05,.75,.8,.55],[1.2,.85,.7,.5]].map(([x,z,h,r],i)=>({grp:make(x,z,h,r,sick),i}));
+ const healthyCap=mat('#c45a3c'),edge=[];for(const s of[-1,1])for(let i=0;i<3;i++)edge.push(make(s*(2.95+(i%2)*.25),(i-1)*.55,.42+i*.12,.28,healthyCap));
+ const spores=[];for(let i=0;i<14;i++){const sp=mesh(geo('spore',()=>new T.OctahedronGeometry(.04,0)),spot,-2+((i*7)%10)*.42,.5,((i*3)%5-2)*.3,g);sp.castShadow=false;spores.push(sp);}
+ const healthy=new T.Color('#c45a3c'),purple=new T.Color('#8a5aa8');
+ return(f,time=0)=>{
+  for(const b of big){const t=span(f,.08+b.i*.12,.24+b.i*.12),pop=t<.35?1+Math.sin(t/.35*Math.PI)*.18:Math.max(.001,1-smooth((t-.35)/.65));b.grp.scale.set(pop,t<.35?pop:pop*.6+.001,pop);b.grp.visible=t<1;}
+  healthyCap.color.copy(purple).lerp(healthy,smooth(span(f,.4,1)));sick.emissiveIntensity=.35+.15*Math.sin(time*2.2);
+  spores.forEach((sp,i)=>{sp.visible=f<.85;sp.position.y=.4+((time*.25+i*.13)%1)*1.6;});
+ };
+}
+
+// Crystal chimes: chimes hang across the path from a split beam; each rings and shatters, then the beam folds up.
+function crystalChimes(k,g){
+ const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,glass=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.55,roughness:.15,metalness:.1,transparent:true,opacity:.85});
+ for(const s of[-1,1]){mesh(cyl(.2,.28,3.1,6),m.stone,s*3.05,1.55,0,g);mesh(box(.6,.2,.6,.05),m.dark,s*3.05,3.15,0,g);}
+ const halves=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*3.0,3.0,0);g.add(pivot);mesh(box(3.0,.16,.2,.04),m.wood,-s*1.5,0,0,pivot);return{pivot,s};});
+ const chimeGeo=geo('chime',()=>{const c=new T.OctahedronGeometry(.22,0);c.scale(.8,2.2,.8);return c;}),shardGeo=geo('shard',()=>new T.OctahedronGeometry(.07,0));
+ const chimes=[-2.4,-1.6,-.8,0,.8,1.6,2.4].map((x,i)=>{const len=1.3+((i*5)%4)*.25,c=mesh(chimeGeo,glass,x,3.0-len,0,g);const string=rod(m.ink,.008,g);stretch(string,new T.Vector3(x,2.95,0),new T.Vector3(x,3.0-len+.45,0));const shards=[0,1,2,3].map(j=>{const s=mesh(shardGeo,glass,x,3.0-len,0,g);s.visible=false;s.castShadow=false;return s;});return{c,string,shards,x,y:3.0-len,i};});
+ return(f,time=0)=>{
+  for(const ch of chimes){const t=span(f,.05+ch.i*.085,.2+ch.i*.085);ch.c.rotation.z=Math.sin(time*2+ch.i)*.06+(t>0&&t<.4?Math.sin(t*60)*.15:0);ch.c.visible=t<.4;ch.string.visible=t<.4;
+   ch.shards.forEach((s,j)=>{const a=j*Math.PI/2+ch.i,u=span(t,.4,1);s.visible=u>0&&u<1;s.position.set(ch.x+Math.cos(a)*u*.9,ch.y+u*.5-u*u*1.6,Math.sin(a)*u*.9);s.scale.setScalar(1-u*.7);});}
+  const fold=smooth(span(f,.72,1));for(const h of halves)h.pivot.rotation.z=-h.s*fold*Math.PI/2;
+ };
+}
+
+// Split-log bridge: broken log halves jut up from a murky stream; they swing down and join into a crossing.
+function splitLogs(k,g){
+ const{m,mesh,box,cyl,geo,mat}=k,water=liquidMaterial(new T.Color(k.p.water).lerp(new T.Color(k.p.moss),.45).getStyle(),{local:true,halfWidth:3.3,halfLength:1.15});k.materials.push(water);
+ const stream=mesh(new T.BoxGeometry(6.6,.04,2.3),water,0,0,0,g);stream.castShadow=false;
+ for(const s of[-1,1])for(let i=0;i<5;i++){const l=mesh(rockLump(i+1),i%2?m.moss:m.stone,s*(2.95+(i%2)*.3),.12,(i-2)*.5,g);l.scale.set(.34,.3,.32);}
+ const split=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.45).getStyle()),bark=mat(new T.Color(k.p.wood).multiplyScalar(.72).getStyle()),barkShell=mat(new T.Color(k.p.wood).multiplyScalar(.62).getStyle(),{side:T.DoubleSide});
+ const halves=[];[-1.25,0,1.25].forEach((x,i)=>{for(const end of[-1,1]){const pivot=new T.Group();pivot.position.set(x,.03,end*1.15);g.add(pivot);
+  // Each half reaches from its bank to the middle; its flat split face stays on top when it lies down.
+  mesh(box(.62,.05,1.15,.02),split,0,0,-end*.575,pivot);const shell=mesh(geo('bark',()=>{const c=new T.CylinderGeometry(.31,.31,1.15,10,1,true,-Math.PI/2,Math.PI);c.rotateX(Math.PI/2);return c;}),barkShell,0,-.02,-end*.575,pivot);shell.scale.y=.75;
+  const tip=mesh(geo('splinter',()=>new T.ConeGeometry(.08,.3,4)),split,(end>0?.15:-.15),0,-end*1.15,pivot);tip.rotation.x=-end*Math.PI/2;tip.name='splinter';
+  halves.push({pivot,end,i,tip});}});
+ return f=>{
+  for(const h of halves){const t=span(f,.08+h.i*.24,.38+h.i*.24),drop=smooth(t),bounce=t>0&&t<1?Math.sin(t*Math.PI*3)*(1-t)*.08:0;h.pivot.rotation.x=h.end*(1-drop)*1.15+bounce*h.end;h.tip.visible=t<1;h.tip.scale.setScalar(t<1?1:.001);}
+ };
+}
+
+const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate,ending:fruitTree,correct:signposts,spelling:mushroomRing,'listen-tr':crystalChimes,halves:splitLogs};
 export function makeTaskGate(type,{area=0}={}){const k=gateKit(area),g=new T.Group();g.name='task-gate-'+type;const update=BUILDERS[type](k,g);g.userData.materials=k.materials;return{group:g,update};}
 
 // Task-stage dressing for the same five types. The stage keeps the shared layout (piece positions, sizes and touch
@@ -171,7 +250,47 @@ export function themeStage(type,plan,area=0){
   const tag=looks(m.wood,'#e7c37a',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w*.94,e.h*.9,.12,.05),tag.idle,0,0,0,g);for(const s of[-1,1]){tube([[s*(e.w/2+.08),-e.h*.15,-.05],[s*(e.w/2-.02),e.h*.38,.1],[s*(e.w/2-.3),e.h/2+.02,.12],[s*(e.w/2-.62),e.h/2+.2,-.04]],.05,m.bramble,g,10);for(let j=0;j<2;j++){const th=mesh(geo('thorn',()=>new T.ConeGeometry(.045,.18,4)),m.thorn,s*(e.w/2-.1-j*.25),e.h/2+.06+j*.06,.12,g);th.rotation.z=s*(j?.4:1.2);}}return{face,looks:tag};};
   animated.push(f=>{const dry=smooth(f);m.bramble.color.set(k.p.bramble).lerp(new T.Color(k.p.thorn),dry*.6);vines.forEach((v,i)=>{v.scale.y=1-dry*.06*(i+1);});});
- }else{
+
+ }else if(type==='ending'){
+  // A fruit tree: trunk at the side, branches over the plaques, one fruit per answer that ripens as the task goes on.
+  const bark=mat(new T.Color(k.p.wood).multiplyScalar(.7).getStyle()),fruit=mat('#8fb860',{emissive:'#f0a050',emissiveIntensity:0}),clump=geo('clump',()=>{const c=new T.IcosahedronGeometry(.6,1);c.scale(1,.7,1);return c;});
+  tube([[-3.05,0,-.45],[-2.95,H*.45,-.4],[-3.1,H*.8,-.45],[-2.6,H+.1,-.5]],.3,bark,object,14);tube([[-2.9,H-.2,-.45],[-1,H+.15,-.4],[1.2,H,-.45],[3.0,H-.25,-.5]],.14,bark,object,16);
+  for(let i=0;i<7;i++){const c=mesh(clump,m.leaf,-3+i*1.0,H-.15+(i%2)*.25,-.75,object);c.scale.setScalar(1.15);}for(let i=0;i<4;i++){const c=mesh(clump,m.leaf,-3.15+(i%2)*.35,H*.45+i*.5,-.6,object);c.scale.setScalar(.9);}for(let i=0;i<3;i++){const r=mesh(rockLump(i+1),bark,-3.05+Math.cos(i*2)*.4,.1,-.45+Math.sin(i*2)*.3,object);r.scale.set(.3,.2,.3);}
+  const fruits=[],plaque=looks(mat(new T.Color(k.p.petal).lerp(new T.Color(k.p.leaf),.18).getStyle()),'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.14,Math.min(.25,e.h*.4)),plaque.idle,0,0,0,g);const f=mesh(geo('fruit',()=>new T.IcosahedronGeometry(.2,1)),fruit,e.w/2-.22,e.h/2+.05,.12,g);fruits.push(f);mesh(geo('fleaf',()=>{const q=new T.SphereGeometry(.16,7,4);q.scale(1,.25,.5);return q;}),m.leaf,e.w/2-.02,e.h/2+.2,.08,g).rotation.z=-.6;return{face,looks:plaque};};
+  animated.push((f,time)=>{fruit.color.set('#8fb860').lerp(new T.Color('#f2994a'),smooth(f));fruit.emissiveIntensity=.3*smooth(f);fruits.forEach((q,i)=>{q.rotation.z=Math.sin(time*1.4+i)*.12;});});
+ }else if(type==='correct'){
+  // Signposts in fog: a tall post carries the arrow signs; the fog thins as the right sentences are chosen.
+  mesh(cyl(.17,.24,H+.1,8),m.wood,0,(H+.1)/2,-.5,object);mesh(cyl(.3,.22,.18,8),m.dark,0,H+.12,-.5,object);mesh(cyl(.5,.62,.24,8),m.dark,0,.12,-.5,object);
+  const fog=mat('#f4f1e8',{transparent:true,opacity:.55,depthWrite:false,roughness:1}),puffs=[];for(let i=0;i<8;i++){const p=mesh(geo('puff',()=>{const q=new T.SphereGeometry(.9,10,6);q.scale(1,.4,.7);return q;}),fog,-3+i*.86,.32+(i%2)*.1,.6+(i%3)*.25,object);p.castShadow=false;puffs.push(p);}
+  const sign=looks(m.wood,'#e7c37a',k.p.glow);
+  piece=(e,g)=>{const s=e.x<0?-1:1,face=mesh(box(e.w,e.h,.12,.04),sign.idle,0,0,0,g),tip=mesh(geo('signtip',()=>{const c=new T.ConeGeometry(.5,.36,4);c.rotateZ(-Math.PI/2);c.rotateX(Math.PI/4);c.scale(1,1,.25);return c;}),sign.idle,s*(e.w/2+.17),0,0,g);tip.scale.set(s,e.h/1.0,1);return{face,looks:sign,tints:[tip]};};
+  animated.push(f=>{fog.opacity=.55*(1-smooth(f)*.85);});
+ }else if(type==='spelling'){
+  // Corrupted mushrooms: tall caps at the sides and a cap above each word; they heal as faulty words are found.
+  const sick=mat('#8a5aa8',{emissive:'#a070d0',emissiveIntensity:.45}),stem=mat('#d9cdb8'),spotM=mat('#efe6f6',{emissive:'#d8c8f0',emissiveIntensity:.3}),cap=geo('cap',()=>{const c=new T.SphereGeometry(.5,14,8,0,Math.PI*2,0,Math.PI/2);c.scale(1,.62,1);return c;});
+  for(const s of[-1,1])for(let i=0;i<2;i++){const h=H*(.55-i*.18),x=s*(3.0-i*.15),z=-.4+i*.5;mesh(cyl(.14,.2,h,8),stem,x,h/2,z,object);const c=mesh(cap,sick,x,h,z,object);c.scale.setScalar(1.6-i*.4);}
+  const spores=[];for(let i=0;i<12;i++){const sp=mesh(geo('spore',()=>new T.OctahedronGeometry(.045,0)),spotM,-2.8+((i*7)%12)*.5,1,-.2+(i%3)*.2,object);sp.castShadow=false;spores.push(sp);}
+  const tag=looks(mat('#efe4d0'),'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.14,.06),tag.idle,0,0,0,g);mesh(cyl(.07,.09,.28,7),stem,-e.w/2+.3,e.h/2+.1,.02,g);const c=mesh(cap,sick,-e.w/2+.3,e.h/2+.22,.02,g);c.scale.setScalar(.75);return{face,looks:tag};};
+  const healthy=new T.Color('#c45a3c'),purple=new T.Color('#8a5aa8');
+  animated.push((f,time)=>{sick.color.copy(purple).lerp(healthy,smooth(f));sick.emissiveIntensity=.45*(1-smooth(f))+.05*Math.sin(time*2.2);spores.forEach((sp,i)=>{sp.visible=f<.95;sp.position.y=.6+((time*.22+i*.11)%1)*(H-1);});});
+ }else if(type==='listen-tr'){
+  // Crystal chimes on a beam: spoken words hang as crystals, Turkish meanings as wooden tags, joined by light threads.
+  mesh(box(6.4,.22,.26,.05),m.wood,0,H-.12,-.25,object);for(const s of[-1,1]){mesh(cyl(.18,.26,H,6),m.stone,s*3.05,H/2,-.3,object);}
+  for(const e of pieces){const r=k.rod(m.ink,.01,object);k.stretch(r,new T.Vector3(e.x,H-.2,-.2),new T.Vector3(e.x,e.y+e.h/2,-.05));}
+  const glass=looks(mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.35,roughness:.2}),'#f3e2a0','#c9f7dc'),tag=looks(m.wood,'#e7c37a',k.p.glow);
+  piece=(e,g)=>{const left=e.action==='pair-left',face=mesh(box(e.w,e.h,left?.3:.12,left?.16:.04),left?glass.idle:tag.idle,0,0,0,g);if(left)for(const s of[-1,1]){const c=mesh(geo('pcrystal',()=>{const q=new T.OctahedronGeometry(.18,0);q.scale(.7,1.8,.7);return q;}),glass.idle,s*(e.w/2+.05),-.05,0,g);c.rotation.z=s*.2;}return{face,looks:left?glass:tag};};
+  link={material:m.glow,radius:.035};
+  animated.push((f,time)=>{glass.idle.emissiveIntensity=.3+.12*Math.sin(time*2.4);});
+ }else if(type==='halves'){
+  // Split logs over a murky stream: each sentence half is a log end; matched halves are pinned together.
+  const water=liquidMaterial(new T.Color(k.p.water).lerp(new T.Color(k.p.moss),.45).getStyle(),{local:true,halfWidth:3.2,halfLength:1.1});k.materials.push(water);const stream=mesh(new T.BoxGeometry(6.4,.04,2.2),water,0,0,1.55,object);stream.castShadow=false;
+  for(let i=0;i<9;i++){const l=mesh(rockLump(i%5+1),i%3?m.stone:m.moss,-3+i*.75,.2,.3+(i%2)*.15,object);l.scale.set(.42,.36,.34);}
+  const bark=looks(mat(new T.Color(k.p.wood).multiplyScalar(.85).getStyle()),'#e2b86e',k.p.glow),ring=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.55).getStyle()),rings=mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle());
+  piece=(e,g)=>{const left=e.action==='pair-left',s=left?1:-1,face=mesh(box(e.w,e.h,.4,.18),bark.idle,0,0,0,g);const cap=mesh(geo('endgrain',()=>{const c=new T.CylinderGeometry(.5,.5,.06,16);c.rotateZ(Math.PI/2);return c;}),ring,s*(e.w/2+.02),0,0,g);cap.scale.set(1,e.h*.88,.42/.5*.9);for(const r of[.3,.18]){const t=mesh(geo('grain'+r,()=>{const q=new T.TorusGeometry(r,.012,4,20);q.rotateY(Math.PI/2);return q;}),rings,s*(e.w/2+.06),0,0,g);t.scale.set(1,e.h*.88/1,.8);}return{face,looks:bark};};
+  link={material:mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle()),radius:.07};
+ }else if(type==='listen-word'){
   const bellGeo=geo('bell',()=>{const pts=[];for(let i=0;i<=8;i++){const t=i/8;pts.push(new T.Vector2(.04+Math.sin(t*Math.PI*.5)*.26+t*t*.06,-t*.45));}return new T.LatheGeometry(pts,10);}),heads=[];
   for(const e of pieces){const side=e.x<0?-1:1,base=new T.Vector3(side*3.0,0,-.25),top=new T.Vector3(e.x+side*(e.w/2-.25),e.y+e.h/2+.3,.42);tube([[base.x,0,base.z],[side*2.9,top.y*.6,-.3],[(base.x+top.x)/2,top.y+.35,-.2],[top.x,top.y,top.z]],.05,m.leaf,object,16);const head=new T.Group();head.position.copy(top);head.scale.setScalar(.72);object.add(head);mesh(bellGeo,e.action==='listen'?m.glow:m.bell,0,0,0,head);mesh(geo('pistil',()=>new T.SphereGeometry(.06,6,4)),m.glow,0,-.42,0,head);heads.push(head);}
   for(const s of[-1,1])for(let i=0;i<3;i++){const leaf=mesh(geo('leaf',()=>{const l=new T.SphereGeometry(.42,8,4);l.scale(1,.1,.4);return l;}),m.leaf,s*(2.6+i*.18),.3+i*.35,.1,object);leaf.rotation.set(0,i,s*.5);}

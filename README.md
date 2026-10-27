@@ -8,7 +8,7 @@ Version 0.24.0 · S-tier polish
 
 **Environment art.** The valley walls are faceted, noise-shaped canyon cliffs with strata, moss on ledges, rock detail and trees along a ragged crest. Pools have animated water with shoreline foam and rocky banks (flowing lava in Stormglass); crossing stones, ledges and moving platforms are irregular rock columns; posts, gates, barriers and crates are carved with chamfered edges in colours that match the canyon rock; rolling boulders are round and mossy and leave from rock-framed caves; pebbles, wildflowers and ferns line the trail.
 
-**Task gates.** Five task types now have their own gate and task stage: a rune bridge (English–Turkish matching), stepping stones (sentence order), a bramble wall (odd word out), bell flowers (listening) and a balance gate (numbers). Each opens in visible steps when the task is finished. The other fifteen types follow in phase 2.
+**Task gates.** Ten task types now have their own gate and task stage: a rune bridge (English–Turkish matching), stepping stones (sentence order), a bramble wall (odd word out), bell flowers (listening), a balance gate (numbers), a fruit tree (sentence endings), signposts in fog (correct sentence), a corrupted mushroom ring (spelling), crystal chimes (listen and match Turkish) and a split-log bridge (sentence halves). Each opens in visible steps when the task is finished. The other ten types follow next.
 
 **Audio.** Four original music loops (each arena plus camp) with an action layer that rises during fights and trials; recorded sound effects (Kenney CC0 kits and soundfont chimes); and a pre-recorded English voice for all 783 unit words, so listening tasks sound the same on every device.
 

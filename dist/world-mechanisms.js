@@ -81,12 +81,12 @@ export class WorldMechanism{
    else mesh(this.root,new T.CylinderGeometry(.12,.21,p.height-.5,7),families.includes(p.family)?stone:wood,side*2.8,(p.height-.5)/2,-.25);
   }
   for(const e of p.entries){
-   const g=new T.Group();g.name='piece-'+e.key;g.position.set(e.x,e.y,e.z+(e.selected?.14:0));this.root.add(g);const surface=e.done?green:e.selected?gold:families.includes(p.family)?stone:wood;let face,looks=null;
+   const g=new T.Group();g.name='piece-'+e.key;g.position.set(e.x,e.y,e.z+(e.selected?.14:0));this.root.add(g);const surface=e.done?green:e.selected?gold:families.includes(p.family)?stone:wood;let face,looks=null,tints=[];
    if(e.role==='inscription'||e.role==='assembled'){
     const plaque=mesh(g,new T.BoxGeometry(e.w,e.h,.16),e.role==='assembled'?dark:theme?.inscription||stone,0,0,0);plaque.userData.role='engraved-inscription';face=plaque;
    }else if(theme){
     // Themed pieces: rune tablets, river stones, brass weights, tags and petals instead of framed boards.
-    const art=theme.piece(e,g);face=art.face;looks=art.looks;face.material=e.done?looks.done:e.selected?looks.selected:looks.idle;
+    const art=theme.piece(e,g);face=art.face;looks=art.looks;tints=art.tints||[];face.material=e.done?looks.done:e.selected?looks.selected:looks.idle;for(const t of tints)t.material=face.material;
     if(e.placed){g.position.set(-.80+((e.order-1)%3)*.8,.20+Math.floor((e.order-1)/3)*.12,1.2+Math.floor((e.order-1)/3)*.65);g.scale.set(.34,.24,1.8);g.rotation.x=-Math.PI/2;}
    }else{
     mesh(g,new T.BoxGeometry(e.w+.08,e.h+.08,.21),edge,0,0,-.05);
@@ -102,7 +102,7 @@ export class WorldMechanism{
     if(p.family==='message')strut(this.root,new T.Vector3(e.x,e.y+e.h/2,-.12),new T.Vector3(e.x,p.height-.4,-.12),.022,edge);
    }
    const target=g.position.clone();if(oldRoot&&oldId===t.nodeId&&previous.has(e.key))g.position.copy(previous.get(e.key));
-   this.entries.set(e.key,{entry:e,mesh:g,target,face,looks,targetScale:g.scale.clone(),targetQuaternion:g.quaternion.clone()});
+   this.entries.set(e.key,{entry:e,mesh:g,target,face,looks,tints,targetScale:g.scale.clone(),targetQuaternion:g.quaternion.clone()});
   }
   for(const[a,b]of p.links)this.addLink(a,b,false);
   this.root.updateMatrixWorld(true);return p;
@@ -110,7 +110,7 @@ export class WorldMechanism{
 
  sync(t,plan,node){
   this.plan=plan;this.node=node;this.fraction=taskFraction(t);if(!this.theme)setTrailPropProgress(this.object,this.fraction);
-  for(const e of plan.entries){const v=this.entries.get(e.key),wasPlaced=v.entry.placed,pose=piecePose(e);v.entry=e;v.target.copy(pose.position);v.targetScale.copy(pose.scale);v.targetQuaternion.copy(pose.quaternion);if(e.placed&&!wasPlaced)v.motion={start:v.mesh.position.clone(),scale:v.mesh.scale.clone(),quaternion:v.mesh.quaternion.clone(),age:0,duration:.42};if(v.face&&e.role!=='inscription'&&e.role!=='assembled')v.face.material=v.looks?(e.done?v.looks.done:e.selected?v.looks.selected:v.looks.idle):e.done?this.palette.green:e.selected?this.palette.gold:this.families.includes(plan.family)?this.palette.stone:this.palette.wood;}
+  for(const e of plan.entries){const v=this.entries.get(e.key),wasPlaced=v.entry.placed,pose=piecePose(e);v.entry=e;v.target.copy(pose.position);v.targetScale.copy(pose.scale);v.targetQuaternion.copy(pose.quaternion);if(e.placed&&!wasPlaced)v.motion={start:v.mesh.position.clone(),scale:v.mesh.scale.clone(),quaternion:v.mesh.quaternion.clone(),age:0,duration:.42};if(v.face&&e.role!=='inscription'&&e.role!=='assembled')if(v.looks)for(const t of v.tints)t.material=e.done?v.looks.done:e.selected?v.looks.selected:v.looks.idle;v.face.material=v.looks?(e.done?v.looks.done:e.selected?v.looks.selected:v.looks.idle):e.done?this.palette.green:e.selected?this.palette.gold:this.families.includes(plan.family)?this.palette.stone:this.palette.wood;}
   for(const[a,b]of plan.links)this.addLink(a,b,true);this.root.updateMatrixWorld(true);return plan;
  }
  addLink(a,b,animate){

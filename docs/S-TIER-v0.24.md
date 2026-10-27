@@ -52,9 +52,9 @@ Chromium (SwiftShader WebGL) screenshots and by objective audio analysis. Real-p
 - Props without textures get triplanar stone, wood or leaf detail and contact darkening near the ground.
 - Cost: in the same phone view the High preset draws 243k triangles in 51 calls, against 274k in 48 calls before.
 
-### Themed task gates, phase 1 (`task-gates.js`)
-Five task types now have their own gate on the trail and matching scenery on their task stage. The other fifteen
-keep the previous gates until phase 2.
+### Themed task gates (`task-gates.js`)
+Ten task types now have their own gate on the trail and matching scenery on their task stage (phase 1 and the
+first half of phase 2). The other ten keep the previous gates for now.
 
 | Task | Gate on the trail | Task stage | Opening |
 |---|---|---|---|
@@ -63,6 +63,11 @@ keep the previous gates until phase 2.
 | Remove words that do not belong | A bramble wall of thorny vines woven from two tangled roots | Word tags hang from thorny vines | The vines dry out and wither back to their roots |
 | Listen and identify the word | Bell flowers lean over the path with echo rings | Petal plaques under ringing bells; the listen button is a glowing bell | The stems swing aside and the bells open |
 | Match numbers and number words | A balance gate: a lever arm rests across the path, a dial shows the balance | Brass number weights and word tags hang from a balance; links are chains | Weights drop into the pan until the arm swings up |
+| Choose a sentence ending | A fruit tree whose two heavy branches reach across the path | Leaf plaques under a fruit tree; one fruit per answer ripens as the task goes on | The fruit ripens and drops, then the branches swing aside along the trail |
+| Choose the correct sentence | Three arrow signs hang over a fog bank between two posts | Arrow signs on a tall signpost above a fog bank that thins | The wrong signs crumble, the fog clears and the right sign flies to a post and points the way |
+| Find the misspelled word | A ring of glowing, corrupted purple mushrooms | Word tags with a corrupted mushroom cap; tall mushrooms at the sides heal | The mushrooms swell and burst one by one; the mushrooms at the edge turn healthy |
+| Listen and match Turkish meanings | Crystal chimes hanging across the path from a split beam | Spoken words are crystals and Turkish meanings are tags, hanging from a beam; matches join with light threads | Each chime rings and shatters into shards, then the two beam halves fold up |
+| Match sentence halves | Broken log halves jut up from a murky stream | Each half sentence is a log end with growth rings, over a murky stream; matched halves are pinned with a dowel | The halves swing down and join into a three-log crossing |
 
 - The text sits on a compact label inside each full-size touch target, so the 3D piece shows. Piece positions, sizes
   and the camera framing are unchanged (the existing portrait/desktop touch-target tests still apply).
