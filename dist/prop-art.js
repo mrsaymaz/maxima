@@ -51,12 +51,12 @@ export function stoneColumn(r,depth,seed=1,n=13){
 }
 
 // Animated surface for pools and lava (world-space ripples, shoreline foam, moving glints).
-export function liquidMaterial(color,{lava=false,center={x:0,z:0},forward={x:0,z:-1},right={x:1,z:0},halfWidth=3,halfLength=3}={}){
+export function liquidMaterial(color,{local=false,lava=false,center={x:0,z:0},forward={x:0,z:-1},right={x:1,z:0},halfWidth=3,halfLength=3}={}){
  const material=new T.MeshStandardMaterial({color,roughness:lava?.7:.16,metalness:0,emissive:lava?'#ff6a2b':'#000000',emissiveIntensity:lava?.9:0});
  const u={uTime:WORLD_TIME,uCenter:{value:new T.Vector2(center.x,center.z)},uForward:{value:new T.Vector2(forward.x,forward.z)},uRight:{value:new T.Vector2(right.x,right.z)},uHalf:{value:new T.Vector2(halfWidth,halfLength)}};
  material.userData.liquid=u;material.userData.stylized='liquid';
  material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,u);
-  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vLiquidWorld;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvLiquidWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;');
+  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vLiquidWorld;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvLiquidWorld = '+(local?'transformed':'( modelMatrix * vec4( transformed, 1.0 ) ).xyz')+';');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
 varying vec3 vLiquidWorld;
 uniform float uTime;
@@ -86,7 +86,7 @@ float liquidWave( vec2 p ) {
 	}`);
   if(lava)shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = liquidGlow;');
  };
- material.customProgramCacheKey=()=>'maxima-liquid-'+(lava?1:0);
+ material.customProgramCacheKey=()=>'maxima-liquid-'+(lava?1:0)+(local?'l':'');
  return material;
 }
 

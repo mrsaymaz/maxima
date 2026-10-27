@@ -2,6 +2,7 @@ import * as T from './vendor/three.module.min.js';
 import {activity} from './expedition.js';
 import {chapterPath} from './trail-layout.js';
 import{makeTrailProp,setTrailPropProgress}from'./trail-props.js';import{taskFraction}from'./trail-tasks.js';
+import{THEMED_GATES,themeStage}from'./task-gates.js';import{stylizeProps}from'./world-style.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const FAMILIES={translation:'rune',definition:'pillar',picture:'crate','qa-pairs':'message',halves:'bridge',ending:'fruit',sentence:'bridge',gap:'channel',correct:'sign',repair:'seal',answer:'message',sort:'shelf',intruder:'root',spelling:'mushroom',clue:'cache','listen-word':'flower','listen-tr':'crystal','listen-multi':'bowl',numbers:'scale',instructions:'pack'};
@@ -10,7 +11,7 @@ const FAMILIES={translation:'rune',definition:'pillar',picture:'crate','qa-pairs
 // The HTML is only a sharp, accessible text/hit layer projected onto that piece.
 function raised(p){for(const e of p.entries)e.y+=1.1;p.height+=1.1;return p;}
 export function mechanismPlan(t){
- const a=activity(t.type),p={type:t.type,family:FAMILIES[t.type],caption:a.object,entries:[],links:[],height:6.5,width:6.15};
+ const a=activity(t.type),p={type:t.type,family:FAMILIES[t.type],theme:THEMED_GATES.includes(t.type)?t.type:null,caption:a.object,entries:[],links:[],height:6.5,width:6.15};
  const add=(key,text,x,y,w=2.65,h=1.04,extra={})=>p.entries.push({key,text,x,y,z:.28,w,h,...extra});
  if(t.complete){add('complete','The way is open',0,3.2,4.6,1,{role:'inscription',done:true});return raised(p);}
  if(t.kind==='pairs'){
@@ -44,12 +45,12 @@ export function mechanismPlan(t){
  return raised(p);
 }
 
-export function mechanismMarkup(plan){return `<div class="world-pieces" aria-label="${esc(plan.caption)} interactive mechanism">${plan.entries.map(e=>`<${e.action?'button':'div'} class="world-piece ${e.role||''} ${e.selected?'selected':''} ${e.done?'joined':''} ${e.placed?'laid-piece':''}" data-anchor="${esc(e.key)}" ${e.action?`type="button" data-do="${e.action}"${['pair-left','pick'].includes(e.action)?` aria-pressed="${!!e.selected}"`:''}${e.index!==undefined?` data-index="${e.index}"`:''}${e.textValue!==undefined?` data-text="${esc(e.textValue)}"`:''}${e.disabled?' disabled aria-disabled="true"':''}`:''} style="visibility:hidden">${e.image?`<img src="${esc(e.image)}" alt="Picture option" draggable="false">`:''}<span>${esc(e.text)}</span>${e.context?`<small>${esc(e.context)}</small>`:''}${e.order?`<b class="piece-order">${e.order}</b>`:''}${e.done?'<i aria-hidden="true">✓</i>':''}</${e.action?'button':'div'}>`).join('')}</div>`;}
+export function mechanismMarkup(plan){return `<div class="world-pieces"${plan.theme?` data-theme="${esc(plan.theme)}"`:''} aria-label="${esc(plan.caption)} interactive mechanism">${plan.entries.map(e=>`<${e.action?'button':'div'} class="world-piece ${e.role||''} ${e.selected?'selected':''} ${e.done?'joined':''} ${e.placed?'laid-piece':''}" data-anchor="${esc(e.key)}" ${e.action?`type="button" data-do="${e.action}"${['pair-left','pick'].includes(e.action)?` aria-pressed="${!!e.selected}"`:''}${e.index!==undefined?` data-index="${e.index}"`:''}${e.textValue!==undefined?` data-text="${esc(e.textValue)}"`:''}${e.disabled?' disabled aria-disabled="true"':''}`:''} style="visibility:hidden">${e.image?`<img src="${esc(e.image)}" alt="Picture option" draggable="false">`:''}<span>${esc(e.text)}</span>${e.context?`<small>${esc(e.context)}</small>`:''}${e.order?`<b class="piece-order">${e.order}</b>`:''}${e.done?'<i aria-hidden="true">✓</i>':''}</${e.action?'button':'div'}>`).join('')}</div>`;}
 
 function material(color,emissive=false){return new T.MeshStandardMaterial({color,roughness:.82,emissive:emissive?color:'#000000',emissiveIntensity:emissive?.28:0});}
 function mesh(group,geometry,mat,x,y,z){const m=new T.Mesh(geometry,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function strut(group,a,b,r,mat){const delta=b.clone().sub(a),m=mesh(group,new T.CylinderGeometry(r,r,delta.length(),6),mat,0,0,0);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());return m;}
-function dispose(group){const geometries=new Set(),materials=new Set(group._mechanismMaterials||[]);group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());}
+function dispose(group){const geometries=new Set(),materials=new Set(group._mechanismMaterials||[]);group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m);});const keep=group._retain;geometries.forEach(g=>{if(!keep?.has(g))g.dispose();});materials.forEach(m=>{if(!keep?.has(m))m.dispose();});}
 
 const structure=p=>JSON.stringify([p.family,p.height,p.entries.map(e=>[e.key,e.w,e.h,e.role,e.action])]);
 function piecePose(e){const position=new T.Vector3(e.x,e.y,e.z+(e.selected?.16:0)),scale=new T.Vector3(1,1,1),quaternion=new T.Quaternion();if(e.placed){position.set(-.80+((e.order-1)%3)*.8,.20+Math.floor((e.order-1)/3)*.12,1.2+Math.floor((e.order-1)/3)*.65);scale.set(.34,.24,1.8);quaternion.setFromAxisAngle(new T.Vector3(1,0,0),-Math.PI/2);}return{position,scale,quaternion};}
@@ -67,20 +68,26 @@ export class WorldMechanism{
  constructor(scene){this.effects=[];this.departures=[];this.connectionAnimations=[];this.linkMap=new Map();this.scene=scene;this.root=null;this.entries=new Map();}
  render(t,node){this.hitNodes=null;this.projectionAge=1;
   const nextPlan=mechanismPlan(t);if(!t.complete&&this.root&&this.id===t.nodeId&&this.type===t.type&&structure(nextPlan)===structure(this.plan))return this.sync(t,nextPlan,node);
-  const previous=new Map([...this.entries].map(([k,v])=>[k,v.mesh.position.clone()])),oldRoot=this.root,oldId=this.id;if(t.complete&&oldRoot&&oldId===t.nodeId){this.departures.push({mesh:oldRoot,age:0});this.root=null;}this.clear(true);
+  const previous=new Map([...this.entries].map(([k,v])=>[k,v.mesh.position.clone()])),oldRoot=this.root,oldId=this.id;// A themed stage keeps its scenery when the task completes, so the gate's opening plays on screen; only the answered pieces retract.
+  const kept=t.complete&&oldRoot&&oldId===t.nodeId&&this.theme?.type===t.type?this.theme:null;if(kept){oldRoot.remove(kept.object);oldRoot._retain=new Set(kept.materials);kept.object.traverse(o=>{if(o.geometry)oldRoot._retain.add(o.geometry);});}
+  if(t.complete&&oldRoot&&oldId===t.nodeId){this.departures.push({mesh:oldRoot,age:0});this.root=null;}this.clear(true);
   this.id=t.nodeId;this.type=t.type;this.plan=nextPlan;this.node=node;this.linkMap=new Map();this.root=new T.Group();this.root.name='world-mechanism-'+t.type;const path=node.side?chapterPath(node.chapter,node.side):null,previousPoint=path?.[node.index%4+1],back=new T.Vector3(previousPoint?previousPoint.x-node.x:0,0,previousPoint?previousPoint.z-node.z:1).normalize();this.back=back;this.root.position.set(node.x+back.x*1.35,0,node.z+back.z*1.35);this.root.rotation.y=Math.atan2(back.x,back.z);this.scene.add(this.root);
   const p=this.plan,stone=material('#d0c8ab'),wood=material('#a88659'),dark=material('#345648'),edge=material('#655c43'),green=material('#9ccca9',true),gold=material('#e3bc76'),families=['rune','pillar','seal','crystal','scale'],organic=['fruit','root','flower','mushroom'];
-  this.palette={stone,wood,dark,edge,green,gold};this.root._mechanismMaterials=Object.values(this.palette);this.families=families;this.entries=new Map();this.object=makeTrailProp(t.type);setTrailPropProgress(this.object,taskFraction(t));this.object.position.z=-.38;if(t.type==='ending'){this.object.scale.setScalar(1.5);this.object.position.z=-1.6;}this.root.add(this.object);
+  this.palette={stone,wood,dark,edge,green,gold};const theme=this.theme=kept||themeStage(t.type,p,this.area||0);this.fraction=taskFraction(t);this.root._mechanismMaterials=[...Object.values(this.palette),...(theme?.materials||[])];this.families=families;this.entries=new Map();if(theme){this.object=theme.object;if(!kept){theme.update(0,this.fraction,0);stylizeProps(theme.object);}}else{this.object=makeTrailProp(t.type);setTrailPropProgress(this.object,this.fraction);this.object.position.z=-.38;}if(t.type==='ending'){this.object.scale.setScalar(1.5);this.object.position.z=-1.6;}this.root.add(this.object);
   // Separate uprights, branches, shelves and sockets: there is no floating quiz panel.
-  if(!t.complete)for(const side of[-1,1]){
+  if(!t.complete&&!theme)for(const side of[-1,1]){
    if(organic.includes(p.family)){strut(this.root,new T.Vector3(0,.1,-.6),new T.Vector3(side*2.45,p.height-.6,-.15),.17,wood);}
    else if(t.kind==='pairs'&&families.includes(p.family)){mesh(this.root,new T.BoxGeometry(2.90,p.height-.9,.52),dark,side*1.53,(p.height-.9)/2,-.20);for(const y of[.18,p.height-1.08])mesh(this.root,new T.BoxGeometry(3.02,.26,.68),stone,side*1.53,y,-.18);mesh(this.root,new T.OctahedronGeometry(.25),gold,side*1.53,p.height-.58,-.12);}
    else mesh(this.root,new T.CylinderGeometry(.12,.21,p.height-.5,7),families.includes(p.family)?stone:wood,side*2.8,(p.height-.5)/2,-.25);
   }
   for(const e of p.entries){
-   const g=new T.Group();g.name='piece-'+e.key;g.position.set(e.x,e.y,e.z+(e.selected?.14:0));this.root.add(g);const surface=e.done?green:e.selected?gold:families.includes(p.family)?stone:wood;let face;
+   const g=new T.Group();g.name='piece-'+e.key;g.position.set(e.x,e.y,e.z+(e.selected?.14:0));this.root.add(g);const surface=e.done?green:e.selected?gold:families.includes(p.family)?stone:wood;let face,looks=null;
    if(e.role==='inscription'||e.role==='assembled'){
-    const plaque=mesh(g,new T.BoxGeometry(e.w,e.h,.16),e.role==='assembled'?dark:stone,0,0,0);plaque.userData.role='engraved-inscription';face=plaque;
+    const plaque=mesh(g,new T.BoxGeometry(e.w,e.h,.16),e.role==='assembled'?dark:theme?.inscription||stone,0,0,0);plaque.userData.role='engraved-inscription';face=plaque;
+   }else if(theme){
+    // Themed pieces: rune tablets, river stones, brass weights, tags and petals instead of framed boards.
+    const art=theme.piece(e,g);face=art.face;looks=art.looks;face.material=e.done?looks.done:e.selected?looks.selected:looks.idle;
+    if(e.placed){g.position.set(-.80+((e.order-1)%3)*.8,.20+Math.floor((e.order-1)/3)*.12,1.2+Math.floor((e.order-1)/3)*.65);g.scale.set(.34,.24,1.8);g.rotation.x=-Math.PI/2;}
    }else{
     mesh(g,new T.BoxGeometry(e.w+.08,e.h+.08,.21),edge,0,0,-.05);
     face=mesh(g,new T.BoxGeometry(e.w,e.h,.12),surface,0,0,.06);
@@ -95,19 +102,19 @@ export class WorldMechanism{
     if(p.family==='message')strut(this.root,new T.Vector3(e.x,e.y+e.h/2,-.12),new T.Vector3(e.x,p.height-.4,-.12),.022,edge);
    }
    const target=g.position.clone();if(oldRoot&&oldId===t.nodeId&&previous.has(e.key))g.position.copy(previous.get(e.key));
-   this.entries.set(e.key,{entry:e,mesh:g,target,face,targetScale:g.scale.clone(),targetQuaternion:g.quaternion.clone()});
+   this.entries.set(e.key,{entry:e,mesh:g,target,face,looks,targetScale:g.scale.clone(),targetQuaternion:g.quaternion.clone()});
   }
   for(const[a,b]of p.links)this.addLink(a,b,false);
   this.root.updateMatrixWorld(true);return p;
  }
 
  sync(t,plan,node){
-  this.plan=plan;this.node=node;setTrailPropProgress(this.object,taskFraction(t));
-  for(const e of plan.entries){const v=this.entries.get(e.key),wasPlaced=v.entry.placed,pose=piecePose(e);v.entry=e;v.target.copy(pose.position);v.targetScale.copy(pose.scale);v.targetQuaternion.copy(pose.quaternion);if(e.placed&&!wasPlaced)v.motion={start:v.mesh.position.clone(),scale:v.mesh.scale.clone(),quaternion:v.mesh.quaternion.clone(),age:0,duration:.42};if(v.face&&e.role!=='inscription'&&e.role!=='assembled')v.face.material=e.done?this.palette.green:e.selected?this.palette.gold:this.families.includes(plan.family)?this.palette.stone:this.palette.wood;}
+  this.plan=plan;this.node=node;this.fraction=taskFraction(t);if(!this.theme)setTrailPropProgress(this.object,this.fraction);
+  for(const e of plan.entries){const v=this.entries.get(e.key),wasPlaced=v.entry.placed,pose=piecePose(e);v.entry=e;v.target.copy(pose.position);v.targetScale.copy(pose.scale);v.targetQuaternion.copy(pose.quaternion);if(e.placed&&!wasPlaced)v.motion={start:v.mesh.position.clone(),scale:v.mesh.scale.clone(),quaternion:v.mesh.quaternion.clone(),age:0,duration:.42};if(v.face&&e.role!=='inscription'&&e.role!=='assembled')v.face.material=v.looks?(e.done?v.looks.done:e.selected?v.looks.selected:v.looks.idle):e.done?this.palette.green:e.selected?this.palette.gold:this.families.includes(plan.family)?this.palette.stone:this.palette.wood;}
   for(const[a,b]of plan.links)this.addLink(a,b,true);this.root.updateMatrixWorld(true);return plan;
  }
  addLink(a,b,animate){
-  const key=a+'|'+b;if(this.linkMap.has(key))return;const left=this.entries.get(a),right=this.entries.get(b);if(!left||!right)return;const from=left.target.clone(),to=right.target.clone();from.x+=left.entry.w/2+.02;to.x-=right.entry.w/2+.02;from.z+=.20;to.z+=.20;const cable=strut(this.root,from,to,.052,this.palette.green);cable.userData.acceptedConnection=true;this.linkMap.set(key,cable);if(animate){cable.scale.y=.001;cable.position.copy(from);this.connectionAnimations.push({mesh:cable,root:this.root,from,to,age:0});}
+  const key=a+'|'+b;if(this.linkMap.has(key))return;const left=this.entries.get(a),right=this.entries.get(b);if(!left||!right)return;const from=left.target.clone(),to=right.target.clone();from.x+=left.entry.w/2+.02;to.x-=right.entry.w/2+.02;from.z+=.20;to.z+=.20;const cable=strut(this.root,from,to,this.theme?.link?.radius||.052,this.theme?.link?.material||this.palette.green);cable.userData.acceptedConnection=true;this.linkMap.set(key,cable);if(animate){cable.scale.y=.001;cable.position.copy(from);this.connectionAnimations.push({mesh:cable,root:this.root,from,to,age:0});}
  }
  findEntry(action){const kind={left:'pair-left',right:'pair-right',block:'block',choice:'choice',find:'find',confirm:'confirm',pick:'pick'}[action.kind];return[...this.entries.values()].find(v=>v.entry.action===kind&&(action.index===undefined||v.entry.index===action.index)&&(action.text===undefined||v.entry.textValue===action.text));}
  reject(action){const entry=this.findEntry(action);if(entry)entry.rejection={age:0};}
@@ -123,6 +130,7 @@ export class WorldMechanism{
   this.departures=this.departures.filter(e=>{if(e.age<.7)return true;this.scene.remove(e.mesh);dispose(e.mesh);return false;});
   for(const e of this.effects){e.age+=dt;const f=Math.max(0,Math.min(1,e.age/.8));e.mesh.position.copy(e.start).lerp(e.end,f);e.mesh.position.y+=Math.sin(f*Math.PI)*.8;e.mesh.scale.setScalar(Math.max(.05,1-f*.75));}
   this.effects=this.effects.filter(e=>{if(e.age<.8)return true;this.scene.remove(e.mesh);dispose(e.mesh);return false;});
+  this.themeTime=(this.themeTime||0)+dt;if(this.root&&this.theme)this.theme.update(dt,this.fraction||0,this.themeTime);
   this.connectionAnimations=this.connectionAnimations.filter(e=>{if(!e.root.parent)return false;e.age+=dt;const t=Math.min(1,e.age/.36),f=1-(1-t)**3;e.mesh.scale.y=Math.max(.001,f);e.mesh.position.copy(e.from).lerp(e.to,f*.5);return t<1;});
   if(!this.root)return;
   for(const v of this.entries.values()){

@@ -52,6 +52,25 @@ Chromium (SwiftShader WebGL) screenshots and by objective audio analysis. Real-p
 - Props without textures get triplanar stone, wood or leaf detail and contact darkening near the ground.
 - Cost: in the same phone view the High preset draws 243k triangles in 51 calls, against 274k in 48 calls before.
 
+### Themed task gates, phase 1 (`task-gates.js`)
+Five task types now have their own gate on the trail and matching scenery on their task stage. The other fifteen
+keep the previous gates until phase 2.
+
+| Task | Gate on the trail | Task stage | Opening |
+|---|---|---|---|
+| Match English and Turkish | Rune bridge: two rune monoliths and an upright drawbridge over a glowing chasm | Rune tablets on twin monoliths; matches join with light beams | Runes light in pairs, beams cross, the drawbridge drops with a bounce |
+| Order sentence fragments | A stream full of reeds between two mossy pillars | Word pieces are river stones; placed pieces become stepping stones in water | Stones rise one by one with ripples, the reeds sink |
+| Remove words that do not belong | A bramble wall of thorny vines woven from two tangled roots | Word tags hang from thorny vines | The vines dry out and wither back to their roots |
+| Listen and identify the word | Bell flowers lean over the path with echo rings | Petal plaques under ringing bells; the listen button is a glowing bell | The stems swing aside and the bells open |
+| Match numbers and number words | A balance gate: a lever arm rests across the path, a dial shows the balance | Brass number weights and word tags hang from a balance; links are chains | Weights drop into the pan until the arm swings up |
+
+- The text sits on a compact label inside each full-size touch target, so the 3D piece shows. Piece positions, sizes
+  and the camera framing are unchanged (the existing portrait/desktop touch-target tests still apply).
+- When the last answer is accepted, the stage keeps its scenery and plays the opening while the answered pieces
+  retract; the completion moment lasts 1.9 s for these types (1.1 s for the others).
+- The trail gate of a just-finished task is rebuilt closed and plays its opening when it is next in view.
+- Open gates leave nothing above the walkway (|x| < 2.5 m), in every arena.
+
 ### Effects and feedback (`game-feel.js`, `juice.css`)
 - 60–85 ms hitstop and trauma-based camera shake on hits, crystal cracks and being caught.
 - Damage numbers (percentage of the rival's health), "Blocked" and "Crack!" labels.
@@ -136,7 +155,7 @@ choices are under "Creature, arena and mode".
 
 ## Validation
 
-- Automated tests: **231 passed, 0 failed** (`npm test`). New tests (`tests/runs.test.mjs`) cover the run
+- Automated tests: **235 passed, 0 failed** (`npm test`). New tests (`tests/runs.test.mjs`) cover the run
   layout, chests, format rotation across evolutions, spaced repetition and cramming limits, explanations for
   every format, Wordex counts, quests, streaks and cosmetics. App tests now play real runs to the chest,
   evolve after a perfect first run and offer the guardian at the chest.

@@ -35,3 +35,13 @@ body.in-task #world{width:100%!important;height:100%!important}body.in-task .vig
 .world-piece .piece-order{font-size:11px;line-height:1;min-width:16px;min-height:16px;padding:3px;border:1px solid #f4dfac;color:#fff2c7;background:#27513d}
 .world-piece img{max-height:88%;max-width:90%;filter:drop-shadow(0 1px 1px #284d3440)}
 @media(prefers-reduced-motion:reduce){.world-piece{scroll-behavior:auto;transition:none!important;animation:none!important}}
+/* Themed task gates: the 3D piece (rune tablet, river stone, weight, tag, petal) stays visible; the text sits on a
+   compact label inside the full-size touch target. */
+.world-pieces[data-theme] .world-piece[data-do]{background:transparent;border-color:transparent;box-shadow:none}
+.world-pieces[data-theme] .world-piece[data-do]:hover{background:#fff6dc1f}
+.world-pieces[data-theme] .world-piece[data-do] span{background:#fff8e6eb;color:#1c3a2c;border-radius:7px;padding:3px 9px;max-width:100%;box-shadow:0 1px 3px #1d2a2240,inset 0 0 0 1px #8a734a40}
+.world-pieces[data-theme] .world-piece[data-do] img{border-radius:6px;background:#fff8e6eb;padding:3px}
+.world-pieces[data-theme] .world-piece.selected span{background:#ffe3a0f5;box-shadow:0 0 0 2px #fff1c2,0 2px 6px #4b3a1a66}
+.world-pieces[data-theme] .world-piece.joined span,.world-pieces[data-theme] .world-piece:disabled span{background:#d9f3dcf0;color:#164632}
+.world-pieces[data-theme] .world-piece[data-do="listen"] span{background:#2b4a3cee;color:#fff4d3}
+.world-pieces[data-theme] .world-piece.inscription{color:#1c3a2c;text-shadow:0 1px 0 #fff6dd88}

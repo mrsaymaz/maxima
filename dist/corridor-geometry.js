@@ -1,4 +1,5 @@
 import{bevelBox,carvedCylinder}from'./prop-art.js';
+import{THEMED_GATES,makeTaskGate}from'./task-gates.js';
 import{buildCliffs,foliageGeometry,boulderGeometry,fbm3,chunkedInstances}from'./cliff-art.js';
 import * as T from './vendor/three.module.min.js';
 import {chapterPath,pathDistance,approachPoint,CHAPTER_LENGTH,END} from './trail-layout.js';
@@ -39,6 +40,7 @@ function batchStatic(root){
 // Completed pieces either sink into the verges or become a flush crossing deck.
 export function makeRouteBarrier(type,{area=0,completed=false}={}){
  if(!TYPES.includes(type))throw new Error('Unknown corridor barrier type: '+type);
+ if(THEMED_GATES.includes(type)){const{group:g,update}=makeTaskGate(type,{area});g.name='route-barrier-'+type;g.userData={type,area,progress:0,completed:false,blocking:true,family:'themed-'+type,themed:true,width:6.4,stages:3,solids:[],time:0};STATES.set(g,{callbacks:[{fn:f=>update(f,g.userData.time),index:0}],segments:[],crossing:false,themed:update});setRouteBarrierProgress(g,completed?1:0);return g;}
  const k=kit('route-barrier-'+type,area),{g,m,mesh,box,cyl,crystal,ball,ring,part,link}=k;
  const updates=[],segments=[],crossing=['halves','sentence','gap'].includes(type);
  const family=['translation','definition','correct','repair','answer'].includes(type)?'rune':crossing?'crossing':['picture','sort','clue','listen-multi','numbers','instructions'].includes(type)?'supplies':['ending','intruder','spelling'].includes(type)?'roots':['listen-word','listen-tr'].includes(type)?'echo':'wind';
@@ -109,6 +111,8 @@ export function makeRouteBarrier(type,{area=0,completed=false}={}){
  STATES.set(g,{callbacks,segments,crossing});setRouteBarrierProgress(g,completed?1:0);return g;
 }
 
+// Idle motion for themed gates (swaying bells, echo rings); progress itself only changes through setRouteBarrierProgress.
+export function animateRouteBarrier(group,time){const state=STATES.get(group);if(!state?.themed)return group;group.userData.time=time;state.themed(group.userData.progress,time);return group;}
 export function setRouteBarrierProgress(group,fraction){
  const state=STATES.get(group);if(!state)return group;const f=clamp(fraction);
  group.userData.progress=f;group.userData.completed=f===1;group.userData.blocking=f<1;
