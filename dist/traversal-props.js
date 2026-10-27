@@ -1,10 +1,11 @@
+import{bevelBox,carvedCylinder,stoneColumn,liquidMaterial,rockLump}from'./prop-art.js';
 import{approachHeight}from'./traversal-layout.js';
 import{movingPose,coinPose}from'./path-trials-layout.js';
 import * as T from './vendor/three.module.min.js';
 import {localPoint,plantPhase} from './traversal-layout.js';
 
 const STATES=new WeakMap();
-const PALETTES=[{rock:'#7c8d76',top:'#b0ba91',rim:'#627b61',water:'#5cabae',glow:'#addbca'},{rock:'#778e91',top:'#c0c6ae',rim:'#5c737c',water:'#48667a',glow:'#8fdbe2'},{rock:'#696a7b',top:'#b2a7a2',rim:'#534c62',water:'#b95f45',glow:'#f2ac68'}];
+const PALETTES=[{rock:'#8e8977',top:'#aeb08f',rim:'#6f6c5e',water:'#5cabae',glow:'#addbca'},{rock:'#a8a088',top:'#c4c8a8',rim:'#857c66',water:'#48667a',glow:'#8fdbe2'},{rock:'#6d6f80',top:'#a8a0a0',rim:'#545266',water:'#b95f45',glow:'#f2ac68'}];
 function merge(root){
  root.updateMatrixWorld(true);const inverse=root.matrixWorld.clone().invert(),batches=new Map();
  root.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(inverse.clone().multiply(o.matrixWorld));if(!batches.has(o.material))batches.set(o.material,{p:[],n:[]});const out=batches.get(o.material);for(const v of geo.attributes.position.array)out.p.push(v);for(const v of geo.attributes.normal.array)out.n.push(v);geo.dispose();});
@@ -19,8 +20,8 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
  const material=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.86,...extra});
  const m={rock:material(palette.rock),top:material(palette.top),rim:material(palette.rim),pool:material(palette.water,{roughness:section.area===2?.65:.28,emissive:section.area===0?'#142b29':palette.water,emissiveIntensity:section.area===0?.08:.55}),glow:material(palette.glow,{emissive:palette.glow,emissiveIntensity:.45}),gold:material('#f1c65d',{metalness:.35,roughness:.3,emissive:'#b78024',emissiveIntensity:.30}),rune:material('#fff1a7',{emissive:'#ffe49c',emissiveIntensity:.75}),leaf:material('#5e8054'),stem:material('#6a7450'),bud:material('#a6bf80'),spore:material('#b98ad5',{emissive:'#9768bb',emissiveIntensity:.45}),cloud:material('#9e70bb',{transparent:true,opacity:.15,depthWrite:false,roughness:1}),cloudRim:material('#b290ca',{transparent:true,opacity:.70,depthWrite:false,emissive:'#5a3d71',emissiveIntensity:.3})};
  const geo=(key,make)=>{if(!geometries.has(key))geometries.set(key,make());return geometries.get(key);};
- const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>new T.BoxGeometry(w,h,d));
- const cylinder=(r1,r2,h,n=16)=>geo(`c${r1},${r2},${h},${n}`,()=>new T.CylinderGeometry(r1,r2,h,n));
+ const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
+ const cylinder=(r1,r2,h,n=16)=>geo(`c${r1},${r2},${h},${n}`,()=>carvedCylinder(r1,r2,h,n));
  const mesh=(geometry,mat,x,y,z,parent=group)=>{const o=new T.Mesh(geometry,mat);o.position.set(x,y,z);o.receiveShadow=true;o.castShadow=true;parent.add(o);return o;};
  const fragileData=[];
  const yaw=Math.atan2(-section.right.z,section.right.x),fixed=new T.Group();fixed.name='fixed-scenery';group.add(fixed);
@@ -31,12 +32,14 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
  if(section.kind==='rocks'||section.trial?.kind==='bonus'){
  if(section.kind==='rocks'){
   const pool=section.pool,length=pool.to-pool.from,center=(pool.from+pool.to)/2;
-  const surface=placeBox(pool.width,.10,length,m.pool,center,0,.015);surface.name=['water-surface','luminous-ravine-surface','lava-surface'][section.area]||'water-surface';surface.castShadow=false;
-  for(const side of[-1,1])placeBox(.16,.16,length+.12,m.rim,center,side*(pool.width/2+.075),.015);
-  for(const s of[pool.from,pool.to])placeBox(pool.width+.30,.12,.14,m.rim,s,0,-.01);
+  const c=at(center),liquid=liquidMaterial(palette.water,{lava:section.area===2,center:c,forward:section.forward,right:section.right,halfWidth:pool.width/2,halfLength:length/2});if(section.area===1){liquid.emissive.set(palette.water);liquid.emissiveIntensity=.35;}const surface=placeBox(pool.width,.10,length,liquid,center,0,.015);surface.name=['water-surface','luminous-ravine-surface','lava-surface'][section.area]||'water-surface';surface.castShadow=false;
+  // Rocky banks: lumps along both sides and across both ends, never over the water the player crosses.
+  let n=0;const lump=(s,l,r)=>{const p=at(s,l),o=mesh(rockLump(1+n%5),n%3?m.rim:m.rock,p.x,r*.18,p.z,fixed);o.scale.set(r,r*(.55+(n*37%10)/30),r*(.8+(n*13%10)/40));o.rotation.y=n*1.37;n++;};
+  for(const side of[-1,1])for(let s=pool.from;s<=pool.to;s+=.42){const r=.17+((n*7)%10)/80;lump(s,side*(pool.width/2+.12+r*.55),r);}
+  for(const s of[pool.from,pool.to])for(let l=-pool.width/2;l<=pool.width/2;l+=.4){const r=.14+((n*7)%10)/110;lump(s+(s===pool.from?-1:1)*(.02+r*.4),l,r);}
   }
   // Flat cap is exactly the physics platform radius and declared world Y.
-  for(const platform of section.platforms){const parent=platform.fragile||platform.motion?new T.Group():fixed;if(platform.fragile||platform.motion){parent.name='crumbling-stone-'+platform.id;fixed.add(parent);fragileData.push({platform,parent});}const height=platform.y+.18,o=mesh(cylinder(platform.r,platform.r*.84,height,24),m.rock,platform.x,platform.y-height/2-.014,platform.z,parent);o.name='rock-'+platform.id;const top=mesh(cylinder(platform.r,platform.r,.012,24),platform.fragile?m.rim:m.top,platform.x,platform.y-.006,platform.z,parent);top.name='platform-top-'+platform.id;if(platform.fragile){for(const side of[-1,1]){const crack=mesh(box(.025,.006,platform.r*.72),m.glow,platform.x+side*.17,platform.y+.004,platform.z,parent);crack.rotation.y=side*.5;}}}
+  for(const platform of section.platforms){const parent=platform.fragile||platform.motion?new T.Group():fixed;if(platform.fragile||platform.motion){parent.name='crumbling-stone-'+platform.id;fixed.add(parent);fragileData.push({platform,parent});}const height=platform.y+.18,o=mesh(geo('column'+platform.r+','+height+','+platform.id.length%5,()=>stoneColumn(platform.r,height,1+platform.id.length%5)),m.rock,platform.x,platform.y-.003,platform.z,parent);o.rotation.y=platform.x*1.7;o.name='rock-'+platform.id;const top=mesh(cylinder(platform.r,platform.r,.012,24),platform.fragile?m.rim:m.top,platform.x,platform.y-.006,platform.z,parent);top.name='platform-top-'+platform.id;if(platform.fragile){for(const side of[-1,1]){const crack=mesh(box(.025,.006,platform.r*.72),m.glow,platform.x+side*.17,platform.y+.004,platform.z,parent);crack.rotation.y=side*.5;}}}
   // Surface veins live below the rock tops and never add collision volume.
   if(section.kind==='rocks')for(let i=0;i<8;i++){const pool=section.pool,length=pool.to-pool.from;const s=pool.from+(i+.5)*length/8;for(const side of[-1,1]){const line=placeBox(.035,.003,Math.min(1.1,length/9),section.area===0?m.top:m.glow,s,side*2.6,.068);line.castShadow=false;}}
  }

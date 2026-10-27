@@ -1,3 +1,4 @@
+import{bevelBox,carvedCylinder}from'./prop-art.js';
 import{buildCliffs,foliageGeometry,boulderGeometry,fbm3,chunkedInstances}from'./cliff-art.js';
 import * as T from './vendor/three.module.min.js';
 import {chapterPath,pathDistance,approachPoint,CHAPTER_LENGTH,END} from './trail-layout.js';
@@ -6,15 +7,15 @@ import {chapterPath,pathDistance,approachPoint,CHAPTER_LENGTH,END} from './trail
 const STATES=new WeakMap();
 let ENCLOSURE_CACHE=null;
 const TYPES=['translation','definition','picture','qa-pairs','halves','ending','sentence','gap','correct','repair','answer','sort','intruder','spelling','clue','listen-word','listen-tr','listen-multi','numbers','instructions'];
-const PALETTES=[['#637663','#94a28a','#5b8055','#b8e2c5'],['#627b7a','#a3b8ad','#648c7c','#b7e7e9'],['#62697d','#a2a7b9','#75849a','#d5ccfb']];
+const PALETTES=[['#6e6b5d','#aaa38c','#5b8055','#b8e2c5'],['#7f7663','#cbbf9f','#7d9a6e','#b7e7e9'],['#56586c','#9799ae','#6e7f94','#d5ccfb']];
 const clamp=n=>Math.max(0,Math.min(1,Number.isFinite(n)?n:0));
 function kit(name,area=0){
  const g=new T.Group();g.name=name;const p=PALETTES[area]||PALETTES[0],cache=new Map();
  const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.88,...extra});
  const m={dark:mat(p[0]),stone:mat(p[1]),moss:mat(p[2]),air:mat(p[3],{emissive:p[3],emissiveIntensity:.55,roughness:.45}),wood:mat('#846b50'),light:mat('#b79b70'),gold:mat('#cbb078',{metalness:.18,roughness:.56}),root:mat('#665b49'),corrupt:mat('#766680'),fruit:mat('#dfaa62'),water:mat('#6fbbb7',{roughness:.3}),cream:mat('#e1d9b9'),eye:mat('#253c36')};
  const geo=(key,fn)=>{if(!cache.has(key))cache.set(key,fn());return cache.get(key);};
- const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>new T.BoxGeometry(w,h,d));
- const cyl=(a,b,h,n=7)=>geo(`c${a},${b},${h},${n}`,()=>new T.CylinderGeometry(a,b,h,n));
+ const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
+ const cyl=(a,b,h,n=7)=>geo(`c${a},${b},${h},${n}`,()=>carvedCylinder(a,b,h,n));
  const ball=r=>geo(`s${r}`,()=>new T.SphereGeometry(r,8,5));
  const crystal=r=>geo(`o${r}`,()=>new T.OctahedronGeometry(r));
  const ring=(r,t=.045,arc=Math.PI*2)=>geo(`t${r},${t},${arc}`,()=>new T.TorusGeometry(r,t,4,20,arc));
@@ -44,7 +45,7 @@ export function makeRouteBarrier(type,{area=0,completed=false}={}){
  for(const s of[-1,1]){
   mesh(cyl(.24,.34,.24,8),m.dark,s*2.86,.12,0);
   const h=family==='roots'?1.55:2.85;mesh(cyl(.16,.24,h,7),family==='roots'?m.root:m.stone,s*2.86,h/2+.12,0);
-  if(family!=='roots')mesh(crystal(.18),m.gold,s*2.86,h+.20,0);
+  if(family!=='roots'){mesh(crystal(.18),m.gold,s*2.86,h+.20,0);mesh(cyl(.27,.21,.11,7),m.dark,s*2.86,h+.07,0);for(const y of[.62,h-.28])mesh(cyl(.235,.25,.08,7),m.dark,s*2.86,y,0);}for(let j=0;j<3;j++){const a=(j-1)*1.1,tuft=mesh(ball(.2),m.moss,s*(2.86+Math.cos(a)*.3),.09,Math.sin(a)*.3);tuft.scale.set(1,.45,1);}
  }
  for(let i=0;i<3;i++){
   const span=part('accepted-stage-'+(i+1));span.position.x=(i-1)*2.1;segments.push(span);

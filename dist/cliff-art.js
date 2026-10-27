@@ -36,11 +36,13 @@ export function buildCliffs(strips){
  }
  // Per-face colour: strata bands, darker bases, moss on upward faces and a lighter weathered crown.
  const c=new T.Color(),moss=new T.Color('#6f9a54'),v1=new T.Vector3(),v2=new T.Vector3(),v3=new T.Vector3(),n=new T.Vector3();
- for(let i=0;i<wall.length;i+=9){v1.fromArray(wall,i);v2.fromArray(wall,i+3);v3.fromArray(wall,i+6);n.copy(v2).sub(v1).cross(v3.clone().sub(v1)).normalize();
-  for(let k=0;k<3;k++){const y=wall[i+k*3+1],x=wall[i+k*3],z=wall[i+k*3+2],band=Math.floor(y/1.05),strata=band%2?.9:1,ao=.55+.45*Math.min(1,y/1.8),grain=.86+fbm3(x*1.3,y*2.6,z*1.3)*.26;c.setRGB(strata*ao*grain,strata*ao*grain*.98,strata*ao*grain*.94);const up=Math.max(0,Math.abs(n.y)-.42)/.58;if(up>0)c.lerp(moss,Math.min(1,up*1.4));wallColor.push(c.r,c.g,c.b);}}
+ for(let i=0;i<wall.length;i+=9){const facet=.9+hash(i,7,3)*.2;v1.fromArray(wall,i);v2.fromArray(wall,i+3);v3.fromArray(wall,i+6);n.copy(v2).sub(v1).cross(v3.clone().sub(v1)).normalize();
+  for(let k=0;k<3;k++){const y=wall[i+k*3+1],x=wall[i+k*3],z=wall[i+k*3+2],band=Math.floor(y/1.05+fbm3(x*.2,0,z*.2)*.8),strata=(.8+hash(band,11,5)*.26)*facet,ao=.55+.45*Math.min(1,y/1.8),grain=.86+fbm3(x*1.3,y*2.6,z*1.3)*.26;const warm=hash(band,3,9)*.08;c.setRGB(strata*ao*grain*(1+warm),strata*ao*grain*.98,strata*ao*grain*(.94-warm));const up=Math.max(0,Math.abs(n.y)-.42)/.58;if(up>0)c.lerp(moss,Math.min(1,up*1.4));wallColor.push(c.r,c.g,c.b);}}
  for(let i=0;i<cap.length;i+=3){const x=cap[i],y=cap[i+1],z=cap[i+2],g=.82+fbm3(x*.8,0,z*.8)*.3,low=y<.5?.7:1;capColor.push(g*low,g*low,g*.9*low);}
  const geometry=(positions,colors)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));geo.computeVertexNormals();return geo;};
- const rock=new T.MeshStandardMaterial({color:CLIFF_TINTS[0].rock,vertexColors:true,roughness:.95,flatShading:true,side:T.DoubleSide}),grass=new T.MeshStandardMaterial({color:CLIFF_TINTS[0].grass,vertexColors:true,roughness:1,side:T.DoubleSide});
+ const rock=new T.MeshStandardMaterial({color:CLIFF_TINTS[0].rock,vertexColors:true,roughness:.95,flatShading:true,side:T.DoubleSide});const grass=new T.MeshStandardMaterial({color:CLIFF_TINTS[0].grass,vertexColors:true,roughness:1,side:T.DoubleSide});
+ // Vertex colours carry strata and moss; stylizeProps adds world-space rock detail on top.
+ rock.userData.detail='stone';rock.userData.detailScale=.2;
  // Split into chunks along the route so only the nearby walls are drawn.
  const meshes=[],split=(positions,colors,material,name)=>{const buckets=new Map();for(let i=0;i<positions.length;i+=9){const k=chunkOf((positions[i+2]+positions[i+5]+positions[i+8])/3);if(!buckets.has(k))buckets.set(k,{p:[],c:[]});const b=buckets.get(k);b.p.push(...positions.slice(i,i+9));b.c.push(...colors.slice(i,i+9));}for(const[k,b]of buckets){const m=new T.Mesh(geometry(b.p,b.c),material);m.name=`${name}-${k}`;m.castShadow=true;m.receiveShadow=true;meshes.push(m);}};
  split(wall,wallColor,rock,'cliff-wall');split(cap,capColor,grass,'continuous-moss-cap');

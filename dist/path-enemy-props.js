@@ -1,10 +1,11 @@
+import{bevelBox,carvedCylinder}from'./prop-art.js';
 import{makeEnemySpecies,updateEnemySpecies}from'./enemy-species.js';
 import * as T from './vendor/three.module.min.js';
 
 const STATES=new WeakMap();
 const clamp=n=>Math.max(0,Math.min(1,Number.isFinite(n)?n:0));
 const finite=(n,fallback)=>Number.isFinite(n)?n:fallback;
-const PALETTES=[['#77836d','#a5ad8e','#4d604b','#5f8955'],['#778c8c','#b1c3b1','#465f62','#6f9b82'],['#77788b','#b6b2be','#4f536b','#7d8b92']];
+const PALETTES=[['#8a8574','#b2ab94','#5c594d','#5f8955'],['#a39a82','#cfc4a6','#6d6555','#6f9b82'],['#7b7d92','#b6b2be','#4f536b','#7d8b92']];
 function merge(root){
  root.updateMatrixWorld(true);const inverse=root.matrixWorld.clone().invert(),batches=new Map();
  root.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(inverse.clone().multiply(o.matrixWorld));if(!batches.has(o.material))batches.set(o.material,{p:[],n:[]});const out=batches.get(o.material);for(const v of geo.attributes.position.array)out.p.push(v);for(const v of geo.attributes.normal.array)out.n.push(v);geo.dispose();});root.clear();
@@ -17,7 +18,7 @@ export function makePathEnemy(section){
  const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.87,...extra});
  const m={stone:mat(palette[0]),layer:mat(palette[1]),deep:mat(palette[2]),moss:mat(palette[3]),amber:mat('#edb85d',{emissive:'#bc792c',emissiveIntensity:.48,roughness:.35}),glint:mat('#fff0bb',{emissive:'#f9dda1',emissiveIntensity:.32}),gate:mat(palette[0]),gatePale:mat(palette[1]),gateDark:mat(palette[2]),gateGlow:mat('#a6bd8c',{emissive:'#658d5e',emissiveIntensity:.35}),lane:mat('#efb655',{transparent:true,opacity:.18,depthWrite:false,emissive:'#e5a23d',emissiveIntensity:.5}),laneMark:mat('#ffbd57',{transparent:true,opacity:.86,depthWrite:false,emissive:'#df9e3a',emissiveIntensity:.6}),pips:mat('#fff0bd',{emissive:'#af8b39',emissiveIntensity:.35}),stars:mat('#e9cc7d',{emissive:'#c09e42',emissiveIntensity:.3})};
  const geo=(key,fn)=>{if(!cache.has(key))cache.set(key,fn());return cache.get(key);};
- const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>new T.BoxGeometry(w,h,d));
+ const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
  const pebble=r=>geo('p'+r,()=>new T.DodecahedronGeometry(r,0));
  const ball=r=>geo('s'+r,()=>new T.SphereGeometry(r,10,6));
  const cone=(r,h)=>geo(`c${r},${h}`,()=>new T.ConeGeometry(r,h,5));
@@ -49,7 +50,7 @@ export function makePathEnemy(section){
  const gate=new T.Group();gate.name='rumblebud-stone-arch';gate.visible=!enemy.ordinal;const gateS=finite(enemy.gateS,finite(enemy.s,section.length*.7));gate.position.set(section.start.x+section.forward.x*gateS,0,section.start.z+section.forward.z*gateS);gate.rotation.y=Math.atan2(-section.right.z,section.right.x);group.add(gate);
  const gateFixed=new T.Group();gateFixed.name='arch-frame';gate.add(gateFixed);
  for(const side of[-1,1]){
-  mesh(new T.CylinderGeometry(.22,.30,2.90,7),m.gate,side*2.90,1.45,0,gateFixed);
+  mesh(carvedCylinder(.22,.30,2.90,7),m.gate,side*2.90,1.45,0,gateFixed);
   mesh(box(.56,.17,.62),m.gatePale,side*2.90,.10,0,gateFixed);
   const cap=mesh(pebble(.24),m.gateGlow,side*2.90,3.01,0,gateFixed);cap.scale.y=.50;
  }

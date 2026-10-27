@@ -155,6 +155,7 @@ function detailTexture(kind,size=128){
 }
 let DETAIL=null;
 export function propKind(material){
+ if(material?.userData?.detail&&!material.userData.stylized)return material.userData.detail;
  if(!material?.isMeshStandardMaterial||material.map||material.vertexColors||material.transparent||material.userData.ground||material.userData.rim||material.userData.stylized)return null;
  if(material.metalness>.3||material.emissiveIntensity>.2&&material.emissive?.getHex())return null;
  const hsl={};material.color.getHSL(hsl);if(material.roughness<.4&&hsl.h>.4&&hsl.h<.6)return null;
@@ -162,7 +163,7 @@ export function propKind(material){
 }
 export function stylizeProps(root){
  if(!root)return 0;DETAIL??={stone:detailTexture('stone'),wood:detailTexture('wood'),leaf:detailTexture('leaf')};let count=0;
- root.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){const kind=propKind(m);if(!kind)continue;m.userData.stylized=kind;count++;const tex=DETAIL[kind],scale=kind==='wood'?1.6:kind==='leaf'?1.1:.75;
+ root.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){const kind=propKind(m);if(!kind)continue;m.userData.stylized=kind;count++;const tex=DETAIL[kind],scale=m.userData.detailScale||(kind==='wood'?1.6:kind==='leaf'?1.1:.75);
   m.onBeforeCompile=shader=>{shader.uniforms.uDetail={value:tex};shader.uniforms.uDetailScale={value:scale};
    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDetailPos;\nvarying vec3 vDetailNormal;').replace('#include <fog_vertex>','#include <fog_vertex>\n\t#ifdef USE_INSTANCING\n\t\tvec4 detailWorld = modelMatrix * instanceMatrix * vec4( transformed, 1.0 );\n\t\tvDetailNormal = normalize( mat3( modelMatrix ) * mat3( instanceMatrix ) * objectNormal );\n\t#else\n\t\tvec4 detailWorld = modelMatrix * vec4( transformed, 1.0 );\n\t\tvDetailNormal = normalize( mat3( modelMatrix ) * objectNormal );\n\t#endif\n\tvDetailPos = detailWorld.xyz;');
    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vDetailPos;\nvarying vec3 vDetailNormal;\nuniform sampler2D uDetail;\nuniform float uDetailScale;').replace('#include <map_fragment>',`#include <map_fragment>

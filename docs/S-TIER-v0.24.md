@@ -31,6 +31,27 @@ Chromium (SwiftShader WebGL) screenshots and by objective audio analysis. Real-p
 - **Thin dock** (`mobile-ui.css`): on phones the 3D view is full screen; the joystick and buttons float over
   an 84 px gradient instead of a 132 px opaque bar. Toasts appear under the status bar.
 
+### Environment art (`cliff-art.js`, `prop-art.js`)
+- **Canyon walls**: the corridor enclosure is rebuilt as faceted cliffs pushed around by 3D noise. Walls lean back
+  as they rise, have strata bands with per-band tone and warmth, darker bases, moss on upward ledges, a ragged
+  skyline, a grass crown that drops to the valley floor behind, shrubs and trees along the rim and rock
+  outcrops. World-space rock detail is added in the shader. Walls are split into 66-unit chunks so only nearby
+  ones are drawn. Collision circles are unchanged, and walls never bulge toward the trail below head height.
+- **Water and lava**: pool surfaces use an animated material with world-space ripples, light bands, shoreline foam
+  and a deeper centre; Stormglass gets glowing, flowing lava. The surface height used by the physics is unchanged.
+  Rocky banks replace the flat rim strips.
+- **Platforms**: crossing stones, bonus ledges and moving platforms are irregular rock columns with a chamfered
+  rim; the flat landing top is still exactly the physics radius and height (tests raycast every platform).
+- **Carved props**: every box and cylinder in the barrier, trial, rival-gate and stretch kits is now a chamfered
+  shape with the same bounding box, so edges catch the light. Post, gate and trial colours move from green to
+  stone tones that match each arena's cliffs; barrier posts gain bands, a capstone and moss at the base.
+- **Boulders**: rolling boulders are round, lumpy and mossy on top (smooth shading), and leave from cave mouths
+  framed by rock arches. Wind covers sit in rubble.
+- **Trail dressing**: about 4,400 pebbles, 1,500 wildflower clusters and 740 fern fans line the trail edges
+  (instanced per chunk, no shadows; hidden on Low).
+- Props without textures get triplanar stone, wood or leaf detail and contact darkening near the ground.
+- Cost: in the same phone view the High preset draws 243k triangles in 51 calls, against 274k in 48 calls before.
+
 ### Effects and feedback (`game-feel.js`, `juice.css`)
 - 60–85 ms hitstop and trauma-based camera shake on hits, crystal cracks and being caught.
 - Damage numbers (percentage of the rival's health), "Blocked" and "Crack!" labels.

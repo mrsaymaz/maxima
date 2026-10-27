@@ -1,3 +1,4 @@
+import{bevelBox,carvedCylinder}from'./prop-art.js';
 import * as T from './vendor/three.module.min.js';
 
 // One recognisable prop family per language activity. Content labels belong to the
@@ -17,9 +18,9 @@ function context(type,area){
  const mat=(name,color,extra={})=>{if(!materials.has(name))materials.set(name,new T.MeshStandardMaterial({color,roughness:.84,...extra}));return materials.get(name);};
  const m={wood:mat('wood','#92775b'),woodLight:mat('woodLight','#b89c70'),bark:mat('bark','#74634c'),stone:mat('stone',palette.stone),pale:mat('pale',palette.pale),moss:mat('moss',palette.moss),leaf:mat('leaf',palette.leaf),dark:mat('dark',palette.dark),gold:mat('gold','#d7b36b',{metalness:.28,roughness:.43}),air:mat('air',palette.accent,{emissive:palette.accent,emissiveIntensity:.72,roughness:.42}),water:mat('water','#6cc3c0',{roughness:.22,metalness:.1}),fruit:mat('fruit','#e1aa5a'),red:mat('red','#d18d72'),corrupt:mat('corrupt','#7c6a93',{emissive:'#514365',emissiveIntensity:.15}),cream:mat('cream','#ead9b3'),eye:mat('eye','#203c35',{roughness:.3})};
  const geo=(key,make)=>{if(!geometries.has(key))geometries.set(key,make());return geometries.get(key);};
- const box=(w,h,d)=>geo(`b:${w}:${h}:${d}`,()=>new T.BoxGeometry(w,h,d));
+ const box=(w,h,d)=>geo(`b:${w}:${h}:${d}`,()=>bevelBox(w,h,d));
  const sphere=(r=.2)=>geo(`s:${r}`,()=>new T.SphereGeometry(r,10,7));
- const cyl=(a,b,h,n=10)=>geo(`c:${a}:${b}:${h}:${n}`,()=>new T.CylinderGeometry(a,b,h,n));
+ const cyl=(a,b,h,n=10)=>geo(`c:${a}:${b}:${h}:${n}`,()=>carvedCylinder(a,b,h,n));
  const cone=(r,h,n=7)=>geo(`co:${r}:${h}:${n}`,()=>new T.ConeGeometry(r,h,n));
  const octa=r=>geo(`o:${r}`,()=>new T.OctahedronGeometry(r,0));
  const torus=(r,t=.025,arc=Math.PI*2)=>geo(`t:${r}:${t}:${arc}`,()=>new T.TorusGeometry(r,t,5,32,arc));
