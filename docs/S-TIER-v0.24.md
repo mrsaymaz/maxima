@@ -53,8 +53,8 @@ Chromium (SwiftShader WebGL) screenshots and by objective audio analysis. Real-p
 - Cost: in the same phone view the High preset draws 243k triangles in 51 calls, against 274k in 48 calls before.
 
 ### Themed task gates (`task-gates.js`)
-Ten task types now have their own gate on the trail and matching scenery on their task stage (phase 1 and the
-first half of phase 2). The other ten keep the previous gates for now.
+Fifteen task types now have their own gate on the trail and matching scenery on their task stage. The other five
+keep the previous gates for now.
 
 | Task | Gate on the trail | Task stage | Opening |
 |---|---|---|---|
@@ -68,6 +68,11 @@ first half of phase 2). The other ten keep the previous gates for now.
 | Find the misspelled word | A ring of glowing, corrupted purple mushrooms | Word tags with a corrupted mushroom cap; tall mushrooms at the sides heal | The mushrooms swell and burst one by one; the mushrooms at the edge turn healthy |
 | Listen and match Turkish meanings | Crystal chimes hanging across the path from a split beam | Spoken words are crystals and Turkish meanings are tags, hanging from a beam; matches join with light threads | Each chime rings and shatters into shards, then the two beam halves fold up |
 | Match sentence halves | Broken log halves jut up from a murky stream | Each half sentence is a log end with growth rings, over a murky stream; matched halves are pinned with a dowel | The halves swing down and join into a three-log crossing |
+| Match questions and answers | Birds carrying message scrolls perch on a rope across the path | Questions and answers are scrolls hanging from a branch with perching birds; matches are tied with red string | The birds fly off one by one, then the rope halves drop to their posts |
+| Fill the missing word | A portcullis between stone pillars, with a water wheel and chute at the side | Answers are paddles; a water wheel turns beside a sluice over a channel | Paddles slot into the wheel, it speeds up and lowers the portcullis into the ground |
+| Find and repair the mistake | A great round seal stone with a glowing crack and a missing tile | Words are stone tiles in front of a large cracked seal | The missing tile flies in, the crack seals and the stone rolls down into the ground |
+| Answer the question | A large owl sits in the middle of the path between two lanterns | The owl waits beside the question and nods at each right reply; replies are leaf-cut plaques | The owl nods, then hops aside and settles at the edge of the path |
+| Sort words into categories | Two handcarts block the path | The word to sort sits above two carts whose signs are the categories; crates fill the carts | Crates and sacks drop into the carts, which turn and roll to the sides |
 
 - The text sits on a compact label inside each full-size touch target, so the 3D piece shows. Piece positions, sizes
   and the camera framing are unchanged (the existing portrait/desktop touch-target tests still apply).

@@ -5,7 +5,7 @@ import{bevelBox,carvedCylinder,rockLump,liquidMaterial}from'./prop-art.js';
 // wither, bell flowers swing aside, a balance lifts its arm. Everything is visual; the expedition decides passage.
 // When open, nothing remains over the 5 m walkway (|x| < 2.5) higher than the ground.
 
-export const THEMED_GATES=['translation','sentence','intruder','listen-word','numbers','ending','correct','spelling','listen-tr','halves'];
+export const THEMED_GATES=['translation','sentence','intruder','listen-word','numbers','ending','correct','spelling','listen-tr','halves','qa-pairs','gap','repair','answer','sort'];
 const PALETTES=[
  {stone:'#a39c88',dark:'#5f5b4e',moss:'#5f8452',wood:'#8b6b4a',metal:'#c8a25a',glow:'#8ff0cf',bramble:'#5a4334',thorn:'#8f7562',leaf:'#4f7a45',petal:'#f6efff',bell:'#c7a2e6',water:'#5cabae',ink:'#2f3b33'},
  {stone:'#c9bfa2',dark:'#7a705c',moss:'#7f9a6c',wood:'#9a7a55',metal:'#d8b56a',glow:'#9fe3f2',bramble:'#6b5544',thorn:'#a08a74',leaf:'#6f9a64',petal:'#fff8e8',bell:'#9cc7ef',water:'#48a7c4',ink:'#4a4435'},
@@ -209,7 +209,104 @@ function splitLogs(k,g){
  };
 }
 
-const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate,ending:fruitTree,correct:signposts,spelling:mushroomRing,'listen-tr':crystalChimes,halves:splitLogs};
+// A small perching bird (body, head, beak, tail, two flapping wings) facing +z.
+function bird(k,color){
+ const{mesh,geo,mat}=k,g=new T.Group(),body=mat(color),belly=mat(new T.Color(color).lerp(new T.Color('#fff4dc'),.55).getStyle()),beak=mat('#e8a83a');
+ const b=mesh(geo('bbody',()=>{const q=new T.SphereGeometry(.2,10,7);q.scale(.85,.8,1.15);return q;}),body,0,.2,0,g);mesh(geo('bbelly',()=>{const q=new T.SphereGeometry(.15,8,6);q.scale(.8,.8,.6);return q;}),belly,0,.15,.1,g);
+ mesh(geo('bhead',()=>new T.SphereGeometry(.13,10,7)),body,0,.4,.12,g);const bk=mesh(geo('bbeak',()=>new T.ConeGeometry(.04,.12,5)),beak,0,.39,.27,g);bk.rotation.x=Math.PI/2;
+ for(const s of[-1,1]){mesh(geo('beye',()=>new T.SphereGeometry(.025,6,4)),k.m.ink,s*.07,.43,.22,g);}
+ const tail=mesh(geo('btail',()=>{const q=new T.ConeGeometry(.08,.28,4);q.rotateX(-Math.PI/2-.4);return q;}),body,0,.22,-.24,g);
+ const wings=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*.15,.27,0);g.add(pivot);const w=mesh(geo('bwing',()=>{const q=new T.SphereGeometry(.17,8,5);q.scale(.35,.12,1);q.translate(0,0,-.02);return q;}),body,s*.05,0,0,pivot);w.rotation.z=s*.3;return{pivot,s};});
+ g.userData.flap=(t,amount)=>{for(const w of wings)w.pivot.rotation.z=w.s*(-.2+Math.sin(t)*amount);};
+ return g;
+}
+
+// Message birds: birds holding message scrolls sit on a rope across the path; they fly off and the rope halves drop.
+function messageBirds(k,g){
+ const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,paper=mat('#efe2c4');
+ for(const s of[-1,1]){mesh(cyl(.12,.16,2.5,8),m.wood,s*3.05,1.25,0,g);mesh(box(.5,.12,.5,.03),m.dark,s*3.05,2.52,0,g);}
+ const halves=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*3.0,2.3,0);g.add(pivot);const r=rod(m.ink,.02,pivot);stretch(r,new T.Vector3(0,0,0),new T.Vector3(-s*3.0,-.25,0));return{pivot,s};});
+ const colours=['#5f86b8','#c8783a','#7a9c4c','#b85f6a','#d6b04a'],birds=[-2.3,-1.15,0,1.15,2.3].map((x,i)=>{const b=bird(k,colours[i]);b.position.set(x,2.08-Math.cos(x/3*Math.PI/2)*.22+.0,0);b.scale.setScalar(1.25);g.add(b);
+  const scroll=new T.Group();scroll.position.set(0,-.05,.18);b.add(scroll);const string=rod(m.ink,.008,scroll);stretch(string,new T.Vector3(0,0,0),new T.Vector3(0,-.55,0));mesh(geo('scroll',()=>{const q=new T.CylinderGeometry(.06,.06,.42,10);q.rotateZ(Math.PI/2);return q;}),paper,0,-.62,0,scroll);mesh(box(.36,.3,.01,.004),paper,0,-.82,0,scroll);
+  return{b,x,i,y:b.position.y};});
+ return(f,time=0)=>{
+  for(const q of birds){const t=span(f,.04+q.i*.12,.3+q.i*.12),side=q.x<0||(q.x===0&&q.i%2)?-1:1;q.b.position.set(q.x+side*smooth(t)*4.5,q.y+smooth(t)*3.2,smooth(t)*-1.5);q.b.rotation.y=side*smooth(span(t,0,.2))*.9;q.b.userData.flap(time*(t>0?22:3)+q.i,t>0?1.1:.08);q.b.visible=t<1;}
+  const drop=smooth(span(f,.72,1));for(const h of halves)h.pivot.rotation.z=h.s*drop*(Math.PI/2-.08);
+ };
+}
+
+// Water wheel: a portcullis bars the path; paddles slot into the wheel, it turns and lowers the portcullis into the ground.
+function waterWheel(k,g){
+ const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,water=liquidMaterial(k.p.water,{local:true,halfWidth:.4,halfLength:1.4});k.materials.push(water);
+ for(const s of[-1,1]){mesh(box(.42,3.0,.5,.06),m.stone,s*2.95,1.5,0,g);mesh(box(.6,.2,.66,.05),m.dark,s*2.95,3.08,0,g);}
+ const gate=new T.Group();g.add(gate);for(let i=0;i<9;i++)mesh(box(.12,2.5,.12,.03),m.dark,-2.4+i*.6,1.25,0,gate);for(const y of[.5,1.4,2.3])mesh(box(5.0,.14,.1,.03),m.dark,0,y,.06,gate);for(let i=0;i<9;i++){const tip=mesh(geo('spike',()=>new T.ConeGeometry(.08,.22,4)),m.metal,-2.4+i*.6,-.08,0,gate);tip.rotation.x=Math.PI;}
+ const wheel=new T.Group();wheel.position.set(3.75,1.3,.2);g.add(wheel);const rim=mesh(geo('rim',()=>{const q=new T.TorusGeometry(1.05,.06,6,28);q.rotateY(Math.PI/2);return q;}),m.wood,0,0,0,wheel);rim.castShadow=true;
+ for(let i=0;i<6;i++){const sp=mesh(box(.08,2.05,.08,.02),m.wood,0,0,0,wheel);sp.rotation.x=i*Math.PI/6;}mesh(cyl(.16,.16,.4,10),m.metal,0,0,0,wheel).rotation.z=Math.PI/2;
+ const paddles=[];for(let i=0;i<8;i++){const a=i*Math.PI/4,p=mesh(box(.42,.06,.36,.015),m.wood,0,Math.cos(a)*1.08,Math.sin(a)*1.08,wheel);p.rotation.x=-a;paddles.push({p,i});}
+ const chute=mesh(box(.6,.12,1.6,.03),m.wood,3.75,2.65,-1.1,g);chute.rotation.x=.18;const fall=mesh(new T.BoxGeometry(.4,1.3,.1),water,3.75,1.95,-.35,g);fall.castShadow=false;
+ const ropes=[-1,1].map(()=>rod(m.ink,.02,g));
+ let angle=0,last=0;
+ return(f,time=0)=>{
+  const dt=Math.max(0,Math.min(.1,time-last));last=time;
+  paddles.forEach(q=>{const on=span(f,q.i*.07,q.i*.07+.06)>0||q.i%2;q.p.visible=!!on;});
+  angle+=dt*(.2+smooth(span(f,.4,1))*2.2);wheel.rotation.x=angle;fall.visible=f>.05;
+  const lower=smooth(span(f,.55,1));gate.position.y=-lower*2.62;gate.visible=lower<1;ropes.forEach((r,i)=>{const s=i?1:-1;stretch(r,new T.Vector3(s*2.9,3.1,0),new T.Vector3(s*2.4,2.5+gate.position.y,0));r.visible=lower<1;});
+ };
+}
+
+// Seal stone: a round stone door with a glowing crack and a missing tile; the tile flies in, the crack seals, it rolls down.
+function sealStone(k,g){
+ const{m,mesh,box,cyl,geo,mat}=k,crack=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:1.1}),tileM=mat(k.p.metal,{metalness:.3,roughness:.4,emissive:k.p.glow,emissiveIntensity:0});
+ for(const s of[-1,1]){mesh(cyl(.32,.42,3.4,8),m.stone,s*3.05,1.7,0,g);mesh(cyl(.48,.36,.24,8),m.dark,s*3.05,3.5,0,g);}
+ const seal=new T.Group();seal.position.set(0,1.7,0);g.add(seal);const disc=mesh(geo('seal',()=>{const q=new T.CylinderGeometry(1.7,1.7,.42,32);q.rotateX(Math.PI/2);return q;}),m.stone,0,0,0,seal);
+ mesh(geo('sealrim',()=>new T.TorusGeometry(1.62,.08,6,40)),m.dark,0,0,.22,seal);mesh(geo('sealin',()=>new T.TorusGeometry(.95,.05,6,32)),m.dark,0,0,.22,seal);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,t=mesh(box(.42,.3,.06,.02),i===2?tileM:m.dark,Math.cos(a)*1.28,Math.sin(a)*1.28,.22,seal);t.rotation.z=a+Math.PI/2;if(i===2)t.name='missing-tile';}
+ const tile=seal.getObjectByName('missing-tile'),home=tile.position.clone();
+ const cracks=[[[-.2,1.5],[.15,.8],[-.1,.2],[.2,-.6],[-.05,-1.5]]].flatMap(pts=>pts.slice(1).map((p,i)=>{const a=pts[i],len=Math.hypot(p[0]-a[0],p[1]-a[1]),c=mesh(box(.06,len,.02,.008),crack,(a[0]+p[0])/2,(a[1]+p[1])/2,.23,seal);c.rotation.z=Math.atan2(-(p[0]-a[0]),p[1]-a[1]);return c;}));
+ return f=>{
+  const fly=smooth(span(f,.1,.45));tile.position.set(home.x+(1-fly)*1.8,home.y+(1-fly)*1.2,home.z+(1-fly)*.8);tileM.emissiveIntensity=fly*.6;
+  crack.emissiveIntensity=1.1*(1-smooth(span(f,.4,.65)));cracks.forEach(c=>c.scale.x=1-smooth(span(f,.45,.65))*.9);
+  const sink=smooth(span(f,.62,1));seal.position.y=1.7-sink*3.55;seal.rotation.z=-sink*1.4;seal.visible=sink<1;
+ };
+}
+
+// A large friendly owl (body, face discs, eyes, tufts, wings, toes) facing +z; returns the figure and its head.
+function owlFigure(k){
+ const{mesh,geo,mat}=k,feather=mat(new T.Color(k.p.wood).lerp(new T.Color('#c9a87a'),.4).getStyle()),face=mat('#f1e3c4'),eyeM=mat('#f6f2e6'),pupil=mat('#203028'),beakM=mat('#e0a23c');
+ const owl=new T.Group();const body=mesh(geo('obody',()=>{const q=new T.SphereGeometry(.75,16,12);q.scale(1,1.15,.9);return q;}),feather,0,.86,0,owl);
+ mesh(geo('obelly',()=>{const q=new T.SphereGeometry(.55,12,8);q.scale(1,1.1,.5);return q;}),face,0,.75,.42,owl);
+ const head=new T.Group();head.position.set(0,1.7,0);owl.add(head);mesh(geo('ohead',()=>{const q=new T.SphereGeometry(.55,16,12);q.scale(1.1,.9,.95);return q;}),feather,0,0,0,head);
+ for(const s of[-1,1]){mesh(geo('odisc',()=>{const q=new T.CircleGeometry(.24,16);return q;}),face,s*.22,.02,.5,head);const eye=mesh(geo('oeye',()=>new T.SphereGeometry(.13,10,8)),eyeM,s*.22,.03,.47,head);eye.scale.z=.6;mesh(geo('opupil',()=>new T.SphereGeometry(.07,8,6)),pupil,s*.22,.03,.55,head);const tuft=mesh(geo('otuft',()=>new T.ConeGeometry(.12,.35,5)),feather,s*.38,.48,0,head);tuft.rotation.z=-s*.4;}
+ const beak=mesh(geo('obeak',()=>new T.ConeGeometry(.07,.2,5)),beakM,0,-.12,.55,head);beak.rotation.x=Math.PI/2+.4;
+ for(const s of[-1,1]){const w=mesh(geo('owing',()=>{const q=new T.SphereGeometry(.45,10,8);q.scale(.35,1,.8);return q;}),feather,s*.72,.9,-.05,owl);w.rotation.z=s*.15;for(let j=0;j<3;j++){const toe=mesh(geo('otoe',()=>new T.ConeGeometry(.05,.18,4)),beakM,s*.25+(j-1)*.08,.05,.35,owl);toe.rotation.x=Math.PI/2;}}
+ return{owl,head};
+}
+
+// Woodland visitor: a large owl sits in the middle of the path; it nods, then hops aside and settles.
+function woodlandVisitor(k,g){
+ const{m,mesh,geo}=k,{owl,head}=owlFigure(k);g.add(owl);
+ for(const s of[-1,1]){mesh(k.cyl(.06,.08,1.2,6),m.wood,s*3.0,.6,.3,g);const lamp=mesh(geo('lamp',()=>new T.OctahedronGeometry(.14,0)),m.glow,s*3.0,1.3,.3,g);lamp.castShadow=false;}
+ return(f,time=0)=>{
+  const nod=span(f,0,.5);head.rotation.x=Math.sin(nod*Math.PI*3)*.25*(1-span(f,.45,.5))+Math.sin(time*.8)*.03;head.rotation.y=Math.sin(time*.5)*.15*(1-f);
+  const hop=span(f,.5,1),hx=smooth(hop)*3.45,arc=Math.abs(Math.sin(hop*Math.PI*3))*.45*(1-hop*.3);owl.position.set(hx,arc,smooth(hop)*.6);owl.rotation.y=Math.sin(hop*Math.PI)*-1.2+smooth(span(hop,.8,1))*-.5;owl.scale.setScalar(1-smooth(hop)*.18);
+ };
+}
+
+// Supply carts: two handcarts block the path; crates and sacks drop in, then the carts turn and roll to the sides.
+function supplyCarts(k,g){
+ const{m,mesh,box,cyl,geo,mat}=k,sack=mat('#c9b48a'),crate=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle()),signM=mat('#efe2c4');
+ const carts=[-1,1].map((s,ci)=>{const c=new T.Group();c.position.set(s*1.3,0,0);g.add(c);mesh(box(2.0,.12,1.05,.03),m.wood,0,.62,0,c);for(const z of[-.5,.5])mesh(box(2.0,.42,.07,.02),m.wood,0,.86,z,c);for(const x of[-1,1])mesh(box(.07,.42,1.05,.02),m.wood,x*.98,.86,0,c);
+  const wheels=[-1,1].map(z=>{const w=mesh(geo('cwheel',()=>{const q=new T.CylinderGeometry(.42,.42,.08,14);q.rotateX(Math.PI/2);return q;}),m.dark,.45,.42,z*.6,c);return w;});mesh(box(.06,.06,1.3,.01),m.metal,.45,.42,0,c);
+  const handle=mesh(box(.9,.07,.07,.02),m.wood,-1.38,.85,0,c);handle.rotation.z=-.4;const sign=mesh(box(.9,.42,.05,.02),signM,0,1.42,.55,c);mesh(box(.06,.4,.06,.02),m.wood,0,1.12,.55,c);
+  const items=[0,1,2].map(i=>{const it=mesh(i===1?geo('sack',()=>{const q=new T.SphereGeometry(.26,10,8);q.scale(1,.8,1);return q;}):box(.38,.34,.38,.04),i===1?sack:crate,(i-1)*.55,.9,(i%2)*.15-.05,c);it.visible=false;return{it,i};});
+  return{c,s,wheels,items,ci};});
+ return f=>{
+  for(const cart of carts){cart.items.forEach(q=>{const t=span(f,cart.ci*.08+q.i*.16,cart.ci*.08+q.i*.16+.12);q.it.visible=t>0;q.it.position.y=.9+(1-smooth(t))*1.6;});
+   const roll=smooth(span(f,.6,1));cart.c.rotation.y=-cart.s*roll*Math.PI/2;cart.c.position.x=cart.s*(1.3+roll*2.15);cart.wheels.forEach(w=>w.rotation.z=-roll*5);}
+ };
+}
+
+const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate,ending:fruitTree,correct:signposts,spelling:mushroomRing,'listen-tr':crystalChimes,halves:splitLogs,'qa-pairs':messageBirds,gap:waterWheel,repair:sealStone,answer:woodlandVisitor,sort:supplyCarts};
 export function makeTaskGate(type,{area=0}={}){const k=gateKit(area),g=new T.Group();g.name='task-gate-'+type;const update=BUILDERS[type](k,g);g.userData.materials=k.materials;return{group:g,update};}
 
 // Task-stage dressing for the same five types. The stage keeps the shared layout (piece positions, sizes and touch
@@ -290,6 +387,47 @@ export function themeStage(type,plan,area=0){
   const bark=looks(mat(new T.Color(k.p.wood).multiplyScalar(.85).getStyle()),'#e2b86e',k.p.glow),ring=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.55).getStyle()),rings=mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle());
   piece=(e,g)=>{const left=e.action==='pair-left',s=left?1:-1,face=mesh(box(e.w,e.h,.4,.18),bark.idle,0,0,0,g);const cap=mesh(geo('endgrain',()=>{const c=new T.CylinderGeometry(.5,.5,.06,16);c.rotateZ(Math.PI/2);return c;}),ring,s*(e.w/2+.02),0,0,g);cap.scale.set(1,e.h*.88,.42/.5*.9);for(const r of[.3,.18]){const t=mesh(geo('grain'+r,()=>{const q=new T.TorusGeometry(r,.012,4,20);q.rotateY(Math.PI/2);return q;}),rings,s*(e.w/2+.06),0,0,g);t.scale.set(1,e.h*.88/1,.8);}return{face,looks:bark};};
   link={material:mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle()),radius:.07};
+
+ }else if(type==='qa-pairs'){
+  // Message birds: questions and answers are scrolls hanging from a branch where birds perch; each match sends a bird off.
+  const bark=mat(new T.Color(k.p.wood).multiplyScalar(.75).getStyle());tube([[-3.1,H-.5,-.35],[-1.5,H-.2,-.3],[0,H-.35,-.35],[1.5,H-.15,-.3],[3.1,H-.45,-.35]],.11,bark,object,18);for(const s of[-1,1])mesh(cyl(.13,.18,H-.4,8),m.wood,s*3.05,(H-.4)/2,-.35,object);
+  for(const e of pieces){const r=k.rod(m.ink,.01,object);k.stretch(r,new T.Vector3(e.x+(e.x<0?-.6:.6),H-.3,-.3),new T.Vector3(e.x+(e.x<0?-.6:.6),e.y+e.h/2,-.05));}
+  const colours=['#5f86b8','#c8783a','#7a9c4c','#b85f6a','#d6b04a','#8a6ab0'],perchY=Math.min(...pieces.map(e=>e.y-e.h/2))-.55;tube([[-3.1,perchY-.15,.05],[-1.5,perchY+.05,.1],[0,perchY-.05,.05],[1.5,perchY+.06,.1],[3.1,perchY-.12,.05]],.07,bark,object,18);const birds=colours.map((c,i)=>{const b=bird(k,c);b.position.set(-2.5+i*1.0,perchY+.04+Math.sin(i*1.3)*.04,.08);b.scale.setScalar(.95);object.add(b);return{b,i};});
+  const scroll=looks(mat('#efe2c4'),'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h*.86,.06,.02),scroll.idle,0,0,0,g);for(const y of[-1,1])mesh(geo('roll',()=>{const q=new T.CylinderGeometry(.075,.075,1,10);q.rotateZ(Math.PI/2);return q;}),scroll.idle,0,y*e.h*.45,.02,g).scale.set(e.w*1.04,1,1);return{face,looks:scroll};};
+  link={material:mat('#b84a4a'),radius:.025};
+  animated.push((f,time)=>{const gone=Math.round(f*birds.length);birds.forEach(q=>{const away=q.i<gone;q.b.visible=!away;q.b.userData.flap(time*3+q.i,.08);q.b.rotation.y=Math.sin(time*.7+q.i)*.4;});});
+ }else if(type==='gap'){
+  // Water wheel: a wheel turns beside a sluice; answers are paddles, and the wheel speeds up as the channel fills.
+  const water=liquidMaterial(k.p.water,{local:true,halfWidth:3.2,halfLength:1.1});k.materials.push(water);const stream=mesh(new T.BoxGeometry(6.4,.04,2.2),water,0,0,1.55,object);stream.castShadow=false;
+  for(const s of[-1,1])mesh(box(.42,H,.5,.06),m.stone,s*3.05,H/2,-.4,object);mesh(box(6.5,.3,.5,.06),m.dark,0,H-.15,-.4,object);
+  const gate=new T.Group();object.add(gate);for(let i=0;i<9;i++)mesh(box(.1,1.4,.1,.02),m.dark,-2.4+i*.6,.7,-.6,gate);mesh(box(5.0,.12,.08,.02),m.dark,0,1.2,-.55,gate);
+  const wheel=new T.Group();wheel.position.set(-3.55,1.4,.3);object.add(wheel);mesh(geo('rim',()=>{const q=new T.TorusGeometry(1.15,.07,6,28);q.rotateY(Math.PI/2);return q;}),m.wood,0,0,0,wheel);for(let i=0;i<6;i++){const sp=mesh(box(.08,2.25,.08,.02),m.wood,0,0,0,wheel);sp.rotation.x=i*Math.PI/6;}for(let i=0;i<8;i++){const a=i*Math.PI/4,p=mesh(box(.45,.06,.38,.015),m.wood,0,Math.cos(a)*1.18,Math.sin(a)*1.18,wheel);p.rotation.x=-a;}
+  const paddle=looks(mat(new T.Color(k.p.wood).lerp(new T.Color('#e8cf9a'),.35).getStyle()),'#f0cf7a',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.14,.04),paddle.idle,0,0,0,g);for(const s of[-1,1])mesh(box(.08,e.h+.04,.16,.02),m.metal,s*(e.w/2-.22),0,.02,g);return{face,looks:paddle};};
+  let angle=0;animated.push((f,time)=>{angle=time*(.4+f*1.8);wheel.rotation.x=angle;gate.position.y=-f*1.3;});
+ }else if(type==='repair'){
+  // Seal stone: a great round seal stands behind the words; its crack glows until the broken word is replaced.
+  const crack=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:1});for(const s of[-1,1])mesh(cyl(.3,.4,H,8),m.stone,s*3.1,H/2,-.5,object);
+  const R=Math.min(3.0,H*.47),seal=new T.Group();seal.position.set(0,H*.5,-.55);object.add(seal);mesh(geo('seal'+R,()=>{const q=new T.CylinderGeometry(R,R,.4,40);q.rotateX(Math.PI/2);return q;}),m.stone,0,0,0,seal);mesh(geo('sealrim'+R,()=>new T.TorusGeometry(R-.08,.09,6,48)),m.dark,0,0,.21,seal);
+  const lines=[[-.3,.9],[.2,.45],[-.15,0],[.25,-.45],[-.1,-.95]];for(let i=1;i<lines.length;i++){const a=lines[i-1],b=lines[i],len=Math.hypot(b[0]-a[0],b[1]-a[1])*R,c=mesh(box(.07,len,.02,.008),crack,(a[0]+b[0])/2*R,(a[1]+b[1])/2*R,.22,seal);c.rotation.z=Math.atan2(-(b[0]-a[0]),b[1]-a[1]);}
+  const tile=looks(mat(new T.Color(k.p.stone).multiplyScalar(1.08).getStyle()),'#f0cf7a',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.16,.05),tile.idle,0,0,0,g);mesh(box(e.w+.08,e.h+.08,.08,.02),m.dark,0,0,-.06,g);return{face,looks:tile};};
+  animated.push((f,time)=>{crack.emissiveIntensity=(1-f)*(.8+.3*Math.sin(time*3));seal.rotation.z=f*.25;});
+ }else if(type==='answer'){
+  // Woodland visitor: an owl waits beside the question; replies are leaf-cut plaques and it nods at each right answer.
+  const{owl,head}=owlFigure(k);object.add(owl);owl.position.set(-3.2,0,.25);owl.scale.setScalar(.9);owl.rotation.y=.5;
+  const plaque=looks(mat(new T.Color(k.p.petal).lerp(new T.Color(k.p.leaf),.15).getStyle()),'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.12,Math.min(.25,e.h*.4)),plaque.idle,0,0,0,g);for(const s of[-1,1]){const l=mesh(geo('pleaf',()=>{const q=new T.SphereGeometry(.3,8,4);q.scale(1,.42,.12);return q;}),m.leaf,s*(e.w/2-.05),-e.h/2+.02,.06,g);l.rotation.z=s*-.5;}return{face,looks:plaque};};
+  // The owl dips its head toward each new right answer and then looks around again.
+  let seen=0,nod=0;animated.push((f,time)=>{if(f>seen+.01){seen=f;nod=1;}nod=Math.max(0,nod-.03);head.rotation.x=Math.sin(time*.9)*.05+Math.sin(nod*Math.PI)*.35;head.rotation.y=Math.sin(time*.45)*.2*(1-nod);});
+ }else if(type==='sort'){
+  // Supply carts: the word to sort sits on top; each category is a cart, filling with crates as words are sorted.
+  const carts=pieces.filter(e=>e.action).map(e=>{const c=new T.Group();c.position.set(e.x,0,.35);object.add(c);mesh(box(2.2,.12,1.05,.03),m.wood,0,.62,0,c);for(const z of[-.5,.5])mesh(box(2.2,.42,.07,.02),m.wood,0,.86,z,c);for(const x of[-1,1])mesh(box(.07,.42,1.05,.02),m.wood,x*1.08,.86,0,c);for(const x of[-.65,.65])mesh(geo('cwheel',()=>{const q=new T.CylinderGeometry(.42,.42,.08,14);q.rotateX(Math.PI/2);return q;}),m.dark,x,.42,.58,c);mesh(box(.08,e.y-e.h/2-1.0,.08,.02),m.wood,0,(e.y-e.h/2+1.0)/2,-.4,c);return c;});
+  const crates=[];carts.forEach((c,ci)=>{for(let i=0;i<3;i++){const it=mesh(i===1?geo('sack',()=>{const q=new T.SphereGeometry(.26,10,8);q.scale(1,.8,1);return q;}):box(.38,.34,.38,.04),i===1?mat('#c9b48a'):m.wood,(i-1)*.6,.9,0,c);it.visible=false;crates.push({it,n:ci*3+i});}});
+  const sign=looks(mat('#efe2c4'),'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.1,.03),sign.idle,0,0,0,g);mesh(box(e.w+.12,e.h+.12,.06,.02),m.wood,0,0,-.05,g);return{face,looks:sign};};
+  animated.push(f=>{const n=Math.round(f*crates.length);crates.forEach(q=>q.it.visible=q.n<n);});
  }else if(type==='listen-word'){
   const bellGeo=geo('bell',()=>{const pts=[];for(let i=0;i<=8;i++){const t=i/8;pts.push(new T.Vector2(.04+Math.sin(t*Math.PI*.5)*.26+t*t*.06,-t*.45));}return new T.LatheGeometry(pts,10);}),heads=[];
   for(const e of pieces){const side=e.x<0?-1:1,base=new T.Vector3(side*3.0,0,-.25),top=new T.Vector3(e.x+side*(e.w/2-.25),e.y+e.h/2+.3,.42);tube([[base.x,0,base.z],[side*2.9,top.y*.6,-.3],[(base.x+top.x)/2,top.y+.35,-.2],[top.x,top.y,top.z]],.05,m.leaf,object,16);const head=new T.Group();head.position.copy(top);head.scale.setScalar(.72);object.add(head);mesh(bellGeo,e.action==='listen'?m.glow:m.bell,0,0,0,head);mesh(geo('pistil',()=>new T.SphereGeometry(.06,6,4)),m.glow,0,-.42,0,head);heads.push(head);}
