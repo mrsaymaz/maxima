@@ -5,7 +5,7 @@ import{bevelBox,carvedCylinder,rockLump,liquidMaterial}from'./prop-art.js';
 // wither, bell flowers swing aside, a balance lifts its arm. Everything is visual; the expedition decides passage.
 // When open, nothing remains over the 5 m walkway (|x| < 2.5) higher than the ground.
 
-export const THEMED_GATES=['translation','sentence','intruder','listen-word','numbers','ending','correct','spelling','listen-tr','halves','qa-pairs','gap','repair','answer','sort'];
+export const THEMED_GATES=['translation','sentence','intruder','listen-word','numbers','ending','correct','spelling','listen-tr','halves','qa-pairs','gap','repair','answer','sort','definition','picture','clue','listen-multi','instructions'];
 const PALETTES=[
  {stone:'#a39c88',dark:'#5f5b4e',moss:'#5f8452',wood:'#8b6b4a',metal:'#c8a25a',glow:'#8ff0cf',bramble:'#5a4334',thorn:'#8f7562',leaf:'#4f7a45',petal:'#f6efff',bell:'#c7a2e6',water:'#5cabae',ink:'#2f3b33'},
  {stone:'#c9bfa2',dark:'#7a705c',moss:'#7f9a6c',wood:'#9a7a55',metal:'#d8b56a',glow:'#9fe3f2',bramble:'#6b5544',thorn:'#a08a74',leaf:'#6f9a64',petal:'#fff8e8',bell:'#9cc7ef',water:'#48a7c4',ink:'#4a4435'},
@@ -306,7 +306,91 @@ function supplyCarts(k,g){
  };
 }
 
-const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate,ending:fruitTree,correct:signposts,spelling:mushroomRing,'listen-tr':crystalChimes,halves:splitLogs,'qa-pairs':messageBirds,gap:waterWheel,repair:sealStone,answer:woodlandVisitor,sort:supplyCarts};
+// A carved totem with a sleeping face whose eyes can open and glow; returns the figure and its eye material.
+function totemFigure(k,h=2.4){
+ const{m,mesh,box,cyl,geo,mat}=k,g=new T.Group(),eye=mat(k.p.dark,{emissive:k.p.glow,emissiveIntensity:0});
+ mesh(box(.95,h,.75,.12),m.stone,0,h/2,0,g);mesh(box(1.15,.22,.9,.06),m.dark,0,h+.1,0,g);mesh(cyl(.6,.7,.2,8),m.dark,0,.1,0,g);
+ const lids=[-1,1].map(s=>{mesh(box(.26,.12,.06,.03),eye,s*.22,h*.72,.39,g);const lid=mesh(box(.3,.08,.08,.03),m.stone,s*.22,h*.72+.03,.42,g);return lid;});
+ mesh(box(.12,.3,.08,.03),m.dark,0,h*.58,.4,g);mesh(box(.42,.07,.06,.02),m.dark,0,h*.44,.39,g);for(const s of[-1,1])mesh(box(.12,.5,.1,.03),m.moss,s*.42,h*.2,.36,g);
+ return{g,eye,lids,h};
+}
+
+// Word totems: three sleeping totems stand across the path; their eyes open, then they slide aside.
+function wordTotems(k,g){
+ const totems=[-1.75,0,1.75].map((x,i)=>{const t=totemFigure(k,2.3+(i%2)*.35);t.g.position.set(x,0,0);g.add(t.g);return{...t,x,i};});
+ return f=>{
+  for(const t of totems){const wake=smooth(span(f,t.i*.15,t.i*.15+.2));t.eye.emissiveIntensity=wake*1.4;t.lids.forEach(l=>l.position.y=t.h*.72+.03+wake*.12);
+   const move=smooth(span(f,.6+t.i*.05,.95+t.i*.02));if(t.i===1){t.g.position.y=-move*(t.h+.3);t.g.visible=move<1;}else{t.g.position.x=t.x+Math.sign(t.x)*move*1.85;t.g.rotation.y=-Math.sign(t.x)*move*.3;}}
+ };
+}
+
+// Crate wall: picture crates stacked across the path; lids pop and the crates slide off and stack at the sides.
+function crateWall(k,g){
+ const{m,mesh,box,geo,mat}=k,woodL=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle()),label=mat('#efe2c4');
+ const crate=(parent)=>{mesh(box(.9,.9,.9,.05),woodL,0,.45,0,parent);for(const y of[.12,.78])mesh(box(.94,.1,.94,.02),m.wood,0,y,0,parent);for(const x of[-1,1])mesh(box(.1,.9,.94,.02),m.wood,x*.42,.45,0,parent);mesh(box(.45,.36,.02,.01),label,0,.46,.47,parent);const lid=mesh(box(.94,.07,.94,.02),m.wood,0,.93,0,parent);return lid;};
+ const crates=[];for(let r=0;r<2;r++)for(let c=0;c<5;c++){if(r&&(c===0||c===4))continue;const grp=new T.Group(),x=(c-2)*.95,y=r*.9;grp.position.set(x,y,0);g.add(grp);const lid=crate(grp);crates.push({grp,lid,x,y,n:crates.length});}
+ const sides=[];crates.forEach((q,i)=>{const s=q.x<0||(q.x===0&&i%2)?-1:1,count=sides.filter(v=>v===s).length;sides.push(s);q.side=s;q.slot=count;});
+ return f=>{
+  for(const q of crates){const t=smooth(span(f,.05+q.n*.11,.22+q.n*.11)),pop=span(f,.02+q.n*.11,.1+q.n*.11);q.lid.position.y=.93+Math.sin(pop*Math.PI)*.35;q.lid.rotation.z=Math.sin(pop*Math.PI)*.4;
+   const tx=q.side*3.12,ty=Math.floor(q.slot/2)*.9,tz=(q.slot%2)*.95-.45;q.grp.position.set(q.x+(tx-q.x)*t,q.y+(ty-q.y)*t+Math.sin(t*Math.PI)*.8,tz*t);q.grp.rotation.y=Math.sin(t*Math.PI)*q.side*.3;}
+ };
+}
+
+// Buried cache: a riddle stone and a dirt mound; the mound bursts, a chest rises and opens, then both sink away.
+function buriedCache(k,g){
+ const{m,mesh,box,cyl,geo,mat}=k,dirt=mat(new T.Color(k.p.wood).lerp(new T.Color('#6b5a44'),.6).getStyle(),{roughness:1}),gold=m.metal,glyph=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.9});
+ const stone=new T.Group();g.add(stone);mesh(box(1.6,2.6,.45,.14),m.stone,0,1.3,-.6,stone);mesh(geo('qmark',()=>new T.TorusGeometry(.32,.07,6,16,Math.PI*1.4)),glyph,0,1.75,-.36,stone).rotation.z=-.6;mesh(box(.12,.3,.06,.02),glyph,.02,1.25,-.36,stone);mesh(geo('qdot',()=>new T.SphereGeometry(.08,8,6)),glyph,.02,.95,-.36,stone);
+ for(const s of[-1,1])mesh(cyl(.12,.16,1.4,6),m.wood,s*2.95,.7,0,g);const rope=k.rod(m.ink,.02,g);k.stretch(rope,new T.Vector3(-2.9,1.1,0),new T.Vector3(2.9,1.1,0));
+ const mound=new T.Group();g.add(mound);const clods=[];for(let i=0;i<14;i++){const a=i*2.4,r=.4+(i%4)*.35,c=mesh(rockLump(i%5+1),dirt,Math.cos(a)*r*1.6,.15,Math.sin(a)*r*.7+.3,mound);c.scale.set(.45,.35,.4);clods.push({c,a,r,home:c.position.clone()});}
+ const chest=new T.Group();chest.position.set(0,-1.2,.35);g.add(chest);mesh(box(1.1,.6,.7,.05),m.wood,0,.3,0,chest);for(const x of[-1,1])mesh(box(.08,.64,.74,.02),gold,x*.45,.3,0,chest);const lid=new T.Group();lid.position.set(0,.6,-.35);chest.add(lid);mesh(box(1.12,.18,.72,.05),m.wood,0,.09,.36,lid);mesh(box(.16,.2,.08,.02),gold,0,.02,.72,lid);const shine=mesh(geo('shine',()=>new T.OctahedronGeometry(.18,0)),glyph,0,.75,0,chest);
+ return(f,time=0)=>{
+  const burst=span(f,.05,.35);clods.forEach(q=>{q.c.position.set(q.home.x+Math.cos(q.a)*burst*2.2,q.home.y+Math.sin(burst*Math.PI)*1.1-burst*.4,q.home.z+Math.sin(q.a)*burst*.8);q.c.scale.setScalar(.42*(1-smooth(span(burst,.7,1))));});mound.visible=burst<1;
+  const rise=smooth(span(f,.25,.5)),sink=smooth(span(f,.75,1));chest.position.y=-1.2+rise*1.2-sink*1.6;lid.rotation.x=-smooth(span(f,.45,.65))*1.9;shine.visible=f>.5&&f<.9;shine.rotation.y=time*3;chest.visible=sink<1;
+  stone.position.y=-sink*3.2;stone.visible=sink<1;rope.visible=f<.7;
+ };
+}
+
+// A hedgehog with a little basket, facing +z; returns the figure and its basket group.
+function hedgehogFigure(k){
+ const{mesh,geo,mat}=k,g=new T.Group(),fur=mat('#b08a62'),spine=mat('#6a5038'),face=mat('#e8d2b0'),dark=k.m.ink;
+ mesh(geo('hbody',()=>{const q=new T.SphereGeometry(.45,14,10);q.scale(1,.8,1.15);return q;}),fur,0,.38,0,g);
+ for(let i=0;i<26;i++){const a=i*2.4,b=.25+(i%5)*.12,sp=mesh(geo('hspine',()=>new T.ConeGeometry(.05,.24,4)),spine,Math.cos(a)*.4*Math.sin(b*2),.42+Math.cos(b*2)*.3,-.05-Math.abs(Math.sin(a))*.35,g);sp.lookAt(sp.position.clone().multiplyScalar(3).add(new T.Vector3(0,0,-1)));sp.rotateX(Math.PI/2);}
+ const head=mesh(geo('hhead',()=>{const q=new T.SphereGeometry(.24,12,8);q.scale(1,.9,1.3);return q;}),face,0,.4,.45,g);mesh(geo('hnose',()=>new T.SphereGeometry(.06,8,6)),dark,0,.42,.76,g);for(const s of[-1,1])mesh(geo('heye',()=>new T.SphereGeometry(.04,6,4)),dark,s*.11,.5,.62,g);
+ const basket=new T.Group();basket.position.set(.55,0,.35);g.add(basket);mesh(geo('basket',()=>{const q=new T.CylinderGeometry(.3,.22,.28,12,1,true);return q;}),mat('#c09a5a',{side:T.DoubleSide}),0,.14,0,basket);mesh(geo('bhandle',()=>new T.TorusGeometry(.26,.025,4,16,Math.PI)),spine,0,.28,0,basket);
+ return{g,basket};
+}
+
+// Hungry hedgehog: it waits by a gated fence with an empty basket; requested items drop in, it hops, the gate opens.
+function hungryCreature(k,g){
+ const{m,mesh,box,cyl,geo,mat}=k;
+ for(const s of[-1,1]){mesh(cyl(.13,.17,1.6,8),m.wood,s*2.95,.8,0,g);for(const x of[3.3,3.7])mesh(box(.1,1.0,.1,.02),m.wood,s*x,.5,0,g);}
+ const doors=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*2.9,0,0);g.add(pivot);for(let i=0;i<5;i++)mesh(box(.1,1.2-(i%2)*.15,.08,.02),m.wood,-s*(.3+i*.55),.65,0,pivot);for(const y of[.35,.95])mesh(box(2.75,.1,.06,.02),m.wood,-s*1.42,y,.05,pivot);return{pivot,s};});
+ const{g:hog,basket}=hedgehogFigure(k);hog.position.set(-.6,0,.9);g.add(hog);
+ const colours=['#d6493a','#e8b84a','#7aa850','#5a8fc4'],items=colours.map((c,i)=>{const it=mesh(geo('apple',()=>new T.IcosahedronGeometry(.11,1)),mat(c),(i%2-.5)*.18,.32,(i>1?.08:-.08),basket);it.visible=false;return{it,i};});
+ return(f,time=0)=>{
+  items.forEach(q=>{const t=span(f,.05+q.i*.1,.15+q.i*.1);q.it.visible=t>0;q.it.position.y=.32+(1-smooth(t))*1.4;});
+  const happy=span(f,.45,.65);hog.position.y=Math.abs(Math.sin(happy*Math.PI*3))*.25;
+  const open=smooth(span(f,.55,.85));doors.forEach(d=>d.pivot.rotation.y=d.s*open*Math.PI/2*-1);
+  const walk=smooth(span(f,.7,1));hog.position.x=-.6+walk*4.0;hog.position.z=.9-walk*.5;hog.rotation.y=walk*Math.PI/2;
+ };
+}
+
+// Packing station: a packing bench bars the path; items jump into the pack in order, then the bench swings up aside.
+function packingStation(k,g){
+ const{m,mesh,box,cyl,geo,mat}=k,canvas=mat('#7a9c6a'),strap=mat('#5a4030');
+ for(const s of[-1,1])mesh(cyl(.13,.17,2.2,8),m.wood,s*3.0,1.1,0,g);
+ const bench=new T.Group();bench.position.set(-2.9,0,0);g.add(bench);mesh(box(5.7,.12,1.0,.03),m.wood,2.85,.9,0,bench);const legs=[.4,2.85,5.3].map(x=>mesh(box(.12,.84,.8,.03),m.wood,x,.42,0,bench));
+ const note=mesh(box(.5,.65,.03,.01),mat('#efe2c4'),3.0,1.8,.12,g);note.name='packing-note';
+ const pack=new T.Group();pack.position.set(.4,.96,0);g.add(pack);mesh(geo('pack',()=>{const q=new T.SphereGeometry(.5,12,10);q.scale(.9,1.1,.7);return q;}),canvas,0,.5,0,pack);const flap=mesh(box(.7,.12,.5,.04),canvas,0,.98,.08,pack);for(const x of[-.2,.2])mesh(box(.07,.9,.06,.02),strap,x,.5,.36,pack);
+ const colours=['#d6493a','#e8b84a','#5a8fc4'],items=colours.map((c,i)=>{const it=mesh(box(.32,.28,.28,.04),mat(c),-1.7+i*.8,1.1,0,g);return{it,i,home:it.position.clone()};});
+ return f=>{
+  items.forEach(q=>{const t=span(f,.05+q.i*.13,.17+q.i*.13),e=smooth(t);q.it.position.set(q.home.x+(pack.position.x-q.home.x)*e,q.home.y+Math.sin(t*Math.PI)*1.0+(1.4-q.home.y)*e,q.home.z);q.it.visible=t<1;});
+  flap.rotation.x=f>.45?-.0:.6;const fly=smooth(span(f,.5,.75));pack.position.set(.4+fly*2.85,.96-fly*.96+Math.sin(fly*Math.PI)*1.2,fly*.6);
+  const lift=smooth(span(f,.7,1));bench.rotation.z=lift*Math.PI/2;legs.forEach(l=>l.scale.y=1-lift*.9);
+ };
+}
+
+const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate,ending:fruitTree,correct:signposts,spelling:mushroomRing,'listen-tr':crystalChimes,halves:splitLogs,'qa-pairs':messageBirds,gap:waterWheel,repair:sealStone,answer:woodlandVisitor,sort:supplyCarts,definition:wordTotems,picture:crateWall,clue:buriedCache,'listen-multi':hungryCreature,instructions:packingStation};
 export function makeTaskGate(type,{area=0}={}){const k=gateKit(area),g=new T.Group();g.name='task-gate-'+type;const update=BUILDERS[type](k,g);g.userData.materials=k.materials;return{group:g,update};}
 
 // Task-stage dressing for the same five types. The stage keeps the shared layout (piece positions, sizes and touch
@@ -428,6 +512,47 @@ export function themeStage(type,plan,area=0){
   const sign=looks(mat('#efe2c4'),'#f3d58c',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.1,.03),sign.idle,0,0,0,g);mesh(box(e.w+.12,e.h+.12,.06,.02),m.wood,0,0,-.05,g);return{face,looks:sign};};
   animated.push(f=>{const n=Math.round(f*crates.length);crates.forEach(q=>q.it.visible=q.n<n);});
+
+ }else if(type==='definition'){
+  // Word totems: two sleeping totems flank the pillars; words are carved faces, definitions are tablets; matches wake the totems.
+  const eyes=[];for(const s of[-1,1]){const t=totemFigure(k,H*.55);t.g.position.set(s*3.25,0,-.3);object.add(t.g);eyes.push(t);}
+  mesh(box(6.3,.9,.5,.1),m.dark,0,H-.7,-.3,object);for(const s of[-1,1])mesh(box(.5,H-1.1,.5,.08),m.stone,s*.02,(H-1.1)/2,-.55,object);
+  const face=looks(m.stone,k.p.metal,k.p.glow),tablet=looks(mat(new T.Color(k.p.stone).multiplyScalar(1.12).getStyle()),k.p.metal,k.p.glow);
+  piece=(e,g)=>{const left=e.action==='pair-left',f=mesh(box(e.w,e.h,left?.3:.16,left?.12:.05),left?face.idle:tablet.idle,0,0,0,g);if(left)for(const s of[-1,1])mesh(box(.2,.06,.04,.01),m.ink,s*(e.w/2-.3),e.h/2-.18,left?.16:.09,g);return{face:f,looks:left?face:tablet};};
+  link={material:m.glow,radius:.045};
+  animated.push(f=>{for(const t of eyes){t.eye.emissiveIntensity=smooth(f)*1.4;t.lids.forEach(l=>l.position.y=t.h*.72+.03+smooth(f)*.12);}});
+ }else if(type==='picture'){
+  // Picture crates: words and pictures are crate faces; matched pairs are roped together and crates pile up at the sides.
+  const woodL=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle()),piles=[];for(const s of[-1,1])for(let i=0;i<3;i++){const c=new T.Group();c.position.set(s*(3.0+(i%2)*.15),Math.floor(i/2)*.9,-.3+(i%2)*.9);object.add(c);mesh(box(.9,.9,.9,.05),woodL,0,.45,0,c);for(const y of[.12,.78])mesh(box(.94,.1,.94,.02),m.wood,0,y,0,c);piles.push(c);}
+  mesh(box(6.4,.16,.6,.04),m.wood,0,H-.4,-.3,object);for(const s of[-1,1])mesh(box(.16,H-.4,.16,.03),m.wood,s*3.05,(H-.4)/2,-.3,object);
+  const crate=looks(woodL,'#f0cf7a',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.3,.05),crate.idle,0,0,0,g);for(const y of[-1,1])mesh(box(e.w+.04,.09,.32,.02),m.wood,0,y*(e.h/2-.04),0,g);for(const x of[-1,1])mesh(box(.09,e.h,.32,.02),m.wood,x*(e.w/2-.04),0,0,g);return{face,looks:crate};};
+  link={material:m.ink,radius:.03};
+ }else if(type==='clue'){
+  // Buried cache: a riddle stone behind the clue, answers on dug-up boards, and the chest rises as clues are solved.
+  const dirt=mat(new T.Color(k.p.wood).lerp(new T.Color('#6b5a44'),.6).getStyle(),{roughness:1}),glyph=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.8});
+  mesh(box(5.8,H-.6,.5,.2),m.stone,0,(H-.6)/2,-.7,object);for(const s of[-1,1]){const q=mesh(geo('qmark',()=>new T.TorusGeometry(.32,.07,6,16,Math.PI*1.4)),glyph,s*2.45,H*.55,-.42,object);q.rotation.z=-.6;mesh(geo('qdot',()=>new T.SphereGeometry(.08,8,6)),glyph,s*2.45+.02,H*.55-.75,-.42,object);}
+  for(let i=0;i<10;i++){const c=mesh(rockLump(i%5+1),dirt,-3+i*.66,.15,.4+(i%3)*.2,object);c.scale.set(.42,.3,.38);}
+  const chest=new T.Group();chest.position.set(0,-.7,.9);object.add(chest);mesh(box(1.0,.55,.62,.05),m.wood,0,.27,0,chest);for(const x of[-1,1])mesh(box(.07,.58,.66,.02),m.metal,x*.4,.27,0,chest);const lid=mesh(box(1.02,.16,.64,.05),m.wood,0,.62,0,chest);
+  const board=looks(mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.35).getStyle()),'#f0cf7a',k.p.glow);
+  piece=(e,g)=>{const face=mesh(box(e.w,e.h,.12,.04),board.idle,0,0,0,g);for(const x of[-1,1]){const c=mesh(rockLump(3),dirt,x*(e.w/2-.25),-e.h/2-.05,.05,g);c.scale.set(.22,.14,.18);}return{face,looks:board};};
+  animated.push((f,time)=>{chest.position.y=-.7+smooth(f)*.7;lid.rotation.x=f>=1?-.9:0;glyph.emissiveIntensity=.6+.3*Math.sin(time*2);});
+ }else if(type==='listen-multi'){
+  // Hungry hedgehog: item cards lie on a market table, the basket is the deliver button, and it fills as requests are met.
+  const{g:hog,basket}=hedgehogFigure(k);hog.position.set(-2.55,0,.85);hog.rotation.y=.5;hog.scale.setScalar(1.25);object.add(hog);
+  const hut=new T.Group();hut.position.set(3.0,0,-.4);object.add(hut);mesh(box(1.4,1.6,1.3,.05),m.wood,0,.8,0,hut);const roof=mesh(geo('roof',()=>new T.ConeGeometry(1.15,.9,4)),m.moss,0,2.05,0,hut);roof.rotation.y=Math.PI/4;mesh(box(.5,.9,.04,.02),m.dark,-.2,.45,.66,hut);
+  const colours=['#d6493a','#e8b84a','#7aa850','#5a8fc4'],fruits=colours.map((c,i)=>{const it=mesh(geo('apple',()=>new T.IcosahedronGeometry(.11,1)),mat(c),(i%2-.5)*.18,.32,(i>1?.08:-.08),basket);it.visible=false;return it;});
+  const card=looks(mat('#efe2c4'),'#f3d58c',k.p.glow),weave=looks(mat('#c09a5a'),'#f3d58c',k.p.glow),voice=looks(m.bell,'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const l=e.action==='confirm'?weave:e.action==='listen'?voice:card,face=mesh(box(e.w,e.h,.14,e.action==='confirm'?.3:.05),l.idle,0,0,0,g);if(e.action==='confirm')for(let i=0;i<4;i++)mesh(box(e.w-.2,.03,.02,.01),m.wood,0,-e.h/2+.18+i*.18,.08,g);return{face,looks:l};};
+  animated.push((f,time)=>{const n=Math.round(f*fruits.length);fruits.forEach((q,i)=>q.visible=i<n);hog.position.y=Math.abs(Math.sin(time*2))*.04;});
+ }else if(type==='instructions'){
+  // Packing station: tags lie on a packing bench, the backpack is the secure button, and it fills as orders are packed.
+  mesh(box(6.2,.12,1.0,.03),m.wood,0,.9,.25,object);for(const x of[-2.8,0,2.8])mesh(box(.12,.84,.8,.03),m.wood,x,.42,.25,object);
+  const pack=new T.Group();pack.position.set(-2.6,.96,.3);object.add(pack);mesh(geo('pack',()=>{const q=new T.SphereGeometry(.5,12,10);q.scale(.9,1.1,.7);return q;}),mat('#7a9c6a'),0,.5,0,pack);for(const x of[-.2,.2])mesh(box(.07,.9,.06,.02),mat('#5a4030'),x,.5,.36,pack);
+  const boxes=['#d6493a','#e8b84a','#5a8fc4'].map((c,i)=>{const b=mesh(box(.32,.28,.28,.04),mat(c),-1.4+i*.75,1.1,.25,object);return b;});
+  const tag=looks(mat('#efe2c4'),'#f3d58c',k.p.glow),canvas=looks(mat('#7a9c6a'),'#f3d58c',k.p.glow);
+  piece=(e,g)=>{const l=e.action==='confirm'?canvas:tag,face=mesh(box(e.w,e.h,.14,e.action==='confirm'?.25:.04),l.idle,0,0,0,g);if(e.action!=='confirm'){const hole=mesh(geo('taghole',()=>new T.TorusGeometry(.07,.02,4,12)),m.metal,-e.w/2+.18,e.h/2-.16,.08,g);hole.castShadow=false;}return{face,looks:l};};
+  animated.push(f=>{const n=Math.round(f*boxes.length);boxes.forEach((b,i)=>b.visible=i>=n);pack.scale.setScalar(1+smooth(f)*.15);});
  }else if(type==='listen-word'){
   const bellGeo=geo('bell',()=>{const pts=[];for(let i=0;i<=8;i++){const t=i/8;pts.push(new T.Vector2(.04+Math.sin(t*Math.PI*.5)*.26+t*t*.06,-t*.45));}return new T.LatheGeometry(pts,10);}),heads=[];
   for(const e of pieces){const side=e.x<0?-1:1,base=new T.Vector3(side*3.0,0,-.25),top=new T.Vector3(e.x+side*(e.w/2-.25),e.y+e.h/2+.3,.42);tube([[base.x,0,base.z],[side*2.9,top.y*.6,-.3],[(base.x+top.x)/2,top.y+.35,-.2],[top.x,top.y,top.z]],.05,m.leaf,object,16);const head=new T.Group();head.position.copy(top);head.scale.setScalar(.72);object.add(head);mesh(bellGeo,e.action==='listen'?m.glow:m.bell,0,0,0,head);mesh(geo('pistil',()=>new T.SphereGeometry(.06,6,4)),m.glow,0,-.42,0,head);heads.push(head);}

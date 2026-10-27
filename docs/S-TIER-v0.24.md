@@ -53,8 +53,7 @@ Chromium (SwiftShader WebGL) screenshots and by objective audio analysis. Real-p
 - Cost: in the same phone view the High preset draws 243k triangles in 51 calls, against 274k in 48 calls before.
 
 ### Themed task gates (`task-gates.js`)
-Fifteen task types now have their own gate on the trail and matching scenery on their task stage. The other five
-keep the previous gates for now.
+All twenty task types now have their own gate on the trail and matching scenery on their task stage.
 
 | Task | Gate on the trail | Task stage | Opening |
 |---|---|---|---|
@@ -73,6 +72,11 @@ keep the previous gates for now.
 | Find and repair the mistake | A great round seal stone with a glowing crack and a missing tile | Words are stone tiles in front of a large cracked seal | The missing tile flies in, the crack seals and the stone rolls down into the ground |
 | Answer the question | A large owl sits in the middle of the path between two lanterns | The owl waits beside the question and nods at each right reply; replies are leaf-cut plaques | The owl nods, then hops aside and settles at the edge of the path |
 | Sort words into categories | Two handcarts block the path | The word to sort sits above two carts whose signs are the categories; crates fill the carts | Crates and sacks drop into the carts, which turn and roll to the sides |
+| Match words and definitions | Three sleeping stone totems stand across the path | Words are carved totem faces, definitions are stone tablets; matches join with glowing lines and two totems wake | Their eyes open and glow, the side totems slide aside and the middle one sinks |
+| Match pictures and English | A wall of stacked picture crates | Words and pictures are crate faces roped together when matched; crates pile at the sides | Lids pop and each crate slides off to a stack at the side |
+| Identify the word from a clue | A riddle stone and a dirt mound behind a rope | Answers are dug-up boards in front of a riddle stone; a chest rises as clues are solved | The mound bursts, a chest rises and opens, then the chest and stone sink away |
+| Listen and select requested items | A hedgehog with an empty basket waits at a gated fence | Item cards for a market table, a basket deliver button, the hedgehog and its hut; the basket fills | Requested items drop into the basket, the hedgehog hops, the gate swings open and it trots off |
+| Follow written instructions | A packing bench with a backpack bars the path | Item tags for the bench and a backpack secure button; boxes disappear into the pack | Items jump into the pack in order, the pack flies aside and the bench swings up against the side |
 
 - The text sits on a compact label inside each full-size touch target, so the 3D piece shows. Piece positions, sizes
   and the camera framing are unchanged (the existing portrait/desktop touch-target tests still apply).
