@@ -60,7 +60,15 @@ Validation: **191 tests passed, zero failures**; static runtime verification pas
 
 Upload the complete **dist** folder to Netlify for a manual deployment. It contains index.html, local JavaScript dependencies, all forty-four creature models, language data and pictures. No installation, build step, account service or paid backend is required. Git deployments use netlify.toml, which selects dist.
 
-For a local preview, run `python3 -m http.server 8080 --directory dist` from this folder and open http://localhost:8080. Opening index.html directly does not work because browsers restrict local modules and data loading.
+To play on your own computer, install Node.js (version 18 or newer), open a terminal in this folder and run:
+
+```
+npm start
+```
+
+Then open http://localhost:8080. The command also prints an address for phones on the same Wi-Fi. Press Ctrl+C to stop. To use another port: `PORT=8081 npm start` (Windows PowerShell: `$env:PORT=8081; npm start`). Without Node.js, `python3 -m http.server 8080 --directory dist` works too.
+
+Opening index.html directly (double-clicking it) does not work: the page stays on "Opening the sanctuary" because browsers block modules and data loading for files opened from disk.
 
 ## Living Language refinement
 
