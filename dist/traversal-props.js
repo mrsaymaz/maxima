@@ -40,8 +40,6 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
   }
   // Flat cap is exactly the physics platform radius and declared world Y.
   for(const platform of section.platforms){const parent=platform.fragile||platform.motion?new T.Group():fixed;if(platform.fragile||platform.motion){parent.name='crumbling-stone-'+platform.id;fixed.add(parent);fragileData.push({platform,parent});}const height=platform.y+.18,o=mesh(geo('column'+platform.r+','+height+','+platform.id.length%5,()=>stoneColumn(platform.r,height,1+platform.id.length%5)),m.rock,platform.x,platform.y-.003,platform.z,parent);o.rotation.y=platform.x*1.7;o.name='rock-'+platform.id;const top=mesh(cylinder(platform.r,platform.r,.012,24),platform.fragile?m.rim:m.top,platform.x,platform.y-.006,platform.z,parent);top.name='platform-top-'+platform.id;if(platform.fragile){for(const side of[-1,1]){const crack=mesh(box(.025,.006,platform.r*.72),m.glow,platform.x+side*.17,platform.y+.004,platform.z,parent);crack.rotation.y=side*.5;}}}
-  // Surface veins live below the rock tops and never add collision volume.
-  if(section.kind==='rocks')for(let i=0;i<8;i++){const pool=section.pool,length=pool.to-pool.from;const s=pool.from+(i+.5)*length/8;for(const side of[-1,1]){const line=placeBox(.035,.003,Math.min(1.1,length/9),section.area===0?m.top:m.glow,s,side*2.6,.068);line.castShadow=false;}}
  }
  if(section.kind==='steps'){
   for(const platform of section.platforms){const h=platform.y+.12,p={x:platform.x,z:platform.z},o=mesh(box(platform.hx*2,h,platform.hz*2),m.rock,p.x,platform.y-h/2-.014,p.z,fixed);o.rotation.y=yaw;o.name='stair-'+platform.id;

@@ -70,8 +70,10 @@ float liquidWave( vec2 p ) {
 	float liquidW = liquidWave( liquidLocal );
 	float liquidShore = 1.0 - smoothstep( 0.0, ${lava?'0.55':'0.42'}, liquidEdge + liquidW * 0.05 );
 	float liquidBands = smoothstep( 0.55, 0.95, sin( liquidLocal.x * 5.0 + liquidW * 1.6 ) * sin( liquidLocal.y * 4.3 - uTime * 0.8 ) );
-	${lava?`diffuseColor.rgb *= 0.55 + 0.45 * liquidBands;
-	vec3 liquidGlow = mix( vec3( 0.9, 0.28, 0.06 ), vec3( 1.0, 0.75, 0.3 ), liquidBands ) * ( 0.6 + 0.4 * sin( uTime * 2.0 + liquidW ) );`:`float liquidDepth = smoothstep( 0.0, 1.6, liquidEdge );
+	${lava?`float liquidCrack = smoothstep( 0.25, 0.0, abs( sin( liquidLocal.x * 2.3 + liquidW * 0.9 ) * sin( liquidLocal.y * 1.9 - uTime * 0.35 + liquidW * 0.5 ) ) );
+	float liquidHeat = max( liquidCrack, liquidShore * 0.8 );
+	diffuseColor.rgb = mix( vec3( 0.16, 0.08, 0.07 ), diffuseColor.rgb * 0.8, liquidHeat );
+	vec3 liquidGlow = mix( vec3( 0.55, 0.1, 0.02 ), vec3( 1.0, 0.62, 0.18 ), liquidHeat * liquidHeat ) * ( 0.15 + 1.1 * liquidHeat ) * ( 0.85 + 0.15 * sin( uTime * 2.0 + liquidW ) );`:`float liquidDepth = smoothstep( 0.0, 1.6, liquidEdge );
 	diffuseColor.rgb = mix( diffuseColor.rgb * 1.18, diffuseColor.rgb * 0.62, liquidDepth );
 	diffuseColor.rgb += vec3( 0.10, 0.13, 0.12 ) * liquidBands;
 	diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.93, 0.97, 0.95 ), liquidShore * ( 0.65 + 0.35 * sin( liquidLocal.y * 9.0 + uTime * 3.0 ) ) );`}`).replace('#include <normal_fragment_begin>',`#include <normal_fragment_begin>
@@ -82,7 +84,7 @@ float liquidWave( vec2 p ) {
 		vec3 worldTilt = vec3( g.x * uRight.x + g.y * uForward.x, 0.0, g.x * uRight.y + g.y * uForward.y ) * ${lava?'0.04':'0.12'};
 		normal = normalize( normal - ( viewMatrix * vec4( worldTilt, 0.0 ) ).xyz );
 	}`);
-  if(lava)shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = liquidGlow * ( 0.35 + 0.65 * liquidBands ) * emissiveIntensity;');
+  if(lava)shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = liquidGlow;');
  };
  material.customProgramCacheKey=()=>'maxima-liquid-'+(lava?1:0);
  return material;
