@@ -8,7 +8,7 @@ import{LANES,LANE_HALF,RUN_LEAD,laneSpan,speedAt,runSurface,hurdleHeight}from'./
 // Lane changes, slides and jumps arrive as discrete requests from keys, swipes or joystick flicks.
 export class RunnerControl{
  constructor(){this.lane=1;this.lat=0;this.s=0;this.sliding=0;this.speed=0;this.stun=0;this.mire=0;this.mired=null;this.running=false;this.section=null;
-  this.taken=new Set();this.knocked=new Set();this.filled=new Map();this.done=new Set();this.progress=new Map();this.events={};}
+  this.taken=new Set();this.knocked=new Set();this.wordsDone=new Set();this.filled=new Map();this.done=new Set();this.progress=new Map();this.events={};}
  get forwardYaw(){const f=this.section?.forward;return f?Math.atan2(f.x,f.z):null;}
  // Real distance along the section for track distance s; and where track metre 0 sits in the valley.
  realS(s=this.s){const run=this.section.run;return run.from+(s<0?s:Math.max(0,s-(run.length-run.real)));}
@@ -35,7 +35,7 @@ export class RunnerControl{
  }
  finish(section,nav){
   if(this.done.has(section.id))return;this.done.add(section.id);this.progress.delete(section.id);this.sliding=0;this.running=false;
-  const word=section.run.word;if(word)this.events.word?.(word,this.progress_(word),section);
+  this.closeWord(section);
   this.events.finish?.(section);nav&&(nav.passiveCarry=false);
  }
  shift(direction){if(!this.running)return false;const next=Math.max(0,Math.min(2,this.lane+direction));if(next===this.lane)return false;this.lane=next;this.events.lane?.(direction);return true;}
@@ -74,8 +74,11 @@ export class RunnerControl{
    if(this.taken.has(t.id)||Math.abs(this.s-t.s)>.75||Math.abs(this.lat-LANES[t.lane])>LANE_HALF)continue;
    this.taken.add(t.id);if(t.correct)this.filled.set(t.id,true);for(const other of word.tokens)if(other.slot===t.slot)this.taken.add(other.id);this.events.letter?.(t,word,this.progress_(word));
   }
+  // The word panel closes as soon as the word is complete or its last letter row is behind the creature.
+  if(word&&(this.progress_(word).every(Boolean)||this.s>word.tokens.at(-1).s+1.5))this.closeWord(this.section);
   return null;
  }
+ closeWord(section){const word=section.run.word;if(!word||this.wordsDone.has(section.id))return;this.wordsDone.add(section.id);this.events.word?.(word,this.progress_(word),section);}
  progress_(word){return[...word.answer].map((c,i)=>this.filled.get(word.tokens.find(t=>t.slot===i&&t.correct).id)?c:null);}
  // After a fall in a run: back a few metres, standing, in an open lane, so the hole can be read and the run goes on.
  afterRetry(nav){

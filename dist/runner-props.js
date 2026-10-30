@@ -106,14 +106,20 @@ const GROUNDS={
   for(let i=0;i<4;i++)g.add(mesh(geo('shard',()=>new T.ConeGeometry(.12,.3,4)),mat('#e9c68f',{flat:true}),(i%2?-1:1)*(w/2+.1),.1,(i<2?-1:1)*d/3));return g;},
  void(w,d,kit,anim){const g=new T.Group();g.add(mesh(geo(`vrim${w}x${d}`,()=>new T.BoxGeometry(w+.24,.05,d+.24)),mat('#c47dff',{basic:true}),0,.008),mesh(geo(`void${w}x${d}`,()=>new T.BoxGeometry(w,.06,d)),mat('#0d0620',{basic:true}),0,.014));
   for(let i=0;i<6;i++){const p=mesh(geo('mote',()=>new T.OctahedronGeometry(.05)),mat('#e6b8ff',{basic:true,additive:true}).clone(),((i*.43)%1-.5)*w*.8,0,((i*.71)%1-.5)*d*.8);g.add(p);anim.push(t=>{const k=(t*.5+i/6)%1;p.position.y=.05+k*1.1;p.material.opacity=1-k;});}return g;},
- swamp(w,d,kit,anim){const g=mire(w,d,anim,'#3a3416','#5a4a22','#b6e05a',['#4fc23a','#8be04e']);for(let i=0;i<6;i++){const x=(i%2?1:-1)*(w/2+.05),z=(i/5-.5)*d*.9,reed=mesh(geo('reed',()=>new T.CylinderGeometry(.015,.02,.7,4).translate(0,.35,0)),mat('#6b8f2a'),x,0,z);reed.add(mesh(geo('cattail',()=>new T.CylinderGeometry(.04,.04,.16,6)),mat('#6b3f1f'),0,.66,0));reed.rotation.z=(i%2?-1:1)*.15;g.add(reed);}return g;},
- quicksand(w,d,kit,anim){const g=mire(w,d,anim,'#d9a95e','#b9833f','#f4d08f',null);const swirl=mesh(geo('swirl',()=>new T.TorusGeometry(.5,.03,4,28).rotateX(Math.PI/2)),mat('#8f5f2b'),0,.04,0);g.add(swirl);anim.push(t=>{swirl.rotation.y=t*1.5;swirl.scale.setScalar(.8+Math.sin(t*2)*.15);});return g;},
- glowmire(w,d,kit,anim){return mire(w,d,anim,'#1d8f8a','#0f4f5a','#7affea',null,true);},
+ swamp(w,d,kit,anim){const g=mire(w,d,anim,'#5fbf1f','#2f5a12','#e4ff6a',['#2f9a2a','#ffd84a'],'#d8ff3a');for(let i=0;i<6;i++){const x=(i%2?1:-1)*(w/2+.05),z=(i/5-.5)*d*.9,reed=mesh(geo('reed',()=>new T.CylinderGeometry(.015,.02,.7,4).translate(0,.35,0)),mat('#6b8f2a'),x,0,z);reed.add(mesh(geo('cattail',()=>new T.CylinderGeometry(.04,.04,.16,6)),mat('#6b3f1f'),0,.66,0));reed.rotation.z=(i%2?-1:1)*.15;g.add(reed);}return g;},
+ quicksand(w,d,kit,anim){const g=mire(w,d,anim,'#f0a23a','#a8621c','#ffe7a3',null,'#ffdd55');const swirl=mesh(geo('swirl',()=>new T.TorusGeometry(.5,.03,4,28).rotateX(Math.PI/2)),mat('#8f5f2b'),0,.04,0);g.add(swirl);anim.push(t=>{swirl.rotation.y=t*1.5;swirl.scale.setScalar(.8+Math.sin(t*2)*.15);});return g;},
+ glowmire(w,d,kit,anim){return mire(w,d,anim,'#1fd8c8','#0f4f5a','#b8fff4',null,'#7affea');},
 };
-function mire(w,d,anim,top,edge,bubble,pads,glow=false){
- const g=new T.Group();g.add(mesh(geo(`mrim${w}x${d}`,()=>new T.BoxGeometry(w+.2,.04,d+.2)),mat(edge),0,.008),mesh(geo(`mire${w}x${d}`,()=>new T.BoxGeometry(w,.05,d)),mat(top,{rough:.35,emissive:glow?'#1fe0d0':'#000000',glow:glow?.45:0}),0,.016));
- for(let i=0;i<Math.min(8,Math.round(w*d*.9));i++){const b=mesh(geo('bubble',()=>new T.SphereGeometry(.1,8,6)),mat(bubble,{rough:.2,emissive:glow?bubble:'#000000',glow:glow?.8:0}),((i*.37)%1-.5)*w*.85,.04,((i*.59)%1-.5)*d*.85);g.add(b);anim.push(t=>{const k=(t*.9+i*.31)%1;b.scale.setScalar(.3+k*1.1);b.visible=k<.92;});}
- if(pads)for(let i=0;i<Math.min(5,Math.round(w*d*.5));i++)g.add(mesh(geo('pad',()=>new T.CylinderGeometry(.16,.16,.02,10)),mat(pads[i%2]),((i*.53)%1-.5)*w*.8,.05,((i*.29)%1-.5)*d*.8));
+// Swamps glow and bubble: a bright sludge surface that pulses, a neon outline that marks the edge from far away,
+// rising bubbles and lily pads, so they read as "keep out" at sprint speed.
+function mire(w,d,anim,top,edge,bubble,pads,outline){
+ const g=new T.Group(),surface=mat(top,{rough:.3,emissive:top,glow:.35}).clone();surface.userData.surface='effect';
+ g.add(mesh(geo(`mrim${w}x${d}`,()=>new T.BoxGeometry(w+.24,.05,d+.24)),mat(edge),0,0),mesh(geo(`mire${w}x${d}`,()=>new T.BoxGeometry(w,.06,d)),surface,0,.012));
+ const line=mat(outline,{basic:true,additive:true,opacity:.95}).clone();
+ for(const[x,z,lx,lz]of[[0,d/2+.1,w+.24,.07],[0,-d/2-.1,w+.24,.07],[w/2+.1,0,.07,d+.24],[-w/2-.1,0,.07,d+.24]])g.add(mesh(geo(`mline${lx}x${lz}`,()=>new T.BoxGeometry(lx,.04,lz)),line,x,.05,z));
+ anim.push(t=>{surface.emissiveIntensity=.25+.25*Math.sin(t*3.2);line.opacity=.55+.4*Math.max(0,Math.sin(t*6));});
+ for(let i=0;i<Math.min(10,Math.round(w*d*1.1));i++){const b=mesh(geo('bubble',()=>new T.SphereGeometry(.13,10,8)),mat(bubble,{rough:.15,emissive:bubble,glow:.5}),((i*.37)%1-.5)*w*.85,.06,((i*.59)%1-.5)*d*.85);g.add(b);anim.push(t=>{const k=(t*1.1+i*.31)%1;b.scale.setScalar(.25+k*1.2);b.position.y=.06+k*.12;b.visible=k<.9;});}
+ if(pads)for(let i=0;i<Math.min(6,Math.round(w*d*.6));i++)g.add(mesh(geo('pad',()=>new T.CylinderGeometry(.18,.18,.02,12)),mat(pads[i%2]),((i*.53)%1-.5)*w*.8,.08,((i*.29)%1-.5)*d*.8));
  return g;
 }
 
@@ -129,16 +135,35 @@ function compact(group){
 // (runner-control: the track slides under the creature, then the final metres are real), and only the stretch
 // the creature can see (never past the real clearing) is drawn.
 const TILE=24;
+// Side walls carry bold repeating patterns and lights, and a backdrop row (trees, mesas, crystal spires) stands
+// behind them: all of it slides with the track, so speed reads from every side, not only from the lanes.
+const wallTextures=new Map();
+function wallTexture(area){
+ if(wallTextures.has(area))return wallTextures.get(area);const canvas=typeof document!=='undefined'?document.createElement('canvas'):null;let texture;
+ if(canvas){canvas.width=128;canvas.height=128;const g=canvas.getContext('2d');
+  if(area===0){g.fillStyle='#2f7d2c';g.fillRect(0,0,128,128);g.fillStyle='#4fae3a';g.fillRect(0,0,64,128);for(let i=0;i<14;i++){g.fillStyle=i%3?'#7fd04e':'#1f5a22';g.beginPath();g.arc((i*37)%128,(i*53)%128,9+(i%3)*4,0,Math.PI*2);g.fill();}
+   for(let i=0;i<4;i++){g.fillStyle=['#ff6fa8','#ffe14d','#ffffff','#ff9a3c'][i];g.beginPath();g.arc(20+i*30,30+(i%2)*60,6,0,Math.PI*2);g.fill();}}
+  else if(area===1){g.fillStyle='#e8c38a';g.fillRect(0,0,128,128);g.fillStyle='#d58a4e';g.fillRect(0,40,128,14);g.fillRect(0,96,128,8);g.fillStyle='#c4733d';g.fillRect(0,0,6,128);g.fillRect(64,0,6,128);
+   g.fillStyle='#36c9d6';for(const x of[18,82])g.fillRect(x,64,26,22);g.fillStyle='#fff3c9';for(const x of[26,90])g.fillRect(x,70,10,10);}
+  else{g.fillStyle='#2b2266';g.fillRect(0,0,128,128);g.strokeStyle='#5ff3ff';g.lineWidth=5;g.beginPath();g.moveTo(0,100);g.lineTo(40,60);g.lineTo(64,80);g.lineTo(128,20);g.stroke();g.strokeStyle='#c47dff';g.lineWidth=4;g.beginPath();g.moveTo(0,30);g.lineTo(50,10);g.lineTo(90,50);g.lineTo(128,40);g.stroke();
+   g.fillStyle='#3d3290';g.fillRect(0,0,128,6);g.fillRect(62,0,4,128);}
+  texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(TILE/2.2,1.8);}
+ else texture=new T.Texture();
+ wallTextures.set(area,texture);return texture;
+}
+function wallMaterial(area){const key='wall'+area;if(materials.has(key))return materials.get(key);const m=new T.MeshStandardMaterial({map:wallTexture(area),roughness:.85,emissive:area===2?'#3a2f8a':'#000000',emissiveIntensity:area===2?.4:0});m.userData.surface=area===2?'glass':area===0?'foliage':'stone';m.name='runner-wall-'+area;materials.set(key,m);return m;}
 const WALLS={
- 0(tile,kit){const g=new T.Group();for(const side of[-1,1]){g.add(mesh(geo('hedge',()=>new T.BoxGeometry(.7,2.6,TILE)),mat(kit.leaf,{rough:.95}),side*3.15,1.3,TILE/2));
-   for(let z=1;z<TILE;z+=2.4)g.add(mesh(geo('hedgetop',()=>new T.IcosahedronGeometry(.55,0)),mat(kit.leafLight||kit.leaf,{flat:true}),side*3.15,2.6,z));
-   for(let z=4;z<TILE;z+=8){g.add(mesh(geo('wtrunk',()=>new T.CylinderGeometry(.16,.22,3.4,7).translate(0,1.7,0)),mat(kit.bark),side*3.9,0,z));g.add(mesh(geo('wcrown',()=>new T.IcosahedronGeometry(1.25,0)),mat(kit.leaf,{flat:true}),side*3.9,4,z));}}return g;},
- 1(tile){const g=new T.Group();for(const side of[-1,1]){g.add(mesh(geo('sand',()=>new T.BoxGeometry(.8,3,TILE)),mat('#e6c48c',{flat:true}),side*3.2,1.5,TILE/2));
-   for(const y of[.9,2.2])g.add(mesh(geo('sandband',()=>new T.BoxGeometry(.84,.16,TILE)),mat('#d0794a'),side*3.2,y,TILE/2));
-   for(let z=0;z<TILE;z+=8)g.add(mesh(geo('sandpillar',()=>new T.CylinderGeometry(.42,.5,3.6,8).translate(0,1.8,0)),mat('#f1dcae',{flat:true}),side*3.25,0,z));}return g;},
- 2(tile){const g=new T.Group();for(const side of[-1,1]){g.add(mesh(geo('cwall',()=>new T.BoxGeometry(.7,2.8,TILE)),mat('#3a2f72',{flat:true}),side*3.15,1.4,TILE/2));
-   g.add(mesh(geo('cseam',()=>new T.BoxGeometry(.74,.08,TILE)),mat('#5ff3ff',{basic:true}),side*3.15,2.82,TILE/2));
-   for(let z=1.5;z<TILE;z+=3)g.add(mesh(geo('cspike',()=>new T.ConeGeometry(.28,1.1,5).translate(0,.55,0)),mat(z%2?'#9f7bff':'#62f5ff',{emissive:z%2?'#7a4dff':'#22c8ff',glow:.7,flat:true}),side*3.15,2.8,z));}return g;},
+ 0(tile,kit){const g=new T.Group(),wall=wallMaterial(0);for(const side of[-1,1]){g.add(mesh(geo('wall0',()=>new T.BoxGeometry(.7,3.4,TILE)),wall,side*3.15,1.7,TILE/2));
+   for(let z=1;z<TILE;z+=2.4)g.add(mesh(geo('hedgetop',()=>new T.IcosahedronGeometry(.6,0)),mat(kit.leafLight||kit.leaf,{flat:true}),side*3.15,3.4,z));
+   for(let z=3;z<TILE;z+=6)g.add(mesh(geo('flowerlamp',()=>new T.SphereGeometry(.2,10,8)),mat('#ffe066',{emissive:'#ffb800',glow:1.2,rough:.3}),side*2.78,1.6,z));
+   for(let z=2;z<TILE;z+=4.8){const big=(z/4.8|0)%2;g.add(mesh(geo('btrunk',()=>new T.CylinderGeometry(.22,.32,4.5,7).translate(0,2.25,0)),mat(kit.bark),side*(5.2+big*1.6),0,z));g.add(mesh(geo('bcrown'+big,()=>new T.IcosahedronGeometry(1.7+big*.5,0)),mat(big?kit.leaf:(kit.leafLight||kit.leaf),{flat:true}),side*(5.2+big*1.6),4.8+big*.6,z));}}return g;},
+ 1(tile){const g=new T.Group(),wall=wallMaterial(1);for(const side of[-1,1]){g.add(mesh(geo('wall1',()=>new T.BoxGeometry(.8,3.6,TILE)),wall,side*3.2,1.8,TILE/2));
+   for(let z=0;z<TILE;z+=6){g.add(mesh(geo('sandpillar',()=>new T.CylinderGeometry(.42,.5,4.2,8).translate(0,2.1,0)),mat('#f1dcae',{flat:true}),side*3.25,0,z));g.add(mesh(geo('sconce',()=>new T.SphereGeometry(.18,10,8)),mat('#ff9a3c',{emissive:'#ff6a00',glow:1.3}),side*2.85,2.6,z+3));}
+   for(let z=1;z<TILE;z+=6){const h=5+((z*7)%3)*1.6;g.add(mesh(geo('mesa'+h,()=>new T.CylinderGeometry(1.3,1.8,h,6).translate(0,h/2,0)),mat(z%12<6?'#d98b4e':'#e9b779',{flat:true}),side*(6+((z*3)%2)*1.8),0,z));}}return g;},
+ 2(tile){const g=new T.Group(),wall=wallMaterial(2);for(const side of[-1,1]){g.add(mesh(geo('wall2',()=>new T.BoxGeometry(.7,3.2,TILE)),wall,side*3.15,1.6,TILE/2));
+   g.add(mesh(geo('cseam',()=>new T.BoxGeometry(.74,.08,TILE)),mat('#5ff3ff',{basic:true}),side*3.15,3.22,TILE/2));
+   for(let z=1.5;z<TILE;z+=3)g.add(mesh(geo('cspike',()=>new T.ConeGeometry(.28,1.1,5).translate(0,.55,0)),mat(z%2?'#9f7bff':'#62f5ff',{emissive:z%2?'#7a4dff':'#22c8ff',glow:.7,flat:true}),side*3.15,3.2,z));
+   for(let z=2;z<TILE;z+=4){const h=4+((z*5)%4)*1.3;g.add(mesh(geo('spire'+h,()=>new T.ConeGeometry(.9,h,5).translate(0,h/2,0)),mat(z%8<4?'#5b44c9':'#2fb8d8',{emissive:z%8<4?'#3a1f9a':'#0f7f9f',glow:.5,flat:true}),side*(5.4+((z*3)%2)*1.5),0,z));}}return g;},
 };
 const wallCache=new Map();
 function wallsFor(area,kit){if(!wallCache.has(area))wallCache.set(area,compact((WALLS[area]||WALLS[0])(0,kit)));return wallCache.get(area);}
@@ -165,7 +190,8 @@ export function makeRunnerScenery(section,{creatureHeight=.65}={}){
   if(o.type==='barrier'){g=(JUMPS[o.style]||JUMPS.crates)(width,kit,anim);g.scale.set(1,hurdle,Math.min(1.6,hurdle));}
   else if(o.type==='bar')g=(SLIDES[o.style]||SLIDES.trunk)(width,Math.max(.55,creatureHeight*.62),kit,anim);
   else g=(GROUNDS[o.style]||GROUNDS.pit)(width,o.depth,kit,anim);
-  if(anim.length===moving&&o.type!=='barrier')g=compact(g);g.name=o.id;at(g,o.s,center);items.push({object:g,from:o.s-o.depth,to:o.s+o.depth,id:o.id});
+  // Holes and swamps lie on top of the lanes (y .09), or the track floor would hide them.
+  if(anim.length===moving&&o.type!=='barrier')g=compact(g);g.name=o.id;at(g,o.s,center,o.type==='hole'||o.type==='swamp'?.09:0);items.push({object:g,from:o.s-o.depth,to:o.s+o.depth,id:o.id});
  }
  // Coins: one instanced mesh for the whole run; collected and out-of-view coins are scaled away.
  const coins=new T.InstancedMesh(geo('runcoin',()=>new T.CylinderGeometry(.22,.22,.05,18).rotateZ(Math.PI/2)),mat('#ffcc3a',{emissive:'#c98a00',glow:.55,rough:.3}),Math.max(1,run.coins.length));

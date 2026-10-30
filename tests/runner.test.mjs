@@ -96,3 +96,11 @@ test('a classic journey carries over to the runner with its positions moved onto
  assert.equal(moved.position.z,w.stretchZ(-58));assert.equal(moved.position.x,-10);assert.equal(moved.checkpoint.position.z,w.stretchZ(-200));assert.equal(moved.travel.safe.z,w.stretchZ(-58));
  assert.equal(runner.wallet.balance,12,'coins come along');assert.equal(e.position.z,-58,'the classic save itself is untouched');assert.equal(importClassicSave(null),null);
 });
+test('the word closes as soon as it is spelled or its last row is passed, not at the end of the run',()=>{
+ setRunnerWords([{id:'w1',en:'rule',tr:'kural'}]);
+ const section=withRun(2),run=section.run,word=run.word,nav=navFor(section),r=new RunnerControl(),closed=[];r.events={word:(w,letters)=>closed.push(letters.join(''))};r.engage(nav);
+ for(const t of word.tokens.filter(t=>t.correct)){r.s=t.s;r.lat=LANES[t.lane];r.collide(nav);}
+ assert.deepEqual(closed,[word.answer],'closes on the last correct letter');r.finish(section,nav);assert.equal(closed.length,1,'and only once');
+ const other=withRun(6),missed=[],r2=new RunnerControl();r2.events={word:(w,letters)=>missed.push(letters)};const nav2=navFor(other);r2.engage(nav2);
+ r2.s=other.run.word.tokens.at(-1).s+2;r2.collide(nav2);assert.equal(missed.length,1,'closes once the last row is behind');assert.ok(missed[0].every(c=>c===null));
+});

@@ -1,11 +1,14 @@
 /* Runner mode: word-run panel, and the joystick steps aside while the creature runs on its own. */
 body.runner-running #joystick{opacity:0;pointer-events:none;transition:opacity .2s}
-#runner-word{position:fixed;z-index:46;left:50%;top:calc(76px + var(--safe-top,0px));transform:translateX(-50%);min-width:min(300px,86vw);max-width:92vw;padding:10px 18px 12px;border:3px solid #1b294f;border-radius:20px;background:#fff7dcf2;color:#1b294f;text-align:center;box-shadow:0 5px 0 #1b294f;pointer-events:none}
+#runner-word{position:fixed;z-index:46;left:50%;top:calc(62px + var(--safe-top,0px));transform:translateX(-50%);max-width:calc(100vw - 24px);padding:5px 12px 7px;border:2px solid #1b294f;border-radius:14px;background:#fff7dceb;color:#1b294f;text-align:center;box-shadow:0 3px 0 #1b294f;pointer-events:none;white-space:nowrap}
 #runner-word[hidden]{display:none}
-#runner-word small{display:block;font:800 11px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#657391}
-#runner-word strong{display:block;font:800 24px/1.2 system-ui,-apple-system,sans-serif;margin:3px 0 8px}
-.runner-slots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
-.runner-slots span{display:grid;place-items:center;width:30px;height:36px;border-radius:9px;background:#e4dabc;font:800 21px/1 system-ui,-apple-system,sans-serif;color:#1b294f}
+#runner-word small{display:none}
+#runner-word em{font:800 11px/1 system-ui,-apple-system,sans-serif;font-style:normal;letter-spacing:.8px;color:#657391;margin-right:7px;vertical-align:middle}
+/* While a word is up it takes the hint bar's place. */
+body.runner-word .play-dock .traversal-hint{visibility:hidden}
+#runner-word strong{display:inline-block;font:800 17px/1.2 system-ui,-apple-system,sans-serif;margin:0 8px 0 0;vertical-align:middle}
+.runner-slots{display:inline-flex;gap:3px;vertical-align:middle;flex-wrap:nowrap}
+.runner-slots span{display:grid;place-items:center;width:clamp(16px,5.2vw,24px);height:clamp(20px,6.4vw,28px);border-radius:6px;background:#e4dabc;font:800 clamp(12px,3.8vw,17px)/1 system-ui,-apple-system,sans-serif;color:#1b294f}
 .runner-slots span.filled{background:#7bdc5a;color:#13361b;animation:runner-pop .25s ease-out}
 .runner-slots span.missed{background:#f3c9a6;color:#7a3a14}
 #runner-word.complete{border-color:#2f8f3a;box-shadow:0 5px 0 #2f8f3a}
