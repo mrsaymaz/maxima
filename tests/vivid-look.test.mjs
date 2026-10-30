@@ -23,3 +23,9 @@ test('turning shadows off also stops the sun casting, so Low is not left in a st
  applyGraphics(world,{preset:'low'},1);assert.equal(world.renderer.shadowMap.enabled,false);assert.equal(world.sun.castShadow,false);
  applyGraphics(world,{preset:'balanced'},1);assert.equal(world.renderer.shadowMap.enabled,true);assert.equal(world.sun.castShadow,true);
 });
+test('near-camera coin dissolve uses the distance in front of the camera and only affects close fragments',async()=>{
+ const{fadeNearCamera}=await import('../dist/prop-art.js');const m=new T.MeshStandardMaterial();fadeNearCamera(m,1.3,3);fadeNearCamera(m);
+ const shader={fragmentShader:'#include <clipping_planes_fragment>',vertexShader:'',uniforms:{}};m.onBeforeCompile(shader);
+ assert.ok(shader.fragmentShader.includes('float maximaDepth = vViewPosition.z;'),'vViewPosition is -mvPosition, so its z is the forward distance');
+ assert.ok(shader.fragmentShader.includes('if ( maximaDepth < 3.00 )'));assert.ok(m.customProgramCacheKey().endsWith('|near-fade'));
+});

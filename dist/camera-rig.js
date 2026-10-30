@@ -36,7 +36,9 @@ export class CreatureCamera{
    const bias=taskStyle==='front'?.16:.32;if(focus){target.x=player.x*(1-bias)+focus.x*bias;target.z=player.z*(1-bias)+focus.z*bias;}
    yaw=taskStyle==='front'?toward+Math.PI:toward+Math.PI/2;actorYaw=toward;fov=44;if(frameFocus&&focus){target.x=(player.x+focus.x)/2;target.z=(player.z+focus.z)/2;target.y=footY+Math.max(rig.targetY,1.15);yaw=toward+Math.PI+Math.PI/3;}
   }
-  const normalDistance=rig.cameraZ/zoom,distance=normalDistance+((3.4+growth*2)/zoom-normalDistance)*combat,height=rig.cameraY/zoom+((2.2+growth*2.2)/zoom-rig.cameraY/zoom)*combat,contextDistance=frameFocus&&view==='focus'&&focus?Math.hypot(focus.x-player.x,focus.z-player.z)*1.4+1:0,framedDistance=Math.max(distance,contextDistance),framedHeight=Math.max(height,contextDistance*.6),
+  // Tall phone screens show little width, so the chase camera rises and steps back there: the creature sits lower in the
+  // frame and more of the route is visible above it. Landscape, tablets and desktop keep the authored framing.
+  const portrait=view==='explore'?clamp((.82-aspect)/.32,0,1):0,normalDistance=rig.cameraZ*(1+.2*portrait)/zoom,distance=normalDistance+((3.4+growth*2)/zoom-normalDistance)*combat,height=rig.cameraY*(1+.55*portrait)/zoom+((2.2+growth*2.2)/zoom-rig.cameraY/zoom)*combat,contextDistance=frameFocus&&view==='focus'&&focus?Math.hypot(focus.x-player.x,focus.z-player.z)*1.4+1:0,framedDistance=Math.max(distance,contextDistance),framedHeight=Math.max(height,contextDistance*.6),
    fitBoxes=frameFocus&&view==='focus'&&focusBounds?[focusBounds,playerBox]:rivalBox&&combat>.02?[playerBox,rivalBox]:view==='explore'?[playerBox]:null,candidate=a=>{
    let scale=1,position;for(let attempt=0;attempt<24;attempt++){const base=anchor||target;position={x:base.x-Math.sin(a)*framedDistance*scale,y:base.y+framedHeight*scale,z:base.z-Math.cos(a)*framedDistance*scale};if(!fitBoxes||framesBoxes(position,target,fitBoxes,fov,aspect))break;scale*=1.1;}
    // Extra attackers may widen the established focus framing by at most 34%; distant/behind threats use edge cues.

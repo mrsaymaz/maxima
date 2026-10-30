@@ -1,6 +1,6 @@
 import{surfaceMaterial,assignSurfaceRoles,replaceCueMaterials}from'./surface-materials.js';
 import{composedHalfWidth,scenicSurface}from'./expedition-composition.js';
-import{bevelBox,carvedCylinder,stoneColumn,liquidMaterial,rockLump}from'./prop-art.js';
+import{bevelBox,carvedCylinder,stoneColumn,liquidMaterial,rockLump,fadeNearCamera}from'./prop-art.js';
 import{approachHeight}from'./traversal-layout.js';
 import{movingPose,coinPose}from'./path-trials-layout.js';
 import * as T from './vendor/three.module.min.js';
@@ -70,6 +70,7 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
   const rims=[];for(const face of[-1,1]){const rim=new T.TorusGeometry(.185,.018,4,16);rim.translate(0,0,face*.038);rims.push(rim);}const rimGeo=joinGeometry(rims);rims.forEach(g=>g.dispose());const fronts=[];
   for(const face of[-1,1])for(const side of[-1,1]){const bit=new T.BoxGeometry(.033,.21,.012);bit.rotateZ(side*.33);bit.translate(side*.045,0,face*.042);fronts.push(bit);}
   const runeGeo=joinGeometry(fronts);fronts.forEach(g=>g.dispose());
+  fadeNearCamera(m.gold);fadeNearCamera(m.rune);
   for(const[geometry,mat,name]of[[bodyGeo,m.gold,'gold-coins'],[rimGeo,m.rune,'coin-rims'],[runeGeo,m.rune,'double-sided-coin-runes']]){const batch=new T.InstancedMesh(geometry,mat,coinCount);batch.name=name;batch.castShadow=true;batch.frustumCulled=false;group.add(batch);coinParts.push(batch);}
  }
  const plantData=[],solids=[];

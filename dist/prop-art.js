@@ -135,3 +135,20 @@ export function trailDressing({widthAt=()=>TRAIL_WIDTH,heightAt=()=>0,clusterAt=
  add(chunkedInstances(fernGeometry(),fern,ferns,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z),v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s*.6);},'trail-ferns'));
  group.userData={pebbles:pebbles.length,flowers:flowers.length,ferns:ferns.length,materials:{stone,fern}};return group;
 }
+
+// Collectables that drift between the camera and the creature dissolve with a stable screen-space dither instead of
+// filling a phone screen. Opaque rendering is kept (no sorting cost); only fragments closer than `far` can vanish.
+export function fadeNearCamera(material,near=1.3,far=3.0){
+ if(material.userData.nearFade)return material;material.userData.nearFade={near,far};const previous=material.onBeforeCompile;
+ material.onBeforeCompile=(shader,renderer)=>{previous?.call(material,shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
+	{
+		float maximaDepth = vViewPosition.z; // three.js stores -mvPosition, so this is the distance in front of the camera
+		if ( maximaDepth < ${far.toFixed(2)} ) {
+			float maximaKeep = smoothstep( ${near.toFixed(2)}, ${far.toFixed(2)}, maximaDepth );
+			float maximaDither = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) );
+			if ( maximaDither > maximaKeep ) discard;
+		}
+	}`);};
+ const key=material.customProgramCacheKey?.bind(material);material.customProgramCacheKey=()=>(key?key():'')+'|near-fade';
+ return material;
+}
