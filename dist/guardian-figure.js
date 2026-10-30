@@ -12,7 +12,7 @@ const THEMES=[
  {stone:'#c9a77a',plate:'#e6d2a8',dark:'#6e5338',trim:'#f2c45a',energy:'#7ff3ff',accent:'#d9583c',accent2:'#3fc6d0'},
  {stone:'#4a4278',plate:'#7d73b8',dark:'#251f45',trim:'#c7b8ff',energy:'#f0a6ff',accent:'#62f5ff',accent2:'#b68cff'},
 ];
-export function guardianMaterials(area=0){const p=GUARDIAN_PALETTES[area]||GUARDIAN_PALETTES[0];return{stone:surfaceMaterial('stone',p.stone,{roughness:.85}),edge:surfaceMaterial('stone',p.edge,{roughness:.75}),dark:surfaceMaterial('stone',p.dark,{roughness:.9}),ground:surfaceMaterial('stone',p.ground,{roughness:1}),metal:surfaceMaterial('metal','#bcaa78',{roughness:.55}),energy:new T.MeshStandardMaterial({color:p.energy,emissive:p.energy,emissiveIntensity:.7,roughness:.3})};}
+export function guardianMaterials(area=0){const p=GUARDIAN_PALETTES[area]||GUARDIAN_PALETTES[0];return{stone:surfaceMaterial('stone',p.stone,{roughness:.85}),edge:surfaceMaterial('stone',p.edge,{roughness:.75}),dark:surfaceMaterial('stone',p.dark,{roughness:.9}),ground:surfaceMaterial('stone',p.ground,{roughness:1}),metal:surfaceMaterial('metal','#bcaa78',{roughness:.55}),energy:Object.assign(new T.MeshStandardMaterial({color:p.energy,emissive:p.energy,emissiveIntensity:.7,roughness:.3}),{userData:{surface:'effect'}})};}
 function mesh(parent,g,m,x=0,y=0,z=0,shadow=true){const o=new T.Mesh(g,m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
 // Merges the still meshes that share a parent, material and shadow setting into one draw call.
 // Meshes in `keep` (animated on their own) and meshes with children stay as they are.

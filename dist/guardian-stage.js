@@ -30,7 +30,7 @@ export class GuardianStage{
   this.combat=new GuardianCombat(state,{area:this.area,bodyProfile:world.nav.bodyProfile||world.bodyProfile,mode,partner,event:(kind,data)=>{if(kind==='boss-hit'||kind==='seal')this.hitAge=0;if(kind==='boss-hit'&&data?.critical)this.critAge=0;if(kind==='seal')this.sealAge=0;if(kind==='ward-broken')this.wardAge=0;if(kind==='hurt'){world.locomotion?.hit();world.combatExpression?.cue('hurt');}if(kind==='boss-hit')world.combatExpression?.cue('success');if(kind==='blocked')world.combatExpression?.cue('blocked');if(kind==='impact')this.fx.impact({...data,y:Math.max(1.4,data.y)},data.hit?'rival':'solid');if(kind==='clear')this.fx.impact({...data,y:.8},'solid');event(kind,data);}});if(resume)this.combat.resume();this.partner=partner;
   world.rival.visible=false;world.creature.visible=true;world.creature.scale.setScalar(1);world.camera.clearViewOffset();world.viewShift=0;
  }
- build(){const p=this.palette,area=this.area,m={stone:surfaceMaterial('stone',p.stone,{roughness:.85}),edge:surfaceMaterial('stone',p.edge,{roughness:.75}),dark:surfaceMaterial('stone',p.dark,{roughness:.9}),ground:surfaceMaterial('stone',p.ground,{roughness:1}),metal:surfaceMaterial('metal','#bcaa78',{roughness:.55}),energy:new T.MeshStandardMaterial({color:p.energy,emissive:p.energy,emissiveIntensity:.7,roughness:.3}),
+ build(){const p=this.palette,area=this.area,m={stone:surfaceMaterial('stone',p.stone,{roughness:.85}),edge:surfaceMaterial('stone',p.edge,{roughness:.75}),dark:surfaceMaterial('stone',p.dark,{roughness:.9}),ground:surfaceMaterial('stone',p.ground,{roughness:1}),metal:surfaceMaterial('metal','#bcaa78',{roughness:.55}),energy:Object.assign(new T.MeshStandardMaterial({color:p.energy,emissive:p.energy,emissiveIntensity:.7,roughness:.3}),{userData:{surface:'effect'}}),
    // One colour code for every guardian: amber = coming, red = hurts now, blue = safe.
    warning:overlay('#ffc36e',.5),danger:overlay('#fc684e',.7),safe:overlay('#7fe9ff',.8),cover:overlay('#ffb057',.3),coverHit:overlay('#e0503c',.55)};this.materials=m;
   const decor=new T.Group();this.root.add(decor);
@@ -52,7 +52,7 @@ export class GuardianStage{
   this.cover=flat(new T.CircleGeometry(ARENA.radius-.3,64),m.cover);this.cover.position.set(ARENA.x,.03,ARENA.z);this.cover.renderOrder=1;
   // Roots, thorn bushes and vines (Whisperwood) or crystals (Stormglass) spring from the ground as instances.
   const spikeGeometry=area===2?new T.OctahedronGeometry(.42,0).scale(1,2.6,1).translate(0,.9,0):new T.ConeGeometry(.3,1.7,5).translate(0,.85,0);
-  const spikeMaterial=area===2?Object.assign(new T.MeshStandardMaterial({color:'#b68cff',emissive:'#7a3dff',emissiveIntensity:.7,roughness:.15,flatShading:true}),{}):surfaceMaterial('stone',area===0?'#5a4a2c':'#8a7a5c',{roughness:.9,flatShading:true});
+  const spikeMaterial=area===2?Object.assign(new T.MeshStandardMaterial({color:'#b68cff',emissive:'#7a3dff',emissiveIntensity:.7,roughness:.15,flatShading:true}),{userData:{surface:'glass'}}):surfaceMaterial('stone',area===0?'#5a4a2c':'#8a7a5c',{roughness:.9,flatShading:true});
   this.spikes=new T.InstancedMesh(spikeGeometry,spikeMaterial,SPIKES);this.spikes.castShadow=true;this.spikes.frustumCulled=false;this.spikes.count=0;this.root.add(this.spikes);this.dummy=new T.Object3D();
   // Projectiles: seed pods, orbit stones or falling crystals.
   const rockGeometry=area===0?new T.IcosahedronGeometry(.8,1).scale(1,1.25,1):area===2?new T.OctahedronGeometry(.75,0).scale(1,2.2,1):new T.DodecahedronGeometry(.75,0);
