@@ -3,9 +3,9 @@ import * as T from './vendor/three.module.min.js';
 import {chapterPath,pathDistance,CHAPTER_LENGTH,END} from './trail-layout.js';
 
 const THEMES=[
- {name:'forest',title:'Whisperwood terraces',lighting:{sky:'#c9ded0',fog:'#c9ded0',hemisphereSky:'#e9f5db',hemisphereGround:'#435b36',sun:'#ffe2ab',sunIntensity:3.0,hemisphereIntensity:1.28,exposure:1.02},colors:{rock:'#536b60',cap:'#71965c',bark:'#685345',leaf:'#346b4b',leafLight:'#87ab64',bloom:'#e9d69c',fungus:'#c79e69',flow:'#64c8bf'}},
- {name:'skyreach',title:'Skyreach aqueducts',lighting:{sky:'#c9dfeb',fog:'#c9dfeb',hemisphereSky:'#edf6ff',hemisphereGround:'#687d78',sun:'#fff0d2',sunIntensity:3.1,hemisphereIntensity:1.65,exposure:1.06},colors:{rock:'#879b9c',cap:'#a8b99d',stone:'#e4d9b8',brass:'#b99b61',leaf:'#7d9f8c',veil:'#a7cdd6',flow:'#7ccada'}},
- {name:'stormglass',title:'Stormglass basalt spires',lighting:{sky:'#9caac4',fog:'#9caac4',hemisphereSky:'#ccd6ff',hemisphereGround:'#31354d',sun:'#d3dfff',sunIntensity:2.55,hemisphereIntensity:1.35,exposure:1.0},colors:{rock:'#303b50',cap:'#59637b',glass:'#9a8bc8',cyan:'#70cedb',leaf:'#687b8f',flow:'#8fabe0'}}
+ {name:'forest',title:'Whisperwood terraces',lighting:{sky:'#c9ded0',fog:'#c9ded0',hemisphereSky:'#e9f5db',hemisphereGround:'#435b36',sun:'#ffe2ab',sunIntensity:3.0,hemisphereIntensity:1.28,exposure:1.02},colors:{rock:'#a99b80',cap:'#86b957',bark:'#7a5638',leaf:'#3f9845',leafLight:'#8fcd4e',bloom:'#ffe08a',fungus:'#e0a066',flow:'#39c0d4'}},
+ {name:'skyreach',title:'Skyreach aqueducts',lighting:{sky:'#c9dfeb',fog:'#c9dfeb',hemisphereSky:'#edf6ff',hemisphereGround:'#687d78',sun:'#fff0d2',sunIntensity:3.1,hemisphereIntensity:1.65,exposure:1.06},colors:{rock:'#cdb68f',cap:'#a6cf66',stone:'#f1e2bd',brass:'#e2b24e',leaf:'#5cb574',veil:'#bfe9f7',flow:'#46c6ea'}},
+ {name:'stormglass',title:'Stormglass basalt spires',lighting:{sky:'#9caac4',fog:'#9caac4',hemisphereSky:'#ccd6ff',hemisphereGround:'#31354d',sun:'#d3dfff',sunIntensity:2.55,hemisphereIntensity:1.35,exposure:1.0},colors:{rock:'#4b3f86',cap:'#4db7a3',glass:'#b59cff',cyan:'#5fe6ff',leaf:'#3aa69e',flow:'#5be0ff'}}
 ];
 const PATHS=Array.from({length:5},(_,c)=>['left','right'].map(s=>chapterPath(c,s))).flat();
 PATHS.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:END.z+8},{...END}]);

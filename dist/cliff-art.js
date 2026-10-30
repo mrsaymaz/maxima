@@ -1,4 +1,5 @@
 import{assignSurface}from'./surface-materials.js';
+import{ARENA_LOOKS}from'./arena-palette.js';
 import * as T from './vendor/three.module.min.js';
 // Stylised cliff walls for the corridor enclosure: faceted, noise-displaced rock with strata bands,
 // darker bases, moss on ledges, a ragged skyline and plants along the rim. Visual only: the enclosure's
@@ -9,7 +10,7 @@ function hash(x,y,z){let h=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Mat
 export function noise3(x,y,z){const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z),fx=x-ix,fy=y-iy,fz=z-iz,s=t=>t*t*(3-2*t),u=s(fx),v=s(fy),w=s(fz);const l=(a,b,t)=>a+(b-a)*t;return l(l(l(hash(ix,iy,iz),hash(ix+1,iy,iz),u),l(hash(ix,iy+1,iz),hash(ix+1,iy+1,iz),u),v),l(l(hash(ix,iy,iz+1),hash(ix+1,iy,iz+1),u),l(hash(ix,iy+1,iz+1),hash(ix+1,iy+1,iz+1),u),v),w);}
 export const fbm3=(x,y,z)=>noise3(x,y,z)*.55+noise3(x*2.1+7.3,y*2.1,z*2.1-3.1)*.3+noise3(x*4.3,y*4.3+1.7,z*4.3)*.15;
 
-export const CLIFF_TINTS=[{rock:'#959782',moss:'#6f8b59',grass:'#7f9b66',dark:'#515e51'},{rock:'#c6bea2',moss:'#8fa57a',grass:'#9fb68a',dark:'#737967'},{rock:'#8d90a8',moss:'#6c7f8c',grass:'#7d8fa2',dark:'#4a4c61'}];
+export const CLIFF_TINTS=ARENA_LOOKS.map(look=>look.cliffs);
 const LEVELS=[0,.13,.29,.46,.63,.8,.93,1];
 export const CHUNK=66;
 export const chunkOf=z=>Math.floor((12-z)/CHUNK);
@@ -56,4 +57,4 @@ export function foliageGeometry(seed=1,detail=1){const geo=new T.IcosahedronGeom
 // Faceted boulder with a lighter, mossy top.
 export function boulderGeometry(seed=1){const geo=new T.IcosahedronGeometry(1,1),p=geo.attributes.position,v=new T.Vector3(),colors=[];for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const k=.72+fbm3(v.x*1.3+seed,v.y*1.3,v.z*1.3+seed*.7)*.5;v.multiplyScalar(k);if(v.y<-.3)v.y=-.3-(v.y+.3)*.2;p.setXYZ(i,v.x,v.y,v.z);}geo.computeVertexNormals();const n=geo.attributes.normal;for(let i=0;i<p.count;i++){const up=Math.max(0,n.getY(i)-.55)/.45,g=.78+fbm3(p.getX(i)*3,p.getY(i)*3,p.getZ(i)*3)*.3;colors.push(g*(1-up*.45),g*(1-up*.15),g*(1-up*.55));}geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));return geo;}
 // Arena palette for walls, caps, outcrops and rim plants.
-export function tintCliffs(group,area=0){const t=CLIFF_TINTS[area]||CLIFF_TINTS[0],leaf=['#5f8a4c','#7c9a6a','#5d6f86'][area]||'#5f8a4c';group?.traverse(o=>{if(!o.material)return;const n=o.name;if(n.startsWith('cliff-wall'))o.material.color.set(t.rock);else if(n.startsWith('continuous-moss-cap'))o.material.color.set(t.grass);else if(n.startsWith('cliff-outcrops'))o.material.color.set(t.rock).multiplyScalar(1.05);else if(n.startsWith('rim-bushes')||n.startsWith('rim-tree-crowns'))o.material.color.set(leaf);});}
+export function tintCliffs(group,area=0){const t=CLIFF_TINTS[area]||CLIFF_TINTS[0],leaf=t.leaf,banks=(ARENA_LOOKS[area]||ARENA_LOOKS[0]).banks;group?.traverse(o=>{if(!o.material)return;const n=o.name;if(n.startsWith('cliff-wall'))o.material.color.set(t.rock);else if(n.startsWith('continuous-moss-cap'))o.material.color.set(t.grass);else if(n.startsWith('cliff-outcrops'))o.material.color.set(t.rock).multiplyScalar(1.05);else if(n.startsWith('rim-bushes')||n.startsWith('rim-tree-crowns'))o.material.color.set(leaf);else if(n.startsWith('valley-bank-earth'))o.material.color.set(banks.earth);else if(n.startsWith('valley-bank-moss'))o.material.color.set(banks.moss);});}

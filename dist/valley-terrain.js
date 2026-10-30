@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.min.js';
+import{ARENA_LOOKS}from'./arena-palette.js';
 import {chapterPath,START,END} from './trail-layout.js';
 import {composedHalfWidth} from './expedition-composition.js';
 
@@ -47,7 +48,7 @@ export function terrainHeight(x,z,area=0){
  const shoulder=smooth((clearance-CELL_APRON)/6.5);
  return FLOOR+shoulder*relief(x,z,area);
 }
-const COLORS=[['#69804d','#acac70','#425744'],['#819185','#b2b99b','#486d70'],['#555e61','#8b8b81','#394f51']].map(row=>row.map(c=>new T.Color(c)));
+const COLORS=ARENA_LOOKS.map(({terrain:t})=>[t.low,t.high,t.route].map(c=>new T.Color(c)));
 export function terrainTint(x,z,y=terrainHeight(x,z),area=0){
  const palette=COLORS[area],color=palette[0].clone().lerp(palette[1],smooth((y-.3)/9)*.48).lerp(palette[2],(1-smooth((routeDistance(x,z)-5)/8))*.15);return color.multiplyScalar(.94+noise(x,z,15,409+area)*.10);
 }

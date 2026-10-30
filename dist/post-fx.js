@@ -1,5 +1,6 @@
 import * as T from './vendor/three.module.min.js';
-// High preset only: HDR scene target, soft bloom from a dual-filter blur chain, ACES tone mapping and per-arena colour grading.
+import{VIVID_GRADE_GLSL}from'./color-grade.js';
+// High preset only: HDR scene target, soft bloom from a dual-filter blur chain, the shared vivid tone curve and per-arena colour grading.
 const VERTEX='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}';
 const BRIGHT=`uniform sampler2D tInput;uniform vec2 uTexel;uniform float uThreshold;varying vec2 vUv;
 void main(){vec3 c=texture2D(tInput,vUv+uTexel*vec2(-1.0,-1.0)).rgb+texture2D(tInput,vUv+uTexel*vec2(1.0,-1.0)).rgb+texture2D(tInput,vUv+uTexel*vec2(-1.0,1.0)).rgb+texture2D(tInput,vUv+uTexel*vec2(1.0,1.0)).rgb;c*=0.25;
@@ -12,15 +13,16 @@ c+=(texture2D(tInput,vUv+h).rgb+texture2D(tInput,vUv-h).rgb+texture2D(tInput,vUv
 const COMPOSITE=`uniform sampler2D tScene;uniform sampler2D tBloom;uniform float uBloom;uniform float uExposure;uniform float uSaturation;uniform float uContrast;uniform float uVignette;uniform vec3 uShadows;uniform vec3 uHighlights;uniform vec2 uAspect;varying vec2 vUv;
 vec3 fit(vec3 v){vec3 a=v*(v+0.0245786)-0.000090537;vec3 b=v*(0.983729*v+0.4329510)+0.238081;return a/b;}
 vec3 aces(vec3 c){const mat3 i=mat3(vec3(0.59719,0.07600,0.02840),vec3(0.35458,0.90834,0.13383),vec3(0.04823,0.01566,0.83777));const mat3 o=mat3(vec3(1.60475,-0.10208,-0.00327),vec3(-0.53108,1.10813,-0.07276),vec3(-0.07367,-0.00605,1.07602));c*=uExposure/0.6;return clamp(o*fit(i*c),0.0,1.0);}
+${VIVID_GRADE_GLSL}
 vec3 srgb(vec3 c){return mix(c*12.92,1.055*pow(c,vec3(1.0/2.4))-0.055,step(0.0031308,c));}
-void main(){vec3 c=texture2D(tScene,vUv).rgb+texture2D(tBloom,vUv).rgb*uBloom;c=srgb(aces(c));
+void main(){vec3 c=texture2D(tScene,vUv).rgb+texture2D(tBloom,vUv).rgb*uBloom;c=srgb(maximaVivid(c,uExposure));
 float l=dot(c,vec3(0.2126,0.7152,0.0722));c=mix(vec3(l),c,uSaturation);c=(c-0.5)*uContrast+0.5;
 c+=uShadows*(1.0-smoothstep(0.0,0.55,l))+uHighlights*smoothstep(0.45,1.0,l);
 vec2 p=(vUv-0.5)*uAspect;c*=1.0-uVignette*smoothstep(0.35,0.95,length(p));gl_FragColor=vec4(clamp(c,0.0,1.0),1.0);}`;
 export const GRADES=[
- {saturation:1.12,contrast:1.05,shadows:[-.012,.004,.014],highlights:[.03,.018,-.012],bloom:.20,vignette:.13},
- {saturation:1.08,contrast:1.04,shadows:[-.01,0,.02],highlights:[.024,.02,.006],bloom:.18,vignette:.12},
- {saturation:1.1,contrast:1.07,shadows:[.008,-.006,.03],highlights:[.012,.014,.03],bloom:.25,vignette:.16}
+ {saturation:1.03,contrast:1.02,shadows:[-.008,.004,.014],highlights:[.018,.012,-.008],bloom:.20,vignette:.11},
+ {saturation:1.02,contrast:1.02,shadows:[-.008,0,.016],highlights:[.016,.012,.004],bloom:.18,vignette:.10},
+ {saturation:1.04,contrast:1.03,shadows:[.008,-.004,.024],highlights:[.012,.008,.02],bloom:.26,vignette:.13}
 ];
 export class PostFX{
  constructor(renderer){

@@ -1,12 +1,13 @@
 import * as T from './vendor/three.module.min.js';
+import{ARENA_LOOKS}from'./arena-palette.js';
 import {surfaceMaterial} from './surface-materials.js';
 
 // Colours are authored in sRGB. Vertex colours remain available for the kit's
 // contact AO; restrained maps add broad painted variation without shader hooks.
 const PALETTES=Object.freeze([
- {id:'whisperwood',title:'Whisperwood',colors:{rock:'#7e8470',rockTop:'#929b77',bark:'#75634b',leaf:'#68824d',leafLight:'#9baa68',fern:'#78935c',timber:'#9a7955',masonry:'#a89f81',soil:'#8a7452',damp:'#5d6b54',water:'#6baba2',foam:'#d9ead4',metal:'#b99a56'}},
- {id:'skyreach',title:'Skyreach',colors:{rock:'#8a9896',rockTop:'#b2bba7',bark:'#7b8070',leaf:'#879e87',leafLight:'#bec9a8',fern:'#9aad8d',timber:'#a18d69',masonry:'#d0c9ae',soil:'#a29b7c',damp:'#718781',water:'#82b9bd',foam:'#e6ecdc',metal:'#b79860'}},
- {id:'stormglass',title:'Stormglass',colors:{rock:'#5b6c83',rockTop:'#8795a5',bark:'#687685',leaf:'#96aab1',leafLight:'#c0ccca',fern:'#9dafb9',timber:'#7e8790',masonry:'#8e9dad',soil:'#68798a',damp:'#455c70',water:'#719fb7',foam:'#d7e6eb',metal:'#aab9c6'}}
+ {id:'whisperwood',title:'Whisperwood',colors:{...ARENA_LOOKS[0].kit}},
+ {id:'skyreach',title:'Skyreach',colors:{...ARENA_LOOKS[1].kit}},
+ {id:'stormglass',title:'Stormglass',colors:{...ARENA_LOOKS[2].kit}}
 ].map(p=>Object.freeze({...p,colors:Object.freeze(p.colors)})));
 const ROLES=Object.freeze({rock:'stone',rockTop:'stone',bark:'wood',leaf:'foliage',leafLight:'foliage',fern:'foliage',timber:'wood',masonry:'stone',soil:'soil',damp:'soil',water:'water',foam:'water',metal:'metal'});
 const FLAT=new Set(['rock','rockTop','leaf','leafLight','fern']);

@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.min.js';
+import{ARENA_LOOKS}from'./arena-palette.js';
 import{chunkOf,noise3}from'./cliff-art.js';
 import{pathDetailHeight}from'./path-detail.js';
 import{surfaceMaterial}from'./surface-materials.js';
@@ -12,7 +13,7 @@ export function bankSection(p,normal,depth=1){
 }
 
 export function buildValleyBanks(strips){
- const batches=new Map(),materials={earth:surfaceMaterial('soil','#8c8063',{vertexColors:true,roughness:1,side:T.DoubleSide}),moss:surfaceMaterial('foliage','#708451',{vertexColors:true,roughness:1,side:T.DoubleSide})};
+ const batches=new Map(),materials={earth:surfaceMaterial('soil',ARENA_LOOKS[0].banks.earth,{vertexColors:true,roughness:1,side:T.DoubleSide}),moss:surfaceMaterial('foliage',ARENA_LOOKS[0].banks.moss,{vertexColors:true,roughness:1,side:T.DoubleSide})};
  let triangles=0;
  for(const s of strips){
   // A thin central ridge must retain its width. Never bridge across to another path.

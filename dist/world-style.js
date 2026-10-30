@@ -1,4 +1,5 @@
 import{composedHalfWidth}from'./expedition-composition.js';
+import{ARENA_LOOKS}from'./arena-palette.js';
 import{SURFACES,assignSurface}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 import{chapterPath,TRAIL_WIDTH,CHAPTER_LENGTH,END}from'./trail-layout.js';
@@ -123,7 +124,7 @@ export function edgeGrass(color='#5f8d55',{widthAt=()=>TRAIL_WIDTH,heightAt=()=>
  mesh.castShadow=false;mesh.receiveShadow=true;mesh.userData.total=spots.length;mesh.frustumCulled=false;return mesh;
 }
 
-export const SKY_ZENITH=['#7fb6d6','#76abdf','#5e6ea6'];
+export const SKY_ZENITH=ARENA_LOOKS.map(look=>look.zenith);
 // Gradient sky dome that follows the camera; its horizon matches the fog colour.
 export function skyDome(){
  const uniforms={uTop:{value:new T.Color(SKY_ZENITH[0])},uHorizon:{value:new T.Color('#c9ded0')},uSun:{value:new T.Color('#ffe2ab')},uSunDir:{value:new T.Vector3(-.45,.75,.48).normalize()}};

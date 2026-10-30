@@ -4,7 +4,7 @@ import * as T from './vendor/three.module.min.js';
 import{surfaceMaterial}from'./surface-materials.js';import{foliageGeometry,boulderGeometry}from'./cliff-art.js';
 import{chapterPath,END}from'./trail-layout.js';import{EXPEDITION_SCENES,segmentRectDistance}from'./expedition-composition.js';
 
-const colors={stone:'#8b927d',dark:'#515e53',limestone:'#cfbf9a',wood:'#73583f',leaf:'#44745a',leafLight:'#7d9b67',moss:'#728b58',water:'#73b8af',crystal:'#90b2b6',bronze:'#b99a64'};
+const colors={stone:'#b0a184',dark:'#6e5e48',limestone:'#e3d0a2',wood:'#80583a',leaf:'#3f9845',leafLight:'#8fcd4e',moss:'#6eb04a',water:'#39c0d4',crystal:'#8fe6ee',bronze:'#d6a648'};
 const roles={stone:'stone',dark:'stone',limestone:'stone',wood:'wood',leaf:'foliage',leafLight:'foliage',moss:'foliage',water:'water',crystal:'glass',bronze:'metal'};
 const PATHS=Array.from({length:5},(_,c)=>['left','right'].map(side=>chapterPath(c,side))).flat();PATHS.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:-658},END]);
 function wedge(){const shape=new T.Shape(),a=Math.PI/12;shape.moveTo(.80,0);shape.lineTo(1,0);for(let i=1;i<=4;i++)shape.lineTo(Math.cos(a*i/4),Math.sin(a*i/4));shape.lineTo(Math.cos(a)*.8,Math.sin(a)*.8);for(let i=3;i>=0;i--)shape.lineTo(Math.cos(a*i/4)*.8,Math.sin(a*i/4)*.8);const g=new T.ExtrudeGeometry(shape,{depth:1,bevelEnabled:false,steps:1,curveSegments:1});g.translate(0,0,-.5);return g;}

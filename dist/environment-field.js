@@ -1,4 +1,5 @@
 import{sceneryPlan}from'./scenery-plan.js';import{sceneryGeometry,authorScenery}from'./scenery-art.js';
+import{ARENA_LOOKS}from'./arena-palette.js';
 import{makeMeadowGrass,updateMeadowGrass}from'./meadow-grass.js';
 import{makeAqueductStory}from'./aqueduct-story.js';
 import * as T from './vendor/three.module.min.js';
@@ -13,11 +14,8 @@ const ROUTES=Array.from({length:5},(_,c)=>['left','right'].map(side=>chapterPath
 ROUTES.push([{x:0,z:12},START,{x:0,z:2}],[{x:0,z:-658},END,{x:0,z:-674}]);
 const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
 export function environmentClearance(x,z){return Math.min(...ROUTES.map(p=>pathDistance({x,z},p)));}
-export const ENVIRONMENT_LIGHTING=[
- {sky:'#bfd7cf',fog:'#bfd7cf',hemisphereSky:'#e4efdb',hemisphereGround:'#3f564b',hemisphereIntensity:1.05,sun:'#ffe0a2',sunIntensity:2.85,exposure:.98,near:34,far:125},
- {sky:'#c6deea',fog:'#c6deea',hemisphereSky:'#edf4f3',hemisphereGround:'#566d70',hemisphereIntensity:1.24,sun:'#ffe9c3',sunIntensity:2.9,exposure:1.01,near:40,far:142},
- {sky:'#a6b7ce',fog:'#a6b7ce',hemisphereSky:'#d6e0f6',hemisphereGround:'#2d3e53',hemisphereIntensity:1.08,sun:'#dde9fa',sunIntensity:2.55,exposure:.99,near:28,far:113}
-];
+// Sky, fog, hemisphere and sun per arena live with the rest of the arena look.
+export const ENVIRONMENT_LIGHTING=ARENA_LOOKS.map(look=>look.lighting);
 function windMaterial(material,uniforms){
  material.userData.stylized='environment-foliage';
  material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,uniforms);shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float environmentFlex;\nuniform float uEnvironmentTime;\nuniform float uEnvironmentMotion;\nuniform vec2 uEnvironmentFocus;\nuniform float uEnvironmentQuiet;').replace('#include <begin_vertex>',`#include <begin_vertex>
