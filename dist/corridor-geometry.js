@@ -1,3 +1,4 @@
+import{classicZ}from'./runner-mode.js';
 import{buildValleyBanks}from'./valley-banks.js';
 import{surfaceMaterial,assignSurface,assignSurfaceRoles}from'./surface-materials.js';
 import{composedHalfWidth,scenicWallHeight}from'./expedition-composition.js';
@@ -185,7 +186,7 @@ export function makeCorridorEnclosure({composed=false,reveals=false}={}){
  const sites=segments.filter(({a,b},i)=>{if(i%9)return false;const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return field(x+n.x*1.1,z+n.z*1.1)>.80;}).map(({a,b})=>{const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return{x:x+n.x*1.15,z:z+n.z*1.15,size:.55+fbm3(x,1,z)*.6};});
  const rockMaterial=new T.MeshStandardMaterial({color:'#b4ab94',vertexColors:true,roughness:.95,flatShading:true}),leafMaterial=new T.MeshStandardMaterial({color:'#5f8a4c',vertexColors:true,roughness:.9,flatShading:true}),barkMaterial=new T.MeshStandardMaterial({color:'#6e5641',roughness:.95});
  assignSurface(rockMaterial,'stone');assignSurface(leafMaterial,'foliage');assignSurface(barkMaterial,'wood');
- const bushSpots=cliffs.rim.filter((r,i)=>composed||reveals?i%11===0&&fbm3(r.x*.2,0,r.z*.08)>.52:i%5===0),treeSpots=cliffs.rim.filter((r,i)=>i%(composed||reveals?67:15)===7&&r.depth>1.2&&(!(composed||reveals)||((-r.z%132+132)%132)>33)),bush=foliageGeometry(2,1),crown=foliageGeometry(5,1),trunk=new T.CylinderGeometry(.09,.15,1,6),rock=boulderGeometry(3);
+ const bushSpots=cliffs.rim.filter((r,i)=>composed||reveals?i%11===0&&fbm3(r.x*.2,0,r.z*.08)>.52:i%5===0),treeSpots=cliffs.rim.filter((r,i)=>i%(composed||reveals?67:15)===7&&r.depth>1.2&&(!(composed||reveals)||((-classicZ(r.z)%132+132)%132)>33)),bush=foliageGeometry(2,1),crown=foliageGeometry(5,1),trunk=new T.CylinderGeometry(.09,.15,1,6),rock=boulderGeometry(3);
  const add=list=>{for(const mesh of list)g.add(mesh);};
  add(chunkedInstances(rock,rockMaterial,composed?sites.filter(r=>fbm3(r.x*.2,0,r.z*.08)>.55):sites,(o,r,i)=>{o.position.set(r.x,r.size*.25,r.z);o.rotation.set(.2*Math.sin(i),i*.67,.15*Math.cos(i));o.scale.set(r.size*1.1,r.size*.85,r.size);},'cliff-outcrops'));
  add(chunkedInstances(bush,leafMaterial,bushSpots,(o,r,i)=>{const k=.32+fbm3(r.x*.7,2,r.z*.7)*.45;o.position.set(r.x+r.nx*r.depth*.35,r.y+k*.35,r.z+r.nz*r.depth*.35);o.rotation.set(0,i*1.3,0);o.scale.set(k*1.3,k,k*1.2);},'rim-bushes'));

@@ -1,3 +1,4 @@
+import{stretchZ}from'./runner-mode.js';
 import{assignSurface}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 import {chapterPath,pathDistance,CHAPTER_LENGTH,END} from './trail-layout.js';
@@ -35,7 +36,7 @@ function kit(area){
   if(!outside||distance<CLEARANCE-1e-6)throw Error(`Scenic ${theme.name}/${feature} would intrude on corridor (${x},${z}; clearance ${distance}).`);
   const key=kind+'|'+material;if(!batches.has(key))batches.set(key,{geometry:g,material:materialFor(material),matrices:[],features:new Set()});const batch=batches.get(key);batch.matrices.push(object.matrix.clone());batch.features.add(feature);placements.push({feature,x,z,minX:box.min.x,maxX:box.max.x,minZ:box.min.z,maxZ:box.max.z,clearance:distance});
  }
- function terrace(side,chapter,tier){const x=side*(32+tier*11+(chapter%2)*3),z=-chapter*CHAPTER_LENGTH-63+tier*5,h=4+tier*2;put('rock','rock',x,h*.58,z,9+tier*2,h,24+tier*2,0,chapter*.035,0,'terrace-relief');put('box','cap',x,h*1.58+.12,z,15+tier*4,.65,36+tier*3,0,0,0,'terrace-top');}
+ function terrace(side,chapter,tier){const x=side*(32+tier*11+(chapter%2)*3),z=stretchZ(-chapter*132-63+tier*5),h=4+tier*2;put('rock','rock',x,h*.58,z,9+tier*2,h,24+tier*2,0,chapter*.035,0,'terrace-relief');put('box','cap',x,h*1.58+.12,z,15+tier*4,.65,36+tier*3,0,0,0,'terrace-top');}
  function landmark(kind,x,z,height){landmarks.push({kind,x,z,height});}
  function finish(){
   let triangles=0,instances=0;
@@ -51,12 +52,12 @@ function forest(k){
  const {put,terrace,landmark}=k;
  for(let c=0;c<5;c++)for(const side of[-1,1]){
   for(let tier=0;tier<2;tier++)terrace(side,c,tier);
-  const x=side*(29+c%2*3),z=-c*CHAPTER_LENGTH-79;
+  const x=side*(29+c%2*3),z=stretchZ(-c*132-79);
   put('arch','bark',x,2.8,z,4.2,4.6,1.65,0,.12*side,0,'ancient-root-arch');
   for(const s of[-1,1])put('cylinder','bark',x+s*4.2,1.45,z,.65,3.1,.7,0,0,s*.07,'arch-root');
   for(let j=0;j<6;j++)put('sphere',j%2?'leaf':'leafLight',x+(j-2.5)*1.15,6.1+Math.sin(j*.65)*1.2,z-.5,1.65,1.25,1.7,0,j*.5,0,'arch-moss-canopy');
   landmark('ancient-root-arch',x,z,8.2);
-  const waterX=side*(32+(c%2)*3),waterZ=-c*CHAPTER_LENGTH-39;
+  const waterX=side*(32+(c%2)*3),waterZ=stretchZ(-c*132-39);
   put('plane','flow',waterX,4.5,waterZ,1.85,5.8,1,0,0,0,'woodland-waterfall');
   put('rock','rock',waterX,.75,waterZ+1.5,3.3,.9,4.1,0,.13,0,'spring-basin');put('cylinder','flow',waterX,1.61,waterZ+1.5,2.8,.1,3.5,0,0,0,'spring-pool');
  }
@@ -74,14 +75,14 @@ function skyreach(k){
  const {put,terrace,landmark}=k;
  for(let c=0;c<5;c++)for(const side of[-1,1]){
   for(let tier=0;tier<2;tier++)terrace(side,c,tier);
-  const x=side*(33+c%2*3),z=-c*CHAPTER_LENGTH-64;
+  const x=side*(33+c%2*3),z=stretchZ(-c*132-64);
   // A continuous elevated trough connects three arches and its spill basin.
   for(const off of[-16,0,16]){put('arch','stone',x,2.4,z+off,7.4,5.8,1.05,0,Math.PI/2,0,'aqueduct-arch');for(const edge of[-1,1])put('cylinder','stone',x,4.4,z+off+edge*7.2,.62,8.8,.62,0,0,0,'aqueduct-pier');}
   put('box','stone',x,8.95,z,2.8,.5,48,0,0,0,'connected-aqueduct-trough');
   put('plane','flow',x,9.23,z,1.55,46,1,-Math.PI/2,0,0,'aqueduct-water-channel');
   put('plane','flow',x,5.05,z+23.6,1.55,8.2,1,0,0,0,'aqueduct-spill');
   put('rock','rock',x,.55,z+25.4,3.8,.65,4.4,0,.2,0,'spill-basin');put('cylinder','flow',x,1.22,z+25.4,3.1,.08,3.6,0,0,0,'sky-pool');
-  const gateX=side*(28+c%2*4),gateZ=-c*CHAPTER_LENGTH-104;
+  const gateX=side*(28+c%2*4),gateZ=stretchZ(-c*132-104);
   for(const s of[-1,1])put('cylinder','stone',gateX+s*3.7,4.2,gateZ,.65,8.4,.65,0,0,0,'wind-crown-pillar');
   put('arch','stone',gateX,8.2,gateZ,3.7,3.4,.9,0,0,0,'wind-crown-arch');put('ring','brass',gateX,10.2,gateZ,2,2,.7,0,.12,0,'wind-crown-ring');
   put('plane','veil',gateX+2.4,6.1,gateZ+.1,.85,3.8,1,0,.1,.08,'wind-ribbon');
@@ -93,12 +94,12 @@ function stormglass(k){
  const {put,terrace,landmark}=k;
  for(let c=0;c<5;c++)for(const side of[-1,1]){
   for(let tier=0;tier<2;tier++)terrace(side,c,tier);
-  const x=side*(31+(c%2)*4),z=-c*CHAPTER_LENGTH-77;
+  const x=side*(31+(c%2)*4),z=stretchZ(-c*132-77);
   put('brokenRing','rock',x,7.8,z,4.6,6.9,1.2,0,.12*side,-.22*side,'shattered-storm-halo');
   for(const s of[-1,1])put('hex','rock',x+s*4.1,3.6,z,.85,7.2,.85,0,Math.PI/6,0,'halo-basalt-support');
   put('octa','glass',x,5.1,z-.6,1.6,4.4,1.4,0,.35,.08,'stormglass-heart');put('ring','cyan',x,5.7,z,2.6,2.6,.4,0,.1,.17,'charged-halo');
   landmark('shattered-storm-halo',x,z,16);
-  put('box','cyan',side*33,.09,-c*CHAPTER_LENGTH-30,2.1,.05,24,0,0,0,'crystal-runnel');put('plane','flow',side*33,4.45,-c*CHAPTER_LENGTH-42,1.4,8.7,1,0,0,0,'luminous-spill');
+  put('box','cyan',side*33,.09,stretchZ(-c*132-30),2.1,.05,24,0,0,0,'crystal-runnel');put('plane','flow',side*33,4.45,stretchZ(-c*132-42),1.4,8.7,1,0,0,0,'luminous-spill');
  }
  for(let i=0;i<150;i++){const side=i%2?1:-1,x=side*(25+(i*17%27)),z=8-(i*43%684),h=2.5+(i%7)*1.3;put('hex','rock',x,h*.5,z,.75+(i%3)*.18,h,.75,0,i*.5,0,'basalt-organ-column');if(i%2===0)put('octa',i%4?'glass':'cyan',x+.9,h*.75,z+1,1.05,2.8+(i%4)*.7,.8,.08,i*.32,.13*side,'angular-crystal-cluster');if(i%5===0)put('cone','leaf',x-1,.5,z+1.8,.38,1,.38,0,i,.14,'silver-storm-sedge');}
 }

@@ -1,3 +1,4 @@
+import{stretchZ}from'./runner-mode.js';
 import * as T from './vendor/three.module.min.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
 import {chapterPath,START,END} from './trail-layout.js';
@@ -6,7 +7,7 @@ import {composedHalfWidth} from './expedition-composition.js';
 // Scenic ground only. Navigation, raised path supports and collision stay in
 // their existing systems. The extra flat apron also protects the interior of
 // each triangle, rather than protecting just its sampled corner vertices.
-export const TERRAIN_BOUNDS=Object.freeze({minX:-60,maxX:60,minZ:-700,maxZ:30});
+export const TERRAIN_BOUNDS=Object.freeze({minX:-60,maxX:60,minZ:stretchZ(-700),maxZ:30});
 const FLOOR=-.015,CHUNKS=12,X_CELLS=60,Z_CELLS=30,CELL_APRON=3.1;
 const CHUNK_LENGTH=(TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/CHUNKS;
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));

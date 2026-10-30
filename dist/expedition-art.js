@@ -1,3 +1,4 @@
+import{stretchZ}from'./runner-mode.js';
 import{makeEnvironmentMaterials}from'./environment-materials.js';
 import{bevelBox,carvedCylinder}from'./prop-art.js';
 import * as T from './vendor/three.module.min.js';
@@ -6,7 +7,7 @@ import{chapterPath,END}from'./trail-layout.js';import{EXPEDITION_SCENES,segmentR
 
 const colors={stone:'#b0a184',dark:'#6e5e48',limestone:'#e3d0a2',wood:'#80583a',leaf:'#3f9845',leafLight:'#8fcd4e',moss:'#6eb04a',water:'#39c0d4',crystal:'#8fe6ee',bronze:'#d6a648'};
 const roles={stone:'stone',dark:'stone',limestone:'stone',wood:'wood',leaf:'foliage',leafLight:'foliage',moss:'foliage',water:'water',crystal:'glass',bronze:'metal'};
-const PATHS=Array.from({length:5},(_,c)=>['left','right'].map(side=>chapterPath(c,side))).flat();PATHS.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:-658},END]);
+const PATHS=Array.from({length:5},(_,c)=>['left','right'].map(side=>chapterPath(c,side))).flat();PATHS.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:stretchZ(-658)},END]);
 function wedge(){const shape=new T.Shape(),a=Math.PI/12;shape.moveTo(.80,0);shape.lineTo(1,0);for(let i=1;i<=4;i++)shape.lineTo(Math.cos(a*i/4),Math.sin(a*i/4));shape.lineTo(Math.cos(a)*.8,Math.sin(a)*.8);for(let i=3;i>=0;i--)shape.lineTo(Math.cos(a*i/4)*.8,Math.sin(a*i/4)*.8);const g=new T.ExtrudeGeometry(shape,{depth:1,bevelEnabled:false,steps:1,curveSegments:1});g.translate(0,0,-.5);return g;}
 function waterTexture(){const data=new Uint8Array(8*64*4);for(let y=0;y<64;y++)for(let x=0;x<8;x++){const i=(y*8+x)*4,v=200+Math.sin(y*.55+x*.9)**2*48;data[i]=v;data[i+1]=Math.min(255,v+7);data[i+2]=255;data[i+3]=255;}const map=new T.DataTexture(data,8,64);map.wrapS=map.wrapT=T.RepeatWrapping;map.needsUpdate=true;return map;}
 
@@ -34,7 +35,7 @@ export function makeExpeditionArt(){
  }
  function planting(){
   // Asymmetric stands leave the middle ridge and each reveal free of competing silhouettes.
-  for(let i=0;i<chapter.trees;i++){const side=i%3===0?1:-1,p=i*2.399,x=side*(23+(i*7%12)),z=-chapter.chapter*132-9-(i*19%109),h=4.5+(i%4)*.85;tree(x,z,h,(i+chapter.chapter)%4,i);if(i%3===0){put('crown','moss',x+1,.3,z+1,1.35,.4,.85,0,p,0,{feature:'clustered-understory',detail:true});put('rock','stone',x-1,.25,z-.6,.7,.55,.65,.1,p,0,{feature:'root-stone',detail:true});}}
+  for(let i=0;i<chapter.trees;i++){const side=i%3===0?1:-1,p=i*2.399,x=side*(23+(i*7%12)),z=stretchZ(-chapter.chapter*132-9-(i*19%109)),h=4.5+(i%4)*.85;tree(x,z,h,(i+chapter.chapter)%4,i);if(i%3===0){put('crown','moss',x+1,.3,z+1,1.35,.4,.85,0,p,0,{feature:'clustered-understory',detail:true});put('rock','stone',x-1,.25,z-.6,.7,.55,.65,.1,p,0,{feature:'root-stone',detail:true});}}
   for(let i=0;i<8;i++){const side=i%2?1:-1,z=-chapter.chapter*132-10-i*13.5;rock(side*(22+(i%3)*4),1.2+i%2,z,3.4,2.0+i%3,5,'outer-terrace');}
  }
  for(const scene of EXPEDITION_SCENES){chapter=scene;batches=new Map();const c=scene.chapter,z=scene.focus.z;

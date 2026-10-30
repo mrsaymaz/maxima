@@ -12,6 +12,16 @@ The game is prebuilt: `dist/index.html`, local modules, all creature assets and 
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
+## Runner prototype · `?mode=runner`
+
+Open the game with `?mode=runner` to try auto-running between gates. It keeps its own save, so classic journeys are untouched; without the setting the game plays exactly as before.
+
+- **Longer trail.** Every gap between gates is 2.5× longer (`dist/runner-mode.js`). Forks stay compact. The map is a continuous warp of the classic one, so terrain, cliffs, landmarks and scenery follow the longer route.
+- **Runs.** After a fork or a gate the creature runs on its own in three lanes (`runner-course.js`, `runner-control.js`). Change lane with ← → / A D or a sideways swipe, jump with ↑ / W / Space or a swipe up, slide with ↓ / S or a swipe down. The joystick steps aside during runs.
+- **Obstacles.** Hurdles need a jump, bars a slide and holes a lane change or a jump. Touching a hurdle or bar is a stumble: a short stop and a step back, and the obstacle is knocked aside. Falling into a hole puts the creature a few metres back in an open lane. Coins, English progress and the journey are never lost. Relaxed is slower and gentler; Challenge is faster, with wider holes and full-width hurdles.
+- **Clearings.** The last 14 m before each gate are free movement as before; path enemies now wait there.
+- **Word runs.** The third run of each chapter shows a word from the current lesson and spreads letters across the lanes: collect the English letters for a Turkish word (even chapters) or the Turkish letters for an English word (odd chapters). A complete word earns 3 coins; a missed word is shown in full.
+
 ## Vivid look, phone framing and installable app · Tier 1 (on v0.46.0)
 
 **Colour and light on every preset.** Low and Balanced now share High's tone curve: a neutral filmic curve with a light saturation, contrast and warm-light/cool-shade grade (`dist/color-grade.js`), in place of ACES, which greyed greens and skies. Each arena has one palette in `dist/arena-palette.js` covering sky, fog, sun, terrain, rock, foliage, water, cliffs, banks and path edges. Whisperwood is a sunny meadow, Skyreach a bright sandstone highland and Stormglass a violet-and-teal twilight. Low no longer darkens the ground: the sun stops casting shadows when the preset disables them, so materials never sample an undrawn shadow map.

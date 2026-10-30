@@ -1,3 +1,4 @@
+import{classicZ,stretchZ}from'./runner-mode.js';
 // The first arena's five chapters form one composed expedition. Saved task/route identities do not change.
 export const EXPEDITION_SCENES=[
  {id:'sheltered-spring',name:'The Sheltered Spring',chapter:0,focus:{x:0,y:7.4,z:-64},rise:.68,trees:14,story:'Water spills from a sheltered hollow in the central ridge.'},
@@ -6,10 +7,12 @@ export const EXPEDITION_SCENES=[
  {id:'fractured-passage',name:'The Fractured Passage',chapter:3,focus:{x:0,y:10,z:-462},rise:.78,trees:5,story:'Fractured stone frames a quiet crystal seam.'},
  {id:'wind-sanctuary',name:'The Wind Sanctuary',chapter:4,focus:{x:0,y:8.4,z:-664},rise:.98,trees:9,story:'The valley opens toward a weathered sanctuary crown.'}
 ];
+for(const scene of EXPEDITION_SCENES)scene.focus.z=stretchZ(scene.focus.z);
 const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
 export const sceneForChapter=chapter=>EXPEDITION_SCENES[Math.max(0,Math.min(4,chapter|0))];
 export function expeditionTitle(area,chapter,fallback=''){return area===0?sceneForChapter(chapter).name:fallback;}
 export function composedHalfWidth(z){
+ z=classicZ(z);
  if(z<-657)return 3.2+2.8*smooth((-z-657)/5);
  const p=(((-z)%132)+132)%132;
  const pinch=smooth((p-6)/2)*(1-smooth((p-11)/2));
@@ -23,7 +26,7 @@ export function scenicRise(section,s){const r=section.scenicRise;if(!r||s<r.from
 // Centre-line heights stay unchanged, and hazards/tasks keep their original support.
 export function scenicSurface(section,s,lateral=0){const base=scenicRise(section,s),width=composedHalfWidth(section.start.z+section.forward.z*s)+.12,edge=Math.min(1,Math.abs(lateral)/width);return base-Math.pow(edge,3)*Math.min(.12,base*.18);}
 // Lower ridge windows expose the main scene without opening a connection between the two branches.
-export function scenicWallHeight(x,z,base){const p=(((-z)%132)+132)%132,window=smooth((p-13)/3)*(1-smooth((p-51)/9)),court=smooth((-z-650)/9);return Math.max(2.2,base*(1-window*.48)*(1-court*.32));}
+export function scenicWallHeight(x,z,base){z=classicZ(z);const p=(((-z)%132)+132)%132,window=smooth((p-13)/3)*(1-smooth((p-51)/9)),court=smooth((-z-650)/9);return Math.max(2.2,base*(1-window*.48)*(1-court*.32));}
 
 // Exact 2D segment / rectangle distance for verifying low solid scenery against the whole route.
 export function segmentRectDistance(a,b,box){

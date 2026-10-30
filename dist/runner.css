@@ -1,0 +1,17 @@
+/* Runner mode: word-run panel, and the joystick steps aside while the creature runs on its own. */
+body.runner-running #joystick{opacity:0;pointer-events:none;transition:opacity .2s}
+#runner-word{position:fixed;z-index:46;left:50%;top:calc(76px + var(--safe-top,0px));transform:translateX(-50%);min-width:min(300px,86vw);max-width:92vw;padding:10px 18px 12px;border:3px solid #1b294f;border-radius:20px;background:#fff7dcf2;color:#1b294f;text-align:center;box-shadow:0 5px 0 #1b294f;pointer-events:none}
+#runner-word[hidden]{display:none}
+#runner-word small{display:block;font:800 11px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#657391}
+#runner-word strong{display:block;font:800 24px/1.2 system-ui,-apple-system,sans-serif;margin:3px 0 8px}
+.runner-slots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.runner-slots span{display:grid;place-items:center;width:30px;height:36px;border-radius:9px;background:#e4dabc;font:800 21px/1 system-ui,-apple-system,sans-serif;color:#1b294f}
+.runner-slots span.filled{background:#7bdc5a;color:#13361b;animation:runner-pop .25s ease-out}
+.runner-slots span.missed{background:#f3c9a6;color:#7a3a14}
+#runner-word.complete{border-color:#2f8f3a;box-shadow:0 5px 0 #2f8f3a}
+#runner-word.shake{animation:runner-shake .3s}
+@keyframes runner-pop{from{transform:scale(1.35)}to{transform:scale(1)}}
+@keyframes runner-shake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 7px))}75%{transform:translateX(calc(-50% + 7px))}}
+@media(prefers-reduced-motion:reduce){.runner-slots span.filled,#runner-word.shake{animation:none}}
+/* Notices move below the track while running, so they never cover the word panel or what is coming. */
+body.runner-running #toast{top:auto;bottom:calc(150px + var(--safe-bottom,0px));transform:none}

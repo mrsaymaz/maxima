@@ -1,3 +1,4 @@
+import{makeRunnerScenery}from'./runner-props.js';
 import{surfaceMaterial,assignSurfaceRoles,replaceCueMaterials}from'./surface-materials.js';
 import{composedHalfWidth,scenicSurface}from'./expedition-composition.js';
 import{bevelBox,carvedCylinder,stoneColumn,liquidMaterial,rockLump,fadeNearCamera}from'./prop-art.js';
@@ -15,7 +16,7 @@ function merge(root){
 }
 function joinGeometry(geometries){const p=[],n=[];for(const original of geometries){const g=original.index?original.toNonIndexed():original;for(const v of g.attributes.position.array)p.push(v);for(const v of g.attributes.normal.array)n.push(v);if(g!==original)g.dispose();}const out=new T.BufferGeometry();out.setAttribute('position',new T.Float32BufferAttribute(p,3));out.setAttribute('normal',new T.Float32BufferAttribute(n,3));return out;}
 
-export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
+export function makeTraversalScenery(section,{mode='relaxed',ground=null,creatureHeight=.65}={}){
  if(!section||!['coins','rocks','plants','steps'].includes(section.kind))throw new Error('Unknown traversal section');
  const group=new T.Group();group.name='traversal-'+section.kind;
  const palette=PALETTES[section.area]||PALETTES[0],geometries=new Map();
@@ -88,7 +89,7 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
   solids.push({id:plant.id,kind:'poison-plant',shape:'circle',x:plant.x,z:plant.z,r:plant.r,minY:0,maxY:.79});
  }
  group.userData={sectionId:section.id,kind:section.kind,area:section.area,mode,solids,collidersInWorldSpace:true,coinCount,coinVisibleCount:coinCount,completed:false,plantStates:[],platformTops:section.platforms.map(p=>({id:p.id,x:p.x,z:p.z,y:p.y,...(p.r?{r:p.r}:{hx:p.hx,hz:p.hz})}))};
- STATES.set(group,{section,coinParts,plantData,fragileData,object});updateTraversalScenery(group,{time:0,collected:new Set(),completed:false});return group;
+ STATES.set(group,{section,coinParts,plantData,fragileData,object});if(section.run){const runner=makeRunnerScenery(section,{creatureHeight});group.add(runner);group.userData.runner=runner;}updateTraversalScenery(group,{time:0,collected:new Set(),completed:false});return group;
 }
 
 export function updateTraversalScenery(group,{time=0,collected=new Set(),completed=false,crumble=null,playerRadius=0}={}){

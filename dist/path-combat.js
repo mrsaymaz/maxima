@@ -8,7 +8,7 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export const ENEMY_SPECIES={ram:{name:'Rumblebud',radius:.58},seed:{name:'Brambleguard',radius:.62},spore:{name:'Mistcap',radius:.62}};
 export function enemyFor(section,mode='relaxed'){
  if(section.adventure===2?!section.rival:section.kind!=='coins'||![0,2,4].includes(section.chapter))return null;
- const s=section.length*.54,kind=section.enemyKind||section.rivalKind||['ram','seed','spore'][section.chapter/2];
+ const s=section.run?section.run.clearFrom+4.5:section.length*.54,kind=section.enemyKind||section.rivalKind||['ram','seed','spore'][section.chapter/2];
  return{id:section.id+':rival',kind,...ENEMY_SPECIES[kind],s,...localPoint(section,s),gateS:section.length-1.4,maxHp:mode==='challenge'?3+section.area:2+Math.floor(section.area/2)};
 }
 export function enemiesFor(section,mode='relaxed',state=null){

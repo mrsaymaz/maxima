@@ -1,5 +1,5 @@
 {
- "hash": "bf6a74e8a5e8",
+ "hash": "44eba21d7c02",
  "files": [
   "./",
   "index.html",
@@ -110,6 +110,13 @@
   "reading-arrangement.js",
   "render-quality.js",
   "restored-sites.js",
+  "runner-control.js",
+  "runner-course.js",
+  "runner-hud.js",
+  "runner-input.js",
+  "runner-mode.js",
+  "runner-props.js",
+  "runner.css",
   "runtime-lifecycle.js",
   "rush-motion.js",
   "scene.js",
