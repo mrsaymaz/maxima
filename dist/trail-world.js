@@ -1,4 +1,4 @@
-import{OcclusionFade}from'./occlusion-fade.js';import{BrickStyle}from'./brick-style.js';import{BRICK_WORLD}from'./world-style-mode.js';
+import{OcclusionFade}from'./occlusion-fade.js';import{BrickStyle}from'./brick-style.js';import{BrickWorld}from'./brick-world.js';import{BRICK_WORLD}from'./world-style-mode.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
 import{sceneryFocus}from'./scenery-plan.js';
 import{CreatureExpression}from'./combat-expression.js';
@@ -130,7 +130,13 @@ export class TrailWorld extends World{
   this.occlusionFade.update(this.scene,head,this.camera.position,new Set([this.creature,this.crowns,this.sky,this.terrain,this.paths,this.effects,this.rival].filter(Boolean)));}
 
  // Brick prototype: patch newly built scenery a couple of times a second (gates, trials and areas appear lazily).
- updateBrickStyle(dt){if(!BRICK_WORLD)return;this.brickTime=(this.brickTime??1)+dt;if(this.brickTime<.5)return;this.brickTime=0;this.brickStyle??=new BrickStyle();this.brickStyle.apply(this.scene,{area:this.area||0,skip:[this.creature,this.sky,this.effects,this.rival],creature:this.model});}
+ updateBrickStyle(dt){if(!BRICK_WORLD)return;this.brickTime=(this.brickTime??1)+dt;if(this.brickTime<.5)return;this.brickTime=0;
+  // Whisperwood is rebuilt from real bricks; other arenas (for now) keep the brick finish only.
+  const skip={roots:new Set([this.creature,this.sky,this.effects,this.rival,this.brickWorld?.group].filter(Boolean)),terrain:this.terrain};
+  if(this.brickWorld&&this.brickWorld.area!==(this.area||0)){this.brickWorld.dispose();this.brickWorld=null;}
+  if(!this.brickWorld&&(this.area||0)===0&&!this.loading){this.brickWorld=new BrickWorld(0);this.brickWorld.area=0;this.scene.add(this.brickWorld.build(this.scene,skip));globalThis.console?.warn?.('Brick world '+JSON.stringify(this.brickWorld.stats));}
+  else if(this.brickWorld?.sweep(this.scene,skip)){globalThis.console?.warn?.('Brick world rebuild');this.brickWorld.dispose();this.brickWorld=null;}
+  this.brickStyle??=new BrickStyle();this.brickStyle.apply(this.scene,{area:this.area||0,skip:[...skip.roots],creature:this.model});}
  walkTo(){this.nav.approach();}
  project(id){const point=this.points[id]?.clone();if(!point)return{visible:false};point.y+=2.5;point.project(this.camera);return{x:(point.x*.5+.5)*innerWidth,y:(-point.y*.5+.5)*innerHeight,visible:point.z<1&&Math.abs(point.x)<1&&Math.abs(point.y)<1};}
  coinEffect(coin){this.reaction=.25;for(let i=0;i<3;i++){const m=new T.Mesh(new T.OctahedronGeometry(.045),new T.MeshBasicMaterial({color:'#f4d275',transparent:true,opacity:.8}));m.position.set(coin.x,coin.y,coin.z);this.effects.add(m);this.pulses.push({m,v:new T.Vector3((i-1)*.4,.65,0),age:0,life:.45,alpha:.8});}}
