@@ -66,6 +66,16 @@
   ],
   "deliver": [
    "deliver.mp3"
+  ],
+  "lane": [
+   "runner-lane.mp3"
+  ],
+  "slide": [
+   "runner-slide.mp3"
+  ],
+  "stumble": [
+   "runner-stumble.mp3"
   ]
- }
+ },
+ "runnerSfx": "Runner move sounds are original offline syntheses by Maxima."
 }

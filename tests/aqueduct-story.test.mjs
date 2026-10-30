@@ -10,7 +10,7 @@ test('all unit sentence tasks drive monotonic restoration from accepted fragment
 test('guardians and other tasks cannot power the sentence route; rotated chapters fall back to their own saved milestones',()=>{
  const e=route();e.active=makeTask(units[0],'sentence',e.id+':battle:0');next(e.active);assert.equal(aqueductProgress(e),0);e.active=null;e.completed=[{index:0,type:'sentence'},{index:5,type:'gap'}];assert.equal(aqueductProgress(e),0);e.formatOffset=1;assert.ok(!orderFor(e,1).includes('sentence'));assert.equal(aqueductProgress(e),.25);
 });
-test('world channel mirrors to the chosen branch, follows saved answers and initializes the restored visitor calmly',()=>{
+test('[classic] world channel mirrors to the chosen branch, follows saved answers and initializes the restored visitor calmly',()=>{
  const e=route(),s=makeAqueductStory({baseY:.4});s.update(0,{expedition:e,player:{x:-10,z:-165}});assert.equal(s.root.scale.x,-1);assert.equal(s.channel.state.powered,false);e.completed.push({index:e.index,type:'sentence'});s.update(.016,{expedition:e,player:{x:-10,z:-165}});assert.equal(s.channel.state.powered,true);assert.equal(s.visitor.state.phase,'approach');e.choices[1]='right';s.update(.016,{expedition:e,player:{x:10,z:-165}});assert.equal(s.root.scale.x,1);const reloaded=makeAqueductStory();reloaded.update(0,{expedition:JSON.parse(JSON.stringify(e)),player:{x:10,z:-165}});assert.equal(reloaded.visitor.state.phase,'rest');assert.equal(s.root.userData.flumeFrom[1]+s.root.position.y,11.9);
 });
 test('water and wildlife pause without drifting; all scene resources are reused, finite and outside walking center lines',()=>{

@@ -1,3 +1,4 @@
+import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
 import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
 import{makeCorridorEnclosure}from'../dist/corridor-geometry.js';import{bankSection}from'../dist/valley-banks.js';
 import{freshJourney,freshExpedition,chooseBranch}from'../dist/expedition.js';import{TrailNavigator}from'../dist/trail-nav.js';
@@ -15,14 +16,14 @@ test('held combat touch direction survives a focus switch, then re-anchors after
 test('moving anticipation preserves launch height when crossing a raised ledge lip',()=>{
  const n=new TrailNavigator(state());n.player={x:0,z:.12};n.support=(p=n.player)=>p.z>0?1:0;n.cancelJump();assert.equal(n.y,1);n.requestJump();n.step(.08,{x:0,z:-1});assert.ok(n.player.z<0);assert.equal(n.y,1);n.step(.05,{x:0,z:-1});assert.equal(n.jumpStage,'air');assert.ok(n.y>1);assert.ok(n.vy>0);
 });
-test('quiet crowned terrain matches support across both shoulders and every chapter without moving tasks/hazards',()=>{
+test('[classic] quiet crowned terrain matches support across both shoulders and every chapter without moving tasks/hazards',()=>{
  for(const side of['left','right'])for(let chapter=0;chapter<5;chapter++){const e=state();e.choices.fill(side);e.index=chapter*4;const s=sectionFor(e,e.index),scene=makeTraversalScenery(s);scene.updateMatrixWorld(true);const fixed=scene.getObjectByName('fixed-scenery');
   for(const distance of[3,7,11]){if(distance>=s.length-1)continue;const width=composedHalfWidth(localPoint(s,distance).z);for(const lateral of[-.8*width,0,.8*width]){const p=localPoint(s,distance,lateral),support=surfaceOnCourse([s],p),ray=new T.Raycaster(new T.Vector3(p.x,5,p.z),new T.Vector3(0,-1,0)),hit=ray.intersectObject(fixed,true)[0];assert.ok(hit);assert.ok(Math.abs(hit.point.y-support-.033)<.012);assert.ok(Math.abs(support-scenicSurface(s,distance,lateral))<1e-8);}}
   assert.equal(scenicSurface(s,0,2),0);assert.equal(scenicSurface(s,s.length,2),0);
  }
 });
 test('bank geometry follows the composed enclosure, retains finite chunked depth on Low and adds no collider or shadow pass',()=>{
- const a=makeCorridorEnclosure({composed:true}),b=makeCorridorEnclosure();const banks=a.children.filter(m=>m.name.startsWith('valley-bank-'));assert.ok(banks.length>=20&&banks.length<=26);assert.ok(a.userData.bankTriangles>10000);assert.ok(!b.children.some(m=>m.name.startsWith('valley-bank-')));
+ const a=makeCorridorEnclosure({composed:true}),b=makeCorridorEnclosure();const banks=a.children.filter(m=>m.name.startsWith('valley-bank-'));assert.ok(banks.length>=20&&banks.length<=26*TRAIL_STRETCH);assert.ok(a.userData.bankTriangles>10000);assert.ok(!b.children.some(m=>m.name.startsWith('valley-bank-')));
  for(const m of banks){assert.equal(m.castShadow,false);assert.equal(m.receiveShadow,true);assert.ok(m.geometry.attributes.position.array.every(Number.isFinite));assert.equal(m.userData.solids,undefined);}
  for(const depth of[.03,.3,1.65]){const row=bankSection({x:5,z:-20},{x:1,z:0},depth);assert.equal(row.length,4);assert.ok(row[2].y>row[0].y+.3);assert.ok(row.at(-1).x<=6.05);}
 });

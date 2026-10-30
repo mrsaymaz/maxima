@@ -1,3 +1,4 @@
+import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
 import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
 import{freshJourney,freshExpedition,validSave,freshSave,chooseBranch}from'../dist/expedition.js';
 import{makeEnvironmentField,updateEnvironmentField,environmentClearance}from'../dist/environment-field.js';
@@ -9,14 +10,15 @@ const eFor=(area=0)=>freshExpedition(freshJourney(),'g5u1',area),fields=[0,1,2].
 // Two five-tree stands per chapter replace uniform scatter; scene coverage and
 // sightlines are checked separately in scenery-composition.test.mjs.
 test('all arenas receive real terrain, varied rooted stands and readable path detail with bounded spatial batches',()=>{
- for(const root of fields){const s=root.userData.stats;assert.ok(s.trees>=50);assert.ok(s.ferns>=100);assert.ok(s.triangles<240000);assert.ok(s.batches<115);assert.equal(s.terrainTriangles,43200);const features=new Set(root.userData.placements.map(p=>p.feature));for(const f of['embedded-stone','verge-fronds','bank-outcrop','fallen-timber','weathered-shelf','channel-foundation','layered-canopy'])assert.ok(features.has(f),f);root.traverse(o=>{if(o.geometry)for(const a of Object.values(o.geometry.attributes))assert.ok(a.array.every(Number.isFinite));});}
+ for(const root of fields){const s=root.userData.stats;assert.ok(s.trees>=50);assert.ok(s.ferns>=100);// The runner trail is longer, so the whole valley holds proportionally more (each view does not).
+ assert.ok(s.triangles<240000*TRAIL_STRETCH);assert.ok(s.batches<115*TRAIL_STRETCH);assert.equal(s.terrainTriangles,43200);const features=new Set(root.userData.placements.map(p=>p.feature));for(const f of['embedded-stone','verge-fronds','bank-outcrop','fallen-timber','weathered-shelf','channel-foundation','layered-canopy'])assert.ok(features.has(f),f);root.traverse(o=>{if(o.geometry)for(const a of Object.values(o.geometry.attributes))assert.ok(a.array.every(Number.isFinite));});}
 });
 
 test('solid new scenery lies outside the entire playable path union, including widened courts',()=>{
  for(const root of fields)for(const p of root.userData.placements.filter(p=>p.solid)){assert.ok(p.clearance-p.r>=Math.max(3.2,composedHalfWidth(p.z))+.299);assert.equal(environmentClearance(p.x,p.z),p.clearance);}
 });
 
-test('nearby ferns follow the raised trail and rooted assets meet actual terrain triangles',()=>{
+test('[classic] nearby ferns follow the raised trail and rooted assets meet actual terrain triangles',()=>{
  for(const root of fields){const area=root.userData.area,e=eFor(area),ray=new T.Raycaster(new T.Vector3(),new T.Vector3(0,-1,0),0,50);for(const p of root.userData.placements.filter(p=>p.kind==='trunk')){ray.ray.origin.set(p.x,30,p.z);const hit=ray.intersectObjects(root._environment.terrainMeshes,false)[0];assert.ok(hit);assert.ok(Math.abs(p.y-hit.point.y+.015)<1e-6);}
   for(const p of root.userData.placements.filter(p=>p.feature==='verge-fronds')){for(const side of ['left','right']){const s=sectionFor({...e,choices:Array(5).fill(side)},Math.max(0,Math.min(4,Math.floor(-p.z/132)))*4,'relaxed',side);const dx=p.x-s.start.x,dz=p.z-s.start.z,d=dx*s.forward.x+dz*s.forward.z,l=dx*s.right.x+dz*s.right.z;if(d>=0&&d<=s.length&&Math.abs(l)<composedHalfWidth(p.z)+.1)assert.ok(Math.abs(p.y-scenicSurface(s,d,l)-.035)<1e-6);}}
  }
@@ -34,7 +36,7 @@ test('restoration water follows saved chapter milestones and initializes correct
  const e=eFor(),root=makeEnvironmentField(e),before=JSON.stringify(e),s=root._environment;assert.ok(s.chapters.every(c=>!c.spill.visible));const completed=Array.from({length:4},(_,index)=>({index}));for(let i=0;i<150;i++)updateEnvironmentField(root,{dt:.016,completed});assert.ok(s.chapters[0].fill>.99);assert.equal(s.chapters[0].spill.visible,true);assert.equal(s.chapters[1].spill.visible,false);assert.equal(JSON.stringify(e),before);const restored=makeEnvironmentField({...e,completed});assert.equal(restored._environment.chapters[0].fill,1);assert.equal(restored._environment.chapters[0].spill.visible,true);
 });
 
-test('new gentle rises in every arena agree with rendered geometry, navigation, coins and safe retries',()=>{
+test('[classic] new gentle rises in every arena agree with rendered geometry, navigation, coins and safe retries',()=>{
  for(let area=0;area<3;area++)for(const side of ['left','right'])for(let chapter=0;chapter<5;chapter++)for(const level of [0,10]){
   const e=eFor(area);e.choices.fill(side);e.index=chapter*4;const s=sectionFor(e,e.index),scene=makeTraversalScenery(s);scene.updateMatrixWorld(true);const nav=new TrailNavigator(e);nav.enableTraversal();nav.setLevel(level);nav.player=localPoint(s,1);nav.cancelJump();const fixed=scene.getObjectByName('fixed-scenery');
   for(let d=2;d<s.length-1;d+=2){const p=localPoint(s,d),ray=new T.Raycaster(new T.Vector3(p.x,5,p.z),new T.Vector3(0,-1,0));assert.ok(Math.abs(ray.intersectObject(fixed,true)[0].point.y-surfaceOnCourse([s],p)-.033)<.012);}

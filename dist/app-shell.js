@@ -9,11 +9,18 @@ export function registerOffline({scope='./',script='sw.js'}={}){
  const secure=loc.protocol==='https:'||['localhost','127.0.0.1'].includes(loc.hostname);if(!secure||/\bnosw\b/.test(loc.search||''))return false;
  // Lessons and media fetched on the very first visit load before the worker takes control, so hand their URLs
  // over once it is ready; otherwise the lesson just played would be missing offline.
- const go=()=>n.serviceWorker.register(script,{scope}).then(()=>n.serviceWorker.ready).then(reg=>reg.active?.postMessage({type:'warm',urls:loadedFiles()})).catch(()=>{});
+ // Devices that stay open for days look for a new build whenever the game returns to the foreground.
+ const go=()=>n.serviceWorker.register(script,{scope}).then(reg=>{doc()?.addEventListener?.('visibilitychange',()=>{if(doc().visibilityState==='visible')reg.update?.().catch(()=>{});});return n.serviceWorker.ready;}).then(reg=>reg.active?.postMessage({type:'warm',urls:loadedFiles()})).catch(()=>{});
  if(doc()?.readyState==='complete')go();else globalThis.addEventListener?.('load',go,{once:true});
  return true;
 }
 
+// A new build has taken over the offline cache while this page still runs the old code: offer a reload.
+// The first install (no previous controller) is not an update.
+export function watchUpdates(onUpdate=()=>{}){
+ const sw=nav()?.serviceWorker;if(!sw?.addEventListener)return false;let had=!!sw.controller;
+ sw.addEventListener('controllerchange',()=>{if(had)onUpdate();had=true;});return true;
+}
 export function loadedFiles(){
  const origin=globalThis.location?.origin;let entries=[];try{entries=globalThis.performance?.getEntriesByType?.('resource')||[];}catch{}
  return[...new Set(entries.map(e=>e.name).filter(url=>origin&&url.startsWith(origin+'/')))];

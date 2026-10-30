@@ -18,3 +18,16 @@ body.runner-word .play-dock .traversal-hint{visibility:hidden}
 @media(prefers-reduced-motion:reduce){.runner-slots span.filled,#runner-word.shake{animation:none}}
 /* Notices move below the track while running, so they never cover the word panel or what is coming. */
 body.playing.runner-running:not(.in-task) #toast{top:auto;bottom:calc(150px + var(--safe-bottom,0px))}
+/* Call-outs: a quick pop in the middle of the screen. */
+#runner-flash{position:fixed;z-index:47;left:50%;top:42%;transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;font:900 34px/1 system-ui,-apple-system,sans-serif;letter-spacing:1px;color:#fff;-webkit-text-stroke:2px #1b294f;text-shadow:0 4px 0 #1b294f}
+#runner-flash.show{animation:runner-flash .7s ease-out forwards}
+#runner-flash.stumble{color:#ff7a4d}#runner-flash.swamp{color:#b8ff4a}#runner-flash.great{color:#ffd23f}
+@keyframes runner-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-75%) scale(.95)}}
+/* Gate progress: a slim rail on the right edge, clear of the Jump and Cast buttons. */
+#runner-progress{position:fixed;z-index:44;right:calc(10px + var(--safe-right,0px));top:calc(120px + var(--safe-top,0px));height:min(38vh,300px);width:22px;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+#runner-progress[hidden]{display:none}
+#runner-progress .gate{font-size:16px;line-height:1;filter:drop-shadow(0 1px 0 #1b294f)}
+#runner-progress .rail{position:relative;flex:1;width:10px;border-radius:6px;background:#1b294f99;border:2px solid #fff7dc;overflow:visible}
+#runner-progress .fill{position:absolute;left:0;right:0;bottom:0;height:calc(var(--run,0)*100%);border-radius:4px;background:linear-gradient(#ffd23f,#7bdc5a)}
+#runner-progress .me{position:absolute;left:50%;bottom:calc(var(--run,0)*100%);width:16px;height:16px;transform:translate(-50%,50%);border-radius:50%;background:#fff7dc;border:3px solid #1b294f}
+@media(prefers-reduced-motion:reduce){#runner-flash.show{animation:none;opacity:1;transform:translate(-50%,-50%)}}

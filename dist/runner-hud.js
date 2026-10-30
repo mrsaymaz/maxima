@@ -23,3 +23,18 @@ export function finishWord(word,letters){
 }
 export function hideWord(){if(panel){clearTimeout(hidden);panel.hidden=true;}doc()?.body?.classList.remove('runner-word');}
 export function controlHint(touch){if(hinted)return null;hinted=true;return touch?'Swipe ← → to change lane · swipe ↑ to jump · swipe ↓ to slide':'← → change lane · ↑ jump · ↓ slide';}
+
+// "Stumble!" and similar call-outs: a short pop in the middle of the track.
+let flashEl=null,flashTimer=null;
+export function flash(text,tone='stumble'){
+ const d=doc();if(!d?.body)return;if(!flashEl?.isConnected){flashEl=d.createElement('div');flashEl.id='runner-flash';flashEl.setAttribute('aria-hidden','true');d.body.append(flashEl);}
+ flashEl.textContent=text;flashEl.className='';void flashEl.offsetWidth;flashEl.className='show '+tone;clearTimeout(flashTimer);flashTimer=setTimeout(()=>{flashEl.className='';},700);
+}
+// Vertical progress to the next gate along the right edge: the gate at the top, the creature climbing toward it.
+let bar=null;
+export function runProgress(fraction){
+ const d=doc();if(!d?.body)return;
+ if(fraction==null){if(bar)bar.hidden=true;return;}
+ if(!bar?.isConnected){bar=d.createElement('div');bar.id='runner-progress';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label','Distance to the next gate');bar.innerHTML='<span class="gate">🏁</span><div class="rail"><div class="fill"></div><span class="me"></span></div>';d.body.append(bar);}
+ const f=Math.max(0,Math.min(1,fraction));bar.hidden=false;bar.style.setProperty('--run',f.toFixed(3));bar.setAttribute('aria-valuenow',String(Math.round(f*100)));
+}

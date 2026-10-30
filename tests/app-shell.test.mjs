@@ -34,3 +34,10 @@ test('service worker serves media from cache while refreshing it, data and code 
  let warm;listeners.message({data:{type:'warm',urls:['https://maxima.test/data/lessons/g5u2.json','https://elsewhere.test/x.js','https://maxima.test/corridor-app.js']},waitUntil:p=>warm=p});await warm;
  assert.deepEqual(log,['https://maxima.test/data/lessons/g5u2.json'],'only missing same-origin files are fetched');
 });
+test('a new build offers a reload only when it replaces a running one, never on the first install',async()=>{
+ const{watchUpdates}=await import('../dist/app-shell.js');const listeners={},sw={controller:null,addEventListener:(t,f)=>listeners[t]=f};
+ const before=globalThis.navigator;Object.defineProperty(globalThis,'navigator',{value:{serviceWorker:sw},configurable:true});
+ try{let offers=0;assert.equal(watchUpdates(()=>offers++),true);listeners.controllerchange();assert.equal(offers,0,'first install');listeners.controllerchange();assert.equal(offers,1,'a later build');
+  sw.controller={};let again=0;watchUpdates(()=>again++);listeners.controllerchange();assert.equal(again,1,'page already controlled');}
+ finally{Object.defineProperty(globalThis,'navigator',{value:before,configurable:true});}
+});

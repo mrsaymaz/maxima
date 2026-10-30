@@ -57,7 +57,7 @@ test('matching has distinct visible terminals and question choices exclude other
  }
 });
 
-test('new encounter rhythms stay quiet first, host trials on compatible ground, and leave combat on flat ground',()=>{
+test('[classic] new encounter rhythms stay quiet first, host trials on compatible ground, and leave combat on flat ground',()=>{
  const rhythms=new Set();for(let area=0;area<3;area++)for(let serial=1;serial<=6;serial++)for(let mask=0;mask<32;mask++){
   const e=freshExpedition(freshJourney(),'g5u1',area);e.serial=serial;e.choices=e.choices.map((_,i)=>mask>>i&1?'right':'left');
   for(let chapter=0;chapter<5;chapter++){
@@ -68,7 +68,7 @@ test('new encounter rhythms stay quiet first, host trials on compatible ground, 
  assert.equal(rhythms.size,4);
 });
 
-test('pacing v1 and older layouts keep their published trial and combat slots',()=>{
+test('[classic] pacing v1 and older layouts keep their published trial and combat slots',()=>{
  for(const version of [undefined,1])for(let area=0;area<3;area++)for(const side of ['left','right']){
   const e=freshExpedition(freshJourney(),'g5u1',area);e.pacingVersion=version;e.choices.fill(side);for(let c=0;c<5;c++){const p=runPlan(e,c);assert.equal(p.trialAt,2);assert.equal(p.rivalAt,1);assert.equal(p.sequence,undefined);assert.equal(sectionFor(e,c*4+2).trial.kind,p.trial);assert.equal(sectionFor(e,c*4+1).rivalKind,p.rival);}
  }

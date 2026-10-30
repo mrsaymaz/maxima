@@ -9,7 +9,7 @@ const expedition={id:'t',area:0,adventureVersion:2,level:0,serial:1,choices:Arra
 // Runner sections exist only on the stretched map, so these tests use a straight 60 m section of the same shape.
 const withRun=(index,mode='relaxed',length=index%4===0?44:60)=>{const s={id:`t:travel:${index}`,index,chapter:Math.floor(index/4),side:'left',area:0,start:{x:0,z:0},forward:{x:0,z:-1},right:{x:1,z:0},length};s.run=runFor(s,expedition,mode,true);return s;};
 
-test('classic play is untouched unless runner mode is asked for',()=>{
+test('[classic] classic play is untouched unless runner mode is asked for',()=>{
  assert.equal(RUNNER,false);assert.equal(TRAIL_STRETCH,1);assert.equal(CHAPTER_LENGTH,132);assert.equal(END.z,-666);assert.equal(stretchZ(-400),-400);
  assert.deepEqual(chapterPath(1,'left').map(p=>p.z),[-130,-141,-160,-190,-220,-250,-262]);
  assert.equal(sectionFor(expedition,1,'relaxed','left').run,undefined);assert.equal(runFor(withRun(1),expedition,'relaxed'),null,'no runs in classic mode');
@@ -103,4 +103,22 @@ test('the word closes as soon as it is spelled or its last row is passed, not at
  assert.deepEqual(closed,[word.answer],'closes on the last correct letter');r.finish(section,nav);assert.equal(closed.length,1,'and only once');
  const other=withRun(6),missed=[],r2=new RunnerControl();r2.events={word:(w,letters)=>missed.push(letters)};const nav2=navFor(other);r2.engage(nav2);
  r2.s=other.run.word.tokens.at(-1).s+2;r2.collide(nav2);assert.equal(missed.length,1,'closes once the last row is behind');assert.ok(missed[0].every(c=>c===null));
+});
+test('Low graphics keeps the track readable with far fewer objects; the HUD helpers are safe without a page',async()=>{
+ const{makeRunnerScenery}=await import('../dist/runner-props.js');const{flash,runProgress}=await import('../dist/runner-hud.js');
+ // Triangles drawn per tile (walls, backdrop, arches) are what cheaper phones feel.
+ const count=low=>{let n=0;makeRunnerScenery(withRun(5),{creatureHeight:1,low}).traverse(o=>{if(o.isMesh&&!o.isInstancedMesh){const g=o.geometry;n+=(g.index?g.index.count:g.attributes.position.count)/3;}});return n;};
+ const full=count(false),low=count(true);assert.ok(low<full*.8,`low ${low} vs full ${full}`);
+ flash('Stumble!');runProgress(.5);runProgress(null);
+});
+test('the valley eases away while the track slides and grows back for the final real metres',async()=>{
+ const T=await import('../dist/vendor/three.module.min.js');const{TrailWorld}=await import('../dist/trail-world.js');
+ const w=Object.create(TrailWorld.prototype),field=new T.Group(),cluster=new T.Group(),meadow=new T.Group(),crowns=new T.Mesh();cluster.name='environment-cluster-3';meadow.name='valley-meadow';field.add(cluster,meadow);
+ const run={length:400,real:40},runner={running:true,s:10,section:{run}};
+ Object.assign(w,{nav:{runner},environmentField:field,crowns,scene:{fog:{near:40,far:125}},time:0});
+ const step=n=>{for(let i=0;i<n;i++){w.time+=.05;w.updateTrackVeil();}};
+ step(2);assert.ok(meadow.scale.y<1&&meadow.scale.y>0,'sinking, not vanishing');assert.ok(w.scene.fog.far<125);
+ step(20);assert.equal(meadow.visible,false);assert.equal(cluster.visible,false);assert.equal(crowns.visible,false);assert.ok(w.scene.fog.far<=82.5);
+ runner.s=run.length-run.real+2;step(2);assert.ok(meadow.visible&&meadow.scale.y>0&&meadow.scale.y<1,'growing back');
+ step(20);assert.equal(meadow.scale.y,1);assert.equal(crowns.visible,true);assert.equal(cluster.scale.y,1);assert.deepEqual([w.scene.fog.near,w.scene.fog.far],[40,125]);assert.equal(w.trackVeil,null);
 });
