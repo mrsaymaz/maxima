@@ -43,3 +43,7 @@
 .world-piece.faulty{outline:3px solid #efae52;outline-offset:-3px;border-radius:7px;background:#ffcd6c28!important}.world-piece.faulty .label-ink{text-decoration:underline wavy #87492b;text-underline-offset:4px;font-weight:850}.world-piece.target-sentence .label-ink{font-weight:900;color:#142d37}.world-piece.questions .label-ink{color:#183947}.world-piece.answers .label-ink{color:#274c36}.world-piece.group-label{color:#23434b;font-weight:900;letter-spacing:.12em}.world-piece.group-label .label-ink{font-weight:900}
 /* Font rounding must not create scroll arrows on an otherwise fitted one-line answer. */
 .world-pieces[data-theme] .world-piece[data-surface][data-overflow=none]>.label-ink{overflow:visible;touch-action:manipulation}
+/* Ink on textured stone, bronze and paper keeps a soft light halo so words stay crisp under the brighter palette
+   and on small phone screens, without turning the piece into a card. */
+.world-pieces[data-theme] .world-piece[data-surface=stone]>.label-ink,.world-pieces[data-theme] .world-piece[data-surface=bronze]>.label-ink,.world-pieces[data-theme] .world-piece[data-surface=scroll]>.label-ink,.world-pieces[data-theme] .world-piece[data-surface=paper]>.label-ink{font-weight:720;text-shadow:0 0 3px #fff7e2,0 0 6px #fff7e2b3,0 1px 0 #fff7e2}
+.world-pieces[data-theme] .world-piece[data-surface=inlay]>.label-ink{text-shadow:0 0 3px #10221d,0 1px 2px #10221dcc}

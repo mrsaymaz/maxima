@@ -99,3 +99,9 @@ body.opening .topbar #save-indicator{display:none}
 }
 .launch-play.is-resume{font-size:clamp(20px,4.8vw,30px);background:linear-gradient(#93e2ff,#43b7f8 35%,#238cdb);box-shadow:inset 0 5px 0 #d1f3ff,inset 0 -7px 0 #1769ae,0 7px 0 #1b294f,0 10px 0 #c6b78a}.launch-play.is-resume svg{filter:drop-shadow(0 3px 0 #1769ae)}
 @media(prefers-reduced-motion:reduce){.launch-panel button{transition:none!important}.launch-panel button:hover{transform:none!important}}
+/* Tall phones: the camp card becomes a bottom sheet so the creature stands in a hero space above it. The card
+   scrolls inside; the Play button stays visible in its footer. */
+@media(max-width:759px) and (min-height:700px) and (orientation:portrait){
+ body.opening .launch-shell{inset-block-start:calc(34vh + var(--safe-top,0px));align-items:flex-end}
+ body.opening .launch-panel{max-height:100%}
+}

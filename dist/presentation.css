@@ -67,3 +67,7 @@ body.returning-to-play #world{animation:back-to-trail .48s ease-out both}body.re
 @media(prefers-reduced-motion:reduce){body.task-arriving #world,body.task-arriving .world-pieces,body.task-arriving .mechanism-hud,body.returning-to-play #world,body.returning-to-play .play-dock{animation-duration:.18s}}
 
 body.task-arriving .world-piece{pointer-events:none!important}
+/* HUD: the next goal under the form, and a small coin-chain chip whose fill shows boost fuel. */
+.play-status #goal-readout{font-weight:650;color:#f4e7b8!important;white-space:nowrap}
+.play-status .rush-chip{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;padding:0 6px;border-radius:10px;font:800 12px/1 system-ui,sans-serif;color:#1b2f25;background:linear-gradient(90deg,#ffd76a var(--fuel,100%),#ffe9ad55 var(--fuel,100%));box-shadow:0 0 0 1px #fff3c466}
+.play-status .rush-chip[hidden]{display:none}
