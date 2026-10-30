@@ -28,6 +28,7 @@ function wordRun(section,r,runTo){
 }
 
 // Beats: a barrier to jump, a bar to slide under, a hole to dodge or jump, or a free coin stretch.
+// Word runs (quiet) carry letters only, so coins never sit on top of a letter.
 function beats(section,r,mode,runTo,quiet){
  const hard=mode==='challenge',spacing=quiet?16:hard?7.6:10,list=[],coins=[];let s=8,k=0,lastFree=1;
  const tutorial=section.chapter===0&&section.index===0;
@@ -41,7 +42,7 @@ function beats(section,r,mode,runTo,quiet){
   if(type!=='coins')list.push({id:`${section.id}:run:${type}:${k}`,type,s,depth:type==='hole'?(hard?2.8:2.3):type==='bar'?.5:.45,lanes,h:type==='barrier'?.5:0});
   // Coins lead into the lane that stays open; over a barrier they arc, inviting the jump.
   const lead=type==='coins'?Math.floor(r()*3)%3:free;
-  for(let i=0;i<4;i++){const cs=s-spacing+2.2+i*1.5;if(cs>RUN_FROM+1)coins.push({id:`${section.id}:run-coin:${k}:${i}`,s:cs,lateral:LANES[lead],y:.58});}
+  if(!quiet)for(let i=0;i<4;i++){const cs=s-spacing+2.2+i*1.5;if(cs>RUN_FROM+1)coins.push({id:`${section.id}:run-coin:${k}:${i}`,s:cs,lateral:LANES[lead],y:.58});}
   if(type==='barrier')for(let i=0;i<3;i++)coins.push({id:`${section.id}:run-arc:${k}:${i}`,s:s-1+i,lateral:LANES[lanes[0]],y:.95+[0,.38,0][i]});
   lastFree=free;s+=spacing*(.85+r()*.3);k++;
  }

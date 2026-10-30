@@ -65,7 +65,7 @@ function configureTravel(){if(RUNNER)setRunnerWords(unit().vocabulary||[]);nav.r
 let runnerTip=0;
 function runnerEvents(){return{
  start:section=>{const hint=controlHint(!!world?.touchHUD);if(hint)toast(hint);if(section.run.word)showWord(section.run.word);else hideWord();},
- letter:(t,word,letters)=>{if(t.correct){cue('coinTick');buzz(HAPTICS.coin);}else{cue('wrong');buzz(HAPTICS.wrong);}showProgress(letters,{wrong:!t.correct});},
+ letter:(t,word,letters)=>{if(t.correct){cue('coinTick');buzz(HAPTICS.coin);}else{cue('wrong');buzz(HAPTICS.wrong);}showProgress(letters,{wrong:!t.correct,language:word.language});},
  word:(word,letters)=>{if(finishWord(word,letters)){let gained=0;for(let i=0;i<3;i++)gained+=collectCoin(save,state(),{id:word.bonusId+':'+i});persist();cue('correct');buzz(HAPTICS.correct);if(gained)rewardCoins(gained);if(word.language==='en')speak(word.answer);toast(`${word.answer.toUpperCase()} = ${word.prompt} · word complete!${gained?` +${gained} coins`:''}`);}else toast(`The word was ${word.answer} (${word.prompt}). Try the next word run!`);},
  stumble:o=>{cue('blocked');buzz(HAPTICS.hurt);const now=Date.now();if(now-runnerTip>6000){runnerTip=now;toast(o.type==='bar'?'Slide under the bars: ↓ or swipe down.':'Jump the hurdles: ↑ or swipe up.');}}
 };}

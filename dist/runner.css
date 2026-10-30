@@ -14,4 +14,4 @@ body.runner-running #joystick{opacity:0;pointer-events:none;transition:opacity .
 @keyframes runner-shake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 7px))}75%{transform:translateX(calc(-50% + 7px))}}
 @media(prefers-reduced-motion:reduce){.runner-slots span.filled,#runner-word.shake{animation:none}}
 /* Notices move below the track while running, so they never cover the word panel or what is coming. */
-body.runner-running #toast{top:auto;bottom:calc(150px + var(--safe-bottom,0px));transform:none}
+body.playing.runner-running:not(.in-task) #toast{top:auto;bottom:calc(150px + var(--safe-bottom,0px))}

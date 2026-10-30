@@ -6,13 +6,13 @@ import{LANES,laneSpan}from'./runner-course.js';
 // What a runner section looks like: hurdles to jump, bars to slide under, dark holes to dodge, and floating
 // letter tokens for word runs. Shapes are simple and high-contrast so they read at speed on a phone.
 const letterTextures=new Map();
-function letterTexture(letter){
- if(letterTextures.has(letter))return letterTextures.get(letter);
+function letterTexture(letter,language='en'){
+ const key=language+':'+letter;if(letterTextures.has(key))return letterTextures.get(key);
  const size=128,canvas=typeof document!=='undefined'?document.createElement('canvas'):null;let texture;
  if(canvas){canvas.width=canvas.height=size;const g=canvas.getContext('2d');g.beginPath();g.arc(64,64,58,0,Math.PI*2);g.fillStyle='#fff6d8';g.fill();g.lineWidth=8;g.strokeStyle='#e0a93a';g.stroke();
-  g.fillStyle='#1b294f';g.font='800 76px system-ui,-apple-system,"Segoe UI",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(letter.toLocaleUpperCase('tr'),64,70);texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;}
+  g.fillStyle='#1b294f';g.font='800 76px system-ui,-apple-system,"Segoe UI",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(letter.toLocaleUpperCase(language),64,70);texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;}
  else texture=new T.Texture();
- letterTextures.set(letter,texture);return texture;
+ letterTextures.set(key,texture);return texture;
 }
 const yawOf=section=>Math.atan2(section.forward.x,section.forward.z);
 export function makeRunnerScenery(section,{creatureHeight=.65}={}){
@@ -40,7 +40,7 @@ export function makeRunnerScenery(section,{creatureHeight=.65}={}){
  }
  const obstacles=new Map();for(const child of group.children)if(child.name.includes(':run:'))obstacles.set(child.name,child);
  const tokens=new Map();
- for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter),transparent:true,depthWrite:false}));sprite.scale.set(.82,.82,1);sprite.name=t.id;place(sprite,t.s,LANES[t.lane],.95);tokens.set(t.id,sprite);}
+ for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter,run.word.language),transparent:true,depthWrite:false}));sprite.scale.set(.82,.82,1);sprite.name=t.id;place(sprite,t.s,LANES[t.lane],.95);tokens.set(t.id,sprite);}
  group.userData.runnerTokens=tokens;group.userData.runnerObstacles=obstacles;return group;
 }
 export function updateRunnerScenery(group,{time=0,taken=new Set(),knocked=new Set()}={}){

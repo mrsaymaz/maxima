@@ -31,7 +31,7 @@ test('runner courses are deterministic, stay inside the run and always leave a w
   if(index%4===2){const word=run.word;assert.ok(word,'every third run of a chapter is a word run');
    const slots=[...word.answer].map((c,i)=>word.tokens.filter(t=>t.slot===i));
    slots.forEach((row,i)=>{assert.equal(row.length,3);assert.equal(row.filter(t=>t.correct).length,1);assert.equal(row.find(t=>t.correct).letter,word.answer[i]);assert.ok(row.filter(t=>!t.correct).every(t=>t.letter!==word.answer[i]));});
-   assert.ok(['rule','whistle','kural','düdük'].includes(word.answer),'single words only');}
+   assert.ok(['rule','whistle','kural','düdük'].includes(word.answer),'single words only');assert.equal(run.coins.length,0,'letters only');}
  }
  const hole=withRun(1,'challenge').run.obstacles.find(o=>o.type==='hole');
  if(hole){const s=withRun(1,'challenge'),span=laneSpan(hole.lanes);assert.equal(runSurface(s,hole.s,(span.min+span.max)/2),null);}
