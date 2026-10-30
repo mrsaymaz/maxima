@@ -1,0 +1,200 @@
+@g5u1
+N:notice|duyuru|A short message giving information.|The notice {is~are~am} beside the school gate.|Duyuru okul kapısının yanındadır.
+N:entrance|giriş|The place where you go into a building.|The entrance {is~are~am} near the office.|Giriş büronun yakınındadır.
+N:rehearsal|prova|Practice before a show or performance.|Our music club {has~have~having} a rehearsal today.|Müzik kulübümüzün bugün provası var.
+N:club member|kulüp üyesi|A person who belongs to a club.|Each club member {wears~wear~wearing} a badge.|Her kulüp üyesi bir rozet takar.
+N:badge|rozet|A small sign worn on clothes.|The badges {are~is~am} on the desk.|Rozetler sıranın üzerindedir.
+N:chessboard|satranç tahtası|The board used for playing chess.|The chessboard {is~are~am} in the club room.|Satranç tahtası kulüp odasındadır.
+N:school choir|okul korosu|A group of pupils who sing together.|Our school choir {sings~sing~singing} at the ceremony.|Okul koromuz törende şarkı söyler.
+N:folk dance|halk oyunu|A traditional dance from a place.|The pupils like {learning~learns~learn} a folk dance.|Öğrenciler halk oyunu öğrenmeyi sever.
+N:science project|fen projesi|A practical task about science.|Our science project {is~are~am} about water.|Fen projemiz su hakkındadır.
+N:school rule|okul kuralı|An instruction everyone at school follows.|This school rule {keeps~keep~keeping} the corridor quiet.|Bu okul kuralı koridoru sessiz tutar.
+V:join a club|bir kulübe katılmak|To become a member of a school group.|You can {join~joins~joining} a club after lunch.|Öğle yemeğinden sonra bir kulübe katılabilirsin.
+V:solve a puzzle|bir bulmaca çözmek|To find the answer to a puzzle.|Our maths club {solves~solve~solving} a puzzle every week.|Matematik kulübümüz her hafta bir bulmaca çözer.
+V:organise|düzenlemek|To plan an event or activity.|Our art teacher {organises~organise~organising} the exhibition.|Resim öğretmenimiz sergiyi düzenler.
+V:arrange|yerleştirmek; düzenlemek|To put things in a planned order.|Please {arrange~arranges~arranging} the chairs in a circle.|Lütfen sandalyeleri daire şeklinde yerleştir.
+V:wait in line|sırada beklemek|To stand behind others and wait.|Please {wait~waits~waiting} in line at the canteen.|Lütfen kantinde sırada bekle.
+V:shout|bağırmak|To speak with a very loud voice.|You must not {shout~shouts~shouting} in the library.|Kütüphanede bağırmamalısın.
+V:fight|kavga etmek|To hurt or argue angrily with someone.|Pupils must not {fight~fights~fighting} in the playground.|Öğrenciler oyun alanında kavga etmemeli.
+A:welcome|hoş karşılanan|Gladly received by a group.|New members {are~is~am} welcome in our club.|Yeni üyeler kulübümüzde hoş karşılanır.
+N:flag|bayrak|A piece of cloth representing a country.|Our flag {is~are~am} above the school door.|Bayrağımız okul kapısının üzerindedir.
+N:ceremony|tören|A formal event for a special day.|The ceremony {starts~start~starting} in the school garden.|Tören okul bahçesinde başlar.
+N:Republic Day|Cumhuriyet Bayramı|The national celebration on 29 October in Türkiye.|Our school {celebrates~celebrate~celebrating} Republic Day in October.|Okulumuz Cumhuriyet Bayramı'nı ekimde kutlar.
+N:country|ülke|A place with its own land and government.|Canada {is~are~am} a country in North America.|Kanada Kuzey Amerika'da bir ülkedir.
+N:capital city|başkent|The main city of a country's government.|Ankara {is~are~am} the capital city of Türkiye.|Ankara Türkiye'nin başkentidir.
+N:classmate|sınıf arkadaşı|A pupil in the same class as you.|My classmate {likes~like~liking} drawing flags.|Sınıf arkadaşım bayrak çizmeyi sever.
+@g5u2
+N:timetable|ders programı|A plan showing when lessons happen.|Our timetable {shows~show~showing} six lessons today.|Ders programımız bugün altı ders gösteriyor.
+N:double lesson|blok ders|Two lessons of the same subject together.|The double lesson {starts~start~starting} after lunch.|Blok ders öğle yemeğinden sonra başlar.
+N:weekday|hafta içi günü|A day from Monday to Friday.|Monday {is~are~am} a weekday.|Pazartesi hafta içi bir gündür.
+N:weekend|hafta sonu|Saturday and Sunday together.|The weekend {is~are~am} after Friday.|Hafta sonu cuma gününden sonradır.
+N:lunch break|öğle arası|Time to stop lessons and eat lunch.|Our lunch break {begins~begin~beginning} at noon.|Öğle aramız öğlen başlar.
+N:dictionary|sözlük|A book that explains words.|The dictionary {is~are~am} on the bookshelf.|Sözlük kitaplığın üzerindedir.
+N:board marker|tahta kalemi|A pen used for writing on a board.|These board markers {are~is~am} blue.|Bu tahta kalemleri mavidir.
+N:sheet of paper|kâğıt yaprağı|One flat piece of paper.|There {is~are~am} a sheet of paper under your book.|Kitabının altında bir kâğıt yaprağı var.
+N:bookshelf|kitaplık|A shelf or piece of furniture for books.|There {are~is~am} two dictionaries on the bookshelf.|Kitaplıkta iki sözlük var.
+N:rubbish bin|çöp kutusu|A container for things you throw away.|The rubbish bin {is~are~am} beside the door.|Çöp kutusu kapının yanındadır.
+N:exercise book|alıştırma defteri|A book for writing school work.|My exercise book {has~have~having} a green cover.|Alıştırma defterimin yeşil bir kapağı var.
+N:school subject|okul dersi|An area of learning taught at school.|Art {is~are~am} my favourite school subject.|Resim en sevdiğim okul dersidir.
+N:information technology|bilişim teknolojileri|A school subject about computers and technology.|Our information technology lesson {starts~start~starting} at ten.|Bilişim teknolojileri dersimiz saat onda başlar.
+N:quarter past|çeyrek geçe|Fifteen minutes after an hour.|It {is~are~am} quarter past eight.|Saat sekizi çeyrek geçiyor.
+N:quarter to|çeyrek kala|Fifteen minutes before the next hour.|It {is~are~am} quarter to eleven.|Saat on bire çeyrek var.
+V:borrow|ödünç almak|To use something and return it later.|Can you lend {me~I~my} a ruler?|Bana bir cetvel ödünç verebilir misin?
+V:lend|ödünç vermek|To let someone use something temporarily.|Please give {her~she~hers} your spare pencil.|Lütfen ona yedek kalemini ver.
+V:raise a hand|el kaldırmak|To put a hand up before speaking.|Please {raise~raises~raising} your hand before you speak.|Lütfen konuşmadan önce elini kaldır.
+V:tidy up|toparlamak|To put things in their proper places.|Please {tidy~tidies~tidying} up your desk.|Lütfen sıranı toparla.
+V:bring|getirmek|To carry something to a person or place.|Please {bring~brings~bringing} your notebook tomorrow.|Lütfen yarın defterini getir.
+V:follow|uymak; takip etmek|To do what instructions tell you.|Please {follow~follows~following} the classroom instructions.|Lütfen sınıf yönergelerine uy.
+ADV:quietly|sessizce|Without making much noise.|Our class {reads~read~reading} quietly after the break.|Sınıfımız teneffüsten sonra sessizce okur.
+ADV:carefully|dikkatlice|With attention to avoid mistakes.|She {checks~check~checking} the timetable carefully.|Ders programını dikkatlice kontrol eder.
+ADV:slowly|yavaşça|At a low speed.|The teacher {speaks~speak~speaking} slowly during the activity.|Öğretmen etkinlik sırasında yavaşça konuşur.
+@g5u3
+N:ankle|ayak bileği|The part joining the foot and leg.|My brother {wears~wear~wearing} socks above his ankles.|Erkek kardeşim ayak bileklerinin üstüne çıkan çoraplar giyer.
+N:neck|boyun|The part between the head and shoulders.|She {wears~wear~wearing} a scarf around her neck.|Boynuna bir atkı takar.
+N:teeth|dişler|The hard white parts used for biting.|He {brushes~brush~brushing} his teeth every morning.|Her sabah dişlerini fırçalar.
+N:height|boy uzunluğu|How tall a person or thing is.|His height {is~are~am} on the health card.|Boy uzunluğu sağlık kartında yazılıdır.
+A:curly|kıvırcık|Having a shape made of curls.|Her curly hair {looks~look~looking} lovely.|Kıvırcık saçları hoş görünür.
+A:straight|düz|Without bends or curls.|My sister {has~have~having} straight hair.|Kız kardeşimin düz saçları var.
+A:wavy|dalgalı|Having soft curves like small waves.|His wavy hair {is~are~am} brown.|Dalgalı saçları kahverengidir.
+A:oval|oval|Shaped like a stretched circle.|She {has~have~having} an oval face.|Oval bir yüzü var.
+N:raincoat|yağmurluk|A coat that keeps rain off you.|My father {wears~wear~wearing} his raincoat on wet days.|Babam yağışlı günlerde yağmurluğunu giyer.
+N:gloves|eldiven|Clothes worn to keep hands warm.|She always {puts~put~putting} her gloves in her bag.|Eldivenlerini her zaman çantasına koyar.
+N:headscarf|başörtüsü|A piece of cloth worn over the hair.|My aunt {chooses~choose~choosing} a blue headscarf.|Teyzem mavi bir başörtüsü seçer.
+N:outfit|kıyafet takımı|A set of clothes worn together.|Her outfit {matches~match~matching} her shoes.|Kıyafet takımı ayakkabılarıyla uyumludur.
+N:bracelet|bileklik|A piece of jewellery worn on the wrist.|This bracelet {belongs~belong~belonging} to my sister.|Bu bileklik kız kardeşime aittir.
+N:umbrella|şemsiye|Something held above you to stop rain.|He {carries~carry~carrying} an umbrella in winter.|Kışın şemsiye taşır.
+A:comfortable|rahat|Making you feel relaxed and at ease.|These comfortable shoes {are~is~am} my favourites.|Bu rahat ayakkabılar en sevdiklerimdir.
+A:ordinary|sıradan|Normal rather than unusual or special.|He usually {wears~wear~wearing} ordinary clothes at home.|Evde genellikle sıradan kıyafetler giyer.
+A:thick|kalın|Having a large distance between surfaces.|She {needs~need~needing} a thick coat in winter.|Kışın kalın bir mont gerekir.
+A:thin|ince|Having little distance between surfaces.|I {wear~wears~wearing} a thin shirt in summer.|Yazın ince bir gömlek giyerim.
+V:try on|üstünde denemek|To put on clothes to check the fit.|She {tries~try~trying} on a jacket before she buys it.|Bir ceketi satın almadan önce üstünde dener.
+V:go shopping|alışverişe gitmek|To visit shops to buy things.|My parents {go~goes~going} shopping on Sundays.|Annem ve babam pazar günleri alışverişe gider.
+ADV:rarely|nadiren|Not very often.|He rarely {wears~wear~wearing} a hat.|Nadiren şapka takar.
+ADV:sometimes|bazen|On some occasions but not always.|She sometimes {reads~read~reading} before breakfast.|Bazen kahvaltıdan önce kitap okur.
+ADV:always|her zaman|On every occasion.|She always wears her watch, {doesn't~don't~isn't} she?|O her zaman saatini takar, değil mi?
+ADV:never|hiçbir zaman|Not on any occasion.|You never forget your coat, {do~does~are} you?|Sen montunu hiç unutmazsın, değil mi?
+@g5u4
+V:knit|örgü örmek|To make clothes using wool and needles.|My grandmother is {knitting~knits~knit} a scarf now.|Büyükannem şimdi bir atkı örüyor.
+V:sew|dikiş dikmek|To join cloth with a needle and thread.|My aunt is {sewing~sews~sew} a bag.|Teyzem bir çanta dikiyor.
+V:bake|fırında pişirmek|To cook food inside an oven.|My father is {baking~bakes~bake} bread today.|Babam bugün ekmek pişiriyor.
+V:water the plants|bitkileri sulamak|To give water to growing plants.|My brother is {watering~waters~water} the plants.|Erkek kardeşim bitkileri suluyor.
+V:feed the cat|kediyi beslemek|To give food to a cat.|My sister is {feeding~feeds~feed} the cat now.|Kız kardeşim şimdi kediyi besliyor.
+V:set the table|sofrayı kurmak|To put plates and cutlery on a table.|We are {setting~sets~set} the table together.|Birlikte sofrayı kuruyoruz.
+V:clear the table|sofrayı toplamak|To take used dishes off the table.|They are {clearing~clears~clear} the table after lunch.|Öğle yemeğinden sonra sofrayı topluyorlar.
+V:take a photo|fotoğraf çekmek|To use a camera to make a picture.|My uncle is {taking~takes~take} a photo of us.|Amcam bizim fotoğrafımızı çekiyor.
+V:play a board game|kutu oyunu oynamak|To play a game on a board.|My cousins are {playing~plays~play} a board game.|Kuzenlerim bir kutu oyunu oynuyor.
+V:paint a picture|resim boyamak|To make a picture using paint.|My mother is {painting~paints~paint} a picture.|Annem bir resim boyuyor.
+V:collect stamps|pul biriktirmek|To keep different stamps as a hobby.|He usually collects stamps, but today he is {sorting~sorts~sort} them.|Genellikle pul biriktirir ama bugün onları ayırıyor.
+V:do a jigsaw|yapboz yapmak|To fit small pieces into one picture.|We are {doing~does~do} a jigsaw in the living room.|Oturma odasında yapboz yapıyoruz.
+V:ride a bicycle|bisiklete binmek|To travel using a bicycle.|My cousin is {riding~rides~ride} a bicycle in the park.|Kuzenim parkta bisiklete biniyor.
+V:go fishing|balık tutmaya gitmek|To go somewhere to catch fish.|My grandfather is {fishing~fishes~fish} by the lake.|Büyükbabam göl kenarında balık tutuyor.
+V:listen to music|müzik dinlemek|To pay attention to songs or other music.|My parents are {listening~listens~listen} to music.|Annem ve babam müzik dinliyor.
+N:family picnic|aile pikniği|An outdoor meal shared with your family.|We are {having~has~have} a family picnic today.|Bugün aile pikniği yapıyoruz.
+N:photo album|fotoğraf albümü|A book for keeping photographs.|She is {looking~looks~look} at a photo album.|Bir fotoğraf albümüne bakıyor.
+N:wool|yün|Soft material used for warm clothes.|My grandmother is {choosing~chooses~choose} blue wool.|Büyükannem mavi yün seçiyor.
+N:needle|iğne|A thin tool used for sewing.|My aunt is {holding~holds~hold} a needle.|Teyzem bir iğne tutuyor.
+N:recipe|yemek tarifi|Instructions for preparing a dish.|My father is {reading~reads~read} a recipe.|Babam bir yemek tarifi okuyor.
+N:family visit|aile ziyareti|Time spent visiting relatives.|We are {enjoying~enjoys~enjoy} a family visit.|Bir aile ziyaretinin keyfini çıkarıyoruz.
+ADV:together|birlikte|With other people rather than alone.|We are {working~works~work} together in the garden.|Bahçede birlikte çalışıyoruz.
+ADV:at the moment|şu anda|At the time of speaking.|She is drawing at the moment, {isn't~aren't~doesn't} she?|O şu anda resim çiziyor, değil mi?
+ADV:now|şimdi|At this present time.|They are cooking now, {aren't~isn't~don't} they?|Onlar şimdi yemek pişiriyor, değil mi?
+@g5u5
+N:detached house|müstakil ev|A house not joined to another house.|This detached house {is~are~am} near the park.|Bu müstakil ev parkın yakınındadır.
+N:block of flats|apartman binası|A building with several separate homes.|The block of flats {is~are~am} taller than our house.|Apartman binası bizim evimizden daha uzundur.
+N:balcony|balkon|An outdoor platform attached to a building.|The balcony {is~are~am} above the garden.|Balkon bahçenin üzerindedir.
+N:attic|çatı katı|A room or space just under a roof.|The attic {is~are~am} smaller than the bedroom.|Çatı katı yatak odasından daha küçüktür.
+N:basement|bodrum|A room below the ground level.|There {are~is~am} two bicycles in the basement.|Bodrumda iki bisiklet var.
+N:armchair|koltuk|A comfortable chair with sides for your arms.|This armchair is {softer~softest~soft} than the wooden chair.|Bu koltuk ahşap sandalyeden daha yumuşaktır.
+N:sofa|kanepe|A long comfortable seat for several people.|The sofa is {wider~widest~wide} than the armchair.|Kanepe koltuktan daha geniştir.
+N:carpet|halı|A thick covering for a floor.|The carpet {is~are~am} in the living room.|Halı oturma odasındadır.
+N:curtain|perde|Cloth hung in front of a window.|These curtains {are~is~am} longer than those curtains.|Bu perdeler şu perdelerden daha uzundur.
+N:amusement park|lunapark|A place with rides and games.|The amusement park {opens~open~opening} at ten.|Lunapark saat onda açılır.
+N:art gallery|sanat galerisi|A place where paintings and other art are shown.|There {are~is~am} colourful paintings in the art gallery.|Sanat galerisinde renkli tablolar var.
+N:playground|oyun alanı|An outdoor place for children to play.|Our playground {has~have~having} two swings.|Oyun alanımızda iki salıncak var.
+N:swing|salıncak|A hanging seat that moves backwards and forwards.|The swing {is~are~am} beside the slide.|Salıncak kaydırağın yanındadır.
+N:slide|kaydırak|A smooth slope children slide down.|This slide is {longer~longest~long} than that slide.|Bu kaydırak şu kaydıraktan daha uzundur.
+N:town square|kent meydanı|An open public space in a town.|The town square {is~are~am} near the museum.|Kent meydanı müzenin yakınındadır.
+N:neighbour|komşu|Someone who lives near your home.|My neighbour {cycles~cycle~cycling} to the park.|Komşum parka bisikletle gider.
+A:peaceful|huzurlu|Calm and without much noise.|This street is {quieter~quietest~quiet} than the main road.|Bu sokak ana yoldan daha sessizdir.
+A:crowded|kalabalık|Full of many people.|The market {is~are~am} crowded on Saturdays.|Pazar cumartesi günleri kalabalıktır.
+A:modern|modern|Designed in a recent style.|The modern flat {has~have~having} large windows.|Modern dairenin büyük pencereleri var.
+A:comfortable|rahat|Pleasant and easy to sit or live in.|This sofa is more {comfortable~comfortably~comfort} than that chair.|Bu kanepe şu sandalyeden daha rahattır.
+A:expensive|pahalı|Costing a lot of money.|This house is more {expensive~expensively~expense} than that flat.|Bu ev şu daireden daha pahalıdır.
+A:cheap|ucuz|Costing little money.|This ticket is {cheaper~cheapest~cheap} than that ticket.|Bu bilet şu biletten daha ucuzdur.
+V:visit|ziyaret etmek|To go and spend time in a place.|My family {visits~visit~visiting} the museum on Sundays.|Ailem pazar günleri müzeyi ziyaret eder.
+N:roof|çatı|The top part covering a building.|The roof {is~are~am} red.|Çatı kırmızıdır.
+@g5u6
+N:ingredient|malzeme|One of the foods used in a recipe.|This recipe {has~have~having} five ingredients.|Bu tarifte beş malzeme var.
+N:portion|porsiyon|An amount of food served to one person.|My brother {has~have~having} got a small portion.|Erkek kardeşimin küçük bir porsiyonu var.
+N:menu|menü|A list of food and drinks you can order.|The restaurant {has~have~having} got a new menu.|Restoranın yeni bir menüsü var.
+N:bill|hesap|A note showing how much you must pay.|Can I {have~has~having} the bill, please?|Hesabı alabilir miyim, lütfen?
+N:cash|nakit|Money in coins or notes.|Can we {pay~pays~paying} in cash?|Nakit ödeyebilir miyiz?
+N:waiter|garson|A person who serves food in a restaurant.|The waiter {has~have~having} got our order.|Garsonun elinde siparişimiz var.
+N:starter|başlangıç yemeği|A small dish before the main meal.|We {have~has~having} got soup as a starter.|Başlangıç yemeği olarak çorbamız var.
+N:main course|ana yemek|The main dish of a meal.|She {has~have~having} got fish for her main course.|Ana yemek olarak balığı var.
+N:dessert|tatlı|Sweet food eaten after a meal.|They {have~has~having} got fruit for dessert.|Tatlı olarak meyveleri var.
+N:food stall|yiyecek tezgâhı|A small stand selling food.|This food stall {has~have~having} got fresh bread.|Bu yiyecek tezgâhında taze ekmek var.
+N:food festival|yemek festivali|An event where people try different foods.|Can we {visit~visits~visiting} the food festival?|Yemek festivalini ziyaret edebilir miyiz?
+N:olive|zeytin|A small fruit often eaten with breakfast.|There {are~is~am} six olives on the plate.|Tabakta altı zeytin var.
+N:flour|un|A powder made from grain for baking.|The bowl {has~have~having} got some flour in it.|Kâsede biraz un var.
+N:butter|tereyağı|A yellow food made from milk.|We {have~has~having} got some butter for the bread.|Ekmek için biraz tereyağımız var.
+N:honey|bal|A sweet food made by bees.|The jar {has~have~having} got some honey in it.|Kavanozda biraz bal var.
+N:rice|pirinç|Small grains cooked and eaten as food.|We {have~has~having} got some rice for dinner.|Akşam yemeği için biraz pirincimiz var.
+N:lentil soup|mercimek çorbası|A hot dish made with lentils and liquid.|Can I {order~orders~ordering} lentil soup?|Mercimek çorbası sipariş edebilir miyim?
+N:bottle|şişe|A container with a narrow top for liquids.|She {has~have~having} got a bottle of water.|Bir şişe suyu var.
+N:slice|dilim|A thin piece cut from something.|He {has~have~having} got two slices of cheese.|İki dilim peyniri var.
+N:glass|bardak|A container used for drinking.|We {have~has~having} got three glasses of juice.|Üç bardak meyve suyumuz var.
+A:sweet|tatlı|Having a taste like sugar.|This dessert {is~are~am} sweet.|Bu tatlı şekerlidir.
+A:salty|tuzlu|Having a taste of salt.|These olives {are~is~am} salty.|Bu zeytinler tuzludur.
+A:spicy|baharatlı; acı|Containing strong spices.|This spicy soup {has~have~having} got red pepper in it.|Bu baharatlı çorbada kırmızıbiber var.
+V:order|sipariş vermek|To ask for food or drinks in a restaurant.|Can I {order~orders~ordering} a glass of ayran?|Bir bardak ayran sipariş edebilir miyim?
+@g5u7
+N:habitat|yaşam alanı|The natural place where an animal lives.|Many animals must {protect~protects~protecting} their young in their habitat.|Birçok hayvan yaşam alanında yavrularını korumalıdır.
+N:savanna|savan|A warm grassland with few trees.|Lions can {live~lives~living} in the savanna.|Aslanlar savanda yaşayabilir.
+N:rainforest|yağmur ormanı|A warm wet forest with many plants.|Monkeys can {climb~climbs~climbing} trees in the rainforest.|Maymunlar yağmur ormanında ağaçlara tırmanabilir.
+N:desert|çöl|A very dry area with little rain.|Camels can {walk~walks~walking} across the desert.|Develer çölü yürüyerek geçebilir.
+N:polar region|kutup bölgesi|An area near the North or South Pole.|Polar bears can {swim~swims~swimming} in cold water.|Kutup ayıları soğuk suda yüzebilir.
+N:prey|av|An animal caught by another animal for food.|An eagle can {catch~catches~catching} small prey.|Bir kartal küçük avlar yakalayabilir.
+N:claw|pençe|A sharp curved nail on an animal's foot.|A cat can {use~uses~using} its claws to climb.|Bir kedi tırmanmak için pençelerini kullanabilir.
+N:wing|kanat|A body part a bird uses to fly.|A bird can {spread~spreads~spreading} its wings.|Bir kuş kanatlarını açabilir.
+N:feather|tüy|One of the light parts covering a bird.|Birds must {keep~keeps~keeping} their feathers clean.|Kuşlar tüylerini temiz tutmalı.
+N:fur|kürk|The thick hair covering some animals.|A fox can {keep~keeps~keeping} warm with its fur.|Bir tilki kürkü sayesinde sıcak kalabilir.
+N:trunk|fil hortumu|The long nose of an elephant.|An elephant can {pick~picks~picking} up food with its trunk.|Bir fil hortumuyla yiyecek alabilir.
+N:tusk|uzun hayvan dişi|A long pointed tooth on some animals.|An elephant's tusks {are~is~am} longer than a lion's teeth.|Bir filin uzun dişleri aslanın dişlerinden daha uzundur.
+N:whale|balina|A very large animal living in the sea.|A whale can {hold~holds~holding} its breath underwater.|Bir balina su altında nefesini tutabilir.
+N:dolphin|yunus|A sea animal that breathes air.|A dolphin must {come~comes~coming} to the surface for air.|Bir yunus hava almak için yüzeye çıkmalı.
+N:owl|baykuş|A bird with large eyes that often hunts at night.|An owl can {see~sees~seeing} well in low light.|Bir baykuş az ışıkta iyi görebilir.
+N:penguin|penguen|A bird that swims but cannot fly.|A penguin can {swim~swims~swimming} but cannot fly.|Bir penguen yüzebilir ama uçamaz.
+A:heavy|ağır|Having a lot of weight.|An elephant is {heavier~heaviest~heavy} than a horse.|Bir fil bir attan daha ağırdır.
+A:fast|hızlı|Able to move at high speed.|A cheetah is {faster~fastest~fast} than a zebra.|Bir çita bir zebradan daha hızlıdır.
+A:dangerous|tehlikeli|Able to hurt someone or something.|A crocodile can {hurt~hurts~hurting} other animals.|Bir timsah diğer hayvanlara zarar verebilir.
+A:strong|güçlü|Having a lot of physical power.|The largest elephant is the {strongest~stronger~strong} elephant in this group.|En büyük fil bu gruptaki en güçlü fildir.
+V:survive|hayatta kalmak|To stay alive despite difficulty.|Animals must {find~finds~finding} water to survive.|Hayvanlar hayatta kalmak için su bulmalı.
+V:migrate|göç etmek|To move to another area with the seasons.|Some birds must {migrate~migrates~migrating} before winter.|Bazı kuşlar kıştan önce göç etmeli.
+V:hide|saklanmak|To stay where others cannot see you.|A rabbit can {hide~hides~hiding} under a bush.|Bir tavşan bir çalının altına saklanabilir.
+V:protect|korumak|To keep someone or something safe.|We must {protect~protects~protecting} wild animals.|Vahşi hayvanları korumalıyız.
+@g5u8
+N:school holiday|okul tatili|A period when pupils do not attend school.|We are {going~go~goes} to visit a lake in the school holiday.|Okul tatilinde bir gölü ziyaret edeceğiz.
+N:campsite|kamp alanı|A place where people can put tents.|My family is {going~go~goes} to stay at a campsite.|Ailem bir kamp alanında kalacak.
+N:tent|çadır|A cloth shelter used when camping.|We are {going~go~goes} to put up our tent before sunset.|Gün batımından önce çadırımızı kuracağız.
+N:sleeping bag|uyku tulumu|A warm bag used for sleeping outdoors.|I am {going~go~goes} to pack my sleeping bag.|Uyku tulumumu çantama koyacağım.
+N:torch|el feneri|A small light carried in the hand.|She is {going~go~goes} to bring a torch.|Bir el feneri getirecek.
+N:backpack|sırt çantası|A bag carried on your back.|He is {going~go~goes} to put water in his backpack.|Sırt çantasına su koyacak.
+N:travel plan|seyahat planı|Ideas about where and how to travel.|We are {going~go~goes} to discuss our travel plan.|Seyahat planımızı konuşacağız.
+N:island|ada|Land with water all around it.|They are {going~go~goes} to visit an island.|Bir adayı ziyaret edecekler.
+N:coast|kıyı|Land beside the sea.|My cousins are {going~go~goes} to walk along the coast.|Kuzenlerim kıyı boyunca yürüyecek.
+N:waterfall|şelale|Water falling from a high place.|We are {going~go~goes} to take photos of a waterfall.|Bir şelalenin fotoğraflarını çekeceğiz.
+N:cave|mağara|A large natural hole in rock.|Our group is {going~go~goes} to explore a cave with a guide.|Grubumuz bir rehberle mağara keşfedecek.
+N:forest path|orman patikası|A narrow walking route through trees.|We are {going~go~goes} to follow the forest path.|Orman patikasını takip edeceğiz.
+N:Earth|Dünya|The planet where we live.|Our class is {going~go~goes} to make a model of Earth.|Sınıfımız Dünya'nın bir modelini yapacak.
+N:globe|küre; dünya modeli|A round model of Earth.|I am {going~go~goes} to find Türkiye on the globe.|Küre üzerinde Türkiye'yi bulacağım.
+N:continent|kıta|One of Earth's very large land areas.|She is {going~go~goes} to colour the continents on her map.|Haritasındaki kıtaları boyayacak.
+N:ocean|okyanus|One of Earth's largest areas of sea.|We are {going~go~goes} to learn about the oceans.|Okyanusları öğreneceğiz.
+N:compass|pusula|A tool that shows directions.|He is {going~go~goes} to use a compass on the walk.|Yürüyüşte pusula kullanacak.
+N:map|harita|A picture showing places and routes.|They are {going~go~goes} to check the map before the trip.|Geziden önce haritayı kontrol edecekler.
+V:explore|keşfetmek|To look around a place to learn about it.|We are {going~go~goes} to explore the valley tomorrow.|Yarın vadiyi keşfedeceğiz.
+V:pack|çantaya koymak|To put things in a bag for a trip.|I am {going~go~goes} to pack a raincoat.|Çantama yağmurluk koyacağım.
+V:stay|kalmak|To spend time living in a place.|We are {going~go~goes} to stay in a village.|Bir köyde kalacağız.
+V:take a trip|geziye çıkmak|To travel somewhere for a short visit.|Our class is {going~go~goes} to take a trip in June.|Sınıfımız haziranda geziye çıkacak.
+A:outdoor|açık havada yapılan|Happening outside a building.|We are {going~go~goes} to try an outdoor activity.|Bir açık hava etkinliği deneyeceğiz.
+N:stargazing|yıldız gözlemi|Looking at stars in the night sky.|They are {going~go~goes} to go stargazing at the campsite.|Kamp alanında yıldız gözlemine gidecekler.

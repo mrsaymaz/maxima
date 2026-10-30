@@ -7,7 +7,7 @@ import {resolve,join,dirname} from 'node:path';
 import * as T from '../dist/vendor/three.module.min.js';
 const TAU=Math.PI*2,SAMPLES=48,WIDTH={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16},SIZE={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4};
 // Main-face orientation measured from original textured geometry; checked in portraits.
-const YAW=[-0.1294201312588322, 0.47801171464424147, 0.1434787629943768, 0.8426664958122152, 0.8328887556947253, -0.42799666198841424, 0.11799711954071172, -3.0816474089298374, 0.7944626124237779, 0.5750798175048585, 0.34481246630962714];
+const YAW=[-0.1294201312588322, 0.47801171464424147, 0.1434787629943768, 0.8426664958122152, 0.8328887556947253, -0.42799666198841424, 0.11799711954071172, 0.059945244659955765, 0.7944626124237779, 0.5750798175048585, 0.34481246630962714];
 function load(path){const raw=readFileSync(path);if(raw.readUInt32LE(0)!==0x46546c67||raw.readUInt32LE(4)!==2)throw Error('Expected GLB2');let json,binary;for(let o=12;o<raw.length;){const n=raw.readUInt32LE(o),kind=raw.readUInt32LE(o+4),chunk=raw.subarray(o+8,o+8+n);if(kind===0x4e4f534a)json=JSON.parse(chunk);if(kind===0x004e4942)binary=chunk;o+=8+n;}return{json,binary:binary.subarray(0,json.buffers[0].byteLength)};}
 function pack(json,binary){const text=Buffer.from(JSON.stringify(json)),j=Buffer.concat([text,Buffer.alloc((4-text.length%4)%4,32)]),b=Buffer.concat([binary,Buffer.alloc((4-binary.length%4)%4)]),head=Buffer.alloc(20),bh=Buffer.alloc(8);head.writeUInt32LE(0x46546c67);head.writeUInt32LE(2,4);head.writeUInt32LE(28+j.length+b.length,8);head.writeUInt32LE(j.length,12);head.writeUInt32LE(0x4e4f534a,16);bh.writeUInt32LE(b.length);bh.writeUInt32LE(0x004e4942,4);return Buffer.concat([head,j,bh,b]);}
 function bake(level,input,output,qa){

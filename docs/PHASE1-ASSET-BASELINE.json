@@ -1,0 +1,782 @@
+{
+  "release": "0.25.0",
+  "scope": "CPU asset/geometry inventory; entire first-arena layers, not a rendered frame or measured device cost",
+  "forms": [
+    {
+      "partner": "hufflepuff",
+      "level": 0,
+      "bytes": 1314792,
+      "skins": 1,
+      "joints": 28,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 1,
+      "bytes": 988096,
+      "skins": 1,
+      "joints": 17,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 2,
+      "bytes": 1611748,
+      "skins": 1,
+      "joints": 33,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 3,
+      "bytes": 1009492,
+      "skins": 1,
+      "joints": 26,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 4,
+      "bytes": 1638476,
+      "skins": 1,
+      "joints": 24,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 5,
+      "bytes": 1748312,
+      "skins": 1,
+      "joints": 19,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 6,
+      "bytes": 1894720,
+      "skins": 1,
+      "joints": 31,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 7,
+      "bytes": 1854584,
+      "skins": 1,
+      "joints": 35,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 8,
+      "bytes": 1825180,
+      "skins": 1,
+      "joints": 31,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 9,
+      "bytes": 1872888,
+      "skins": 1,
+      "joints": 34,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 10,
+      "bytes": 1876844,
+      "skins": 1,
+      "joints": 34,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 0,
+      "bytes": 1145784,
+      "skins": 1,
+      "joints": 29,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 1,
+      "bytes": 1110232,
+      "skins": 1,
+      "joints": 31,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 2,
+      "bytes": 1872796,
+      "skins": 1,
+      "joints": 38,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 3,
+      "bytes": 1137700,
+      "skins": 1,
+      "joints": 29,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 4,
+      "bytes": 1719224,
+      "skins": 1,
+      "joints": 29,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 5,
+      "bytes": 1203860,
+      "skins": 1,
+      "joints": 34,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 6,
+      "bytes": 1976892,
+      "skins": 1,
+      "joints": 78,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 7,
+      "bytes": 1948592,
+      "skins": 1,
+      "joints": 78,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 8,
+      "bytes": 1445852,
+      "skins": 1,
+      "joints": 40,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 9,
+      "bytes": 2021176,
+      "skins": 1,
+      "joints": 79,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "gryffindor",
+      "level": 10,
+      "bytes": 2002848,
+      "skins": 1,
+      "joints": 29,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 0,
+      "bytes": 1538172,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 1,
+      "bytes": 1125720,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 2,
+      "bytes": 1628648,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 3,
+      "bytes": 1625508,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 4,
+      "bytes": 1736916,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 5,
+      "bytes": 1819212,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 6,
+      "bytes": 1702780,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 7,
+      "bytes": 1816328,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 8,
+      "bytes": 1754956,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 9,
+      "bytes": 2062580,
+      "skins": 1,
+      "joints": 78,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 10,
+      "bytes": 2334204,
+      "skins": 1,
+      "joints": 79,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 0,
+      "bytes": 720060,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 1,
+      "bytes": 815172,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 2,
+      "bytes": 1124932,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 3,
+      "bytes": 1281712,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 4,
+      "bytes": 1156088,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 5,
+      "bytes": 1348192,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 6,
+      "bytes": 1387352,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 7,
+      "bytes": 1473580,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 8,
+      "bytes": 1334948,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 9,
+      "bytes": 1483792,
+      "skins": 0,
+      "joints": 0,
+      "weightedPrimitives": 0,
+      "skeletal": false,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump"
+      ]
+    },
+    {
+      "partner": "slytherin",
+      "level": 10,
+      "bytes": 1847216,
+      "skins": 1,
+      "joints": 22,
+      "weightedPrimitives": 1,
+      "skeletal": true,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ]
+    }
+  ],
+  "summary": {
+    "forms": 44,
+    "skeletal": 25,
+    "unrigged": 19
+  },
+  "layers": {
+    "enclosure": {
+      "batches": 92,
+      "triangles": 114500,
+      "shadowBatches": 68
+    },
+    "foreground": {
+      "batches": 56,
+      "triangles": 93788,
+      "shadowBatches": 0
+    },
+    "landmarks": {
+      "batches": 48,
+      "triangles": 21544,
+      "shadowBatches": 10
+    }
+  },
+  "banks": {
+    "triangles": 19620,
+    "batches": 24
+  },
+  "deviceTesting": {
+    "physicalDevicesTested": 0,
+    "browserVisualReview": false,
+    "status": "pending",
+    "targets": {
+      "preferredFps": 60,
+      "lowerTierStableFps": 30
+    }
+  }
+}

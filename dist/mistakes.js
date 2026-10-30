@@ -2,7 +2,7 @@
 const lower=s=>String(s??'').toLowerCase().trim();
 export function turkishFor(unit,english){const e=lower(english);return unit?.vocabulary?.find(v=>lower(v.en)===e)?.tr||'';}
 function sentenceTr(unit,id){const base=String(id||'').replace(/-grammar.*$/,'');return unit?.sentences?.find(s=>s.id===base)?.tr||'';}
-const QUESTION=[[/^how many|^how much/i,'“How many / How much” asks for a number or amount.'],[/^who/i,'“Who” asks about a person, so the answer names someone.'],[/^where/i,'“Where” asks about a place.'],[/^when|^what time/i,'“When” asks about a time.'],[/^why/i,'“Why” asks for a reason, often with “because”.'],[/^which/i,'“Which” asks you to choose one of the things mentioned.'],[/^what/i,'“What” asks about a thing or an action.'],[/^how/i,'“How” asks about the way or condition.'],[/^(do|does|did|is|are|was|were|can|have|has|will)\b/i,'A yes/no question is answered with the same helper verb.']];
+const QUESTION=[[/^how often/i,'“How often” asks about frequency: how regularly something happens.'],[/^how long/i,'“How long” asks about duration or length.'],[/^how far/i,'“How far” asks about distance.'],[/^how old/i,'“How old” asks about age.'],[/^whose/i,'“Whose” asks who owns something.'],[/^how many|^how much/i,'“How many / How much” asks for a number or amount.'],[/^who/i,'“Who” asks about a person, so the answer names someone.'],[/^where/i,'“Where” asks about a place.'],[/^when|^what time/i,'“When” asks about a time.'],[/^why/i,'“Why” asks for a reason, often with “because”.'],[/^which/i,'“Which” asks you to choose one of the things mentioned.'],[/^what/i,'“What” asks about a thing or an action.'],[/^how/i,'“How” asks about the way or condition.'],[/^(do|does|did|is|are|was|were|can|have|has|will)\b/i,'A yes/no question is answered with the same helper verb.']];
 export function questionReason(q){for(const[re,text]of QUESTION)if(re.test(String(q).trim()))return text;return'The answer must reply to exactly what the question asks.';}
 // Compares the chosen option with the answer to name the grammar point.
 export function grammarReason(answer,chosen=''){
@@ -34,6 +34,7 @@ export function explainMistake(task,action,unit){
   if(t.type==='picture')return{answer:p.left,tr:turkishFor(unit,p.left),reason:`The picture shows “${p.left}”.`,ids:[p.id]};
   if(t.type==='qa-pairs')return{answer:`${p.left} → ${p.right}`,tr:'',reason:questionReason(p.left),ids:[p.id]};
   if(t.type==='halves')return{answer:`${p.left} ${p.right}`,tr:p.context||'',reason:'Both halves must join into one sentence with a clear meaning.',ids:[p.id]};
+  if(t.type==='numbers'&&String(p.id).startsWith('ordinal-'))return{answer:`${p.left} = ${p.right}`,tr:'',reason:'Ordinal numbers show position: first, second, third, and so on.',ids:[]};
   if(t.type==='numbers')return{answer:`${p.left} = ${p.right}`,tr:'',reason:numberReason(p.left),ids:[]};
   return{answer:`${p.left} → ${p.right}`,tr:'',reason:'Match each piece with its partner.',ids:[p.id]};
  }
@@ -50,7 +51,7 @@ export function explainMistake(task,action,unit){
   case'spelling':return{answer:`${q.answer} → ${q.correction}`,tr:turkishFor(unit,q.correction),reason:`“${q.answer}” is misspelled; the correct spelling is “${q.correction}”.`,ids:[q.id]};
   case'clue':return{answer:q.answer,tr:turkishFor(unit,q.answer),reason:`The clue describes “${q.answer}”.`,ids:[q.id]};
   case'listen-word':return{answer:q.answer,tr:turkishFor(unit,q.answer),reason:`You heard “${q.answer}”. Listen to the first sound again.`,ids:[q.id]};
-  case'listen-multi':return{answer:q.answer.join(' + '),tr:q.answer.map(w=>turkishFor(unit,w)).filter(Boolean).join(' + '),reason:'Listen for every item after “Please bring”.',ids:[]};
+  case'listen-multi':return{answer:q.answer.join(' + '),tr:q.answer.map(w=>turkishFor(unit,w)).filter(Boolean).join(' + '),reason:'Listen for every item after “Please select”.',ids:[]};
   case'instructions':return{answer:q.answer.join(q.kind==='sequence'?' → ':' + '),tr:q.answer.map(w=>turkishFor(unit,w)).filter(Boolean).join(q.kind==='sequence'?' → ':' + '),reason:q.kind==='sequence'?'Follow the order words: FIRST, SECOND, THIRD.':/Leave/.test(q.prompt)?'“Leave … behind” means do not pack that card.':'Pack every card the request names, and nothing else.',ids:[]};
  }
  return{answer:Array.isArray(q.answer)?q.answer.join(', '):String(q.answer),tr:'',reason:'Read the request again and compare each option.',ids:[q.id]};

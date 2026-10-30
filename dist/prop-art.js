@@ -1,3 +1,4 @@
+import{assignSurface}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 import{fbm3,chunkedInstances,chunkOf}from'./cliff-art.js';
 import{chapterPath,TRAIL_WIDTH,CHAPTER_LENGTH}from'./trail-layout.js';
@@ -54,7 +55,7 @@ export function stoneColumn(r,depth,seed=1,n=13){
 export function liquidMaterial(color,{local=false,lava=false,center={x:0,z:0},forward={x:0,z:-1},right={x:1,z:0},halfWidth=3,halfLength=3}={}){
  const material=new T.MeshStandardMaterial({color,roughness:lava?.7:.16,metalness:0,emissive:lava?'#ff6a2b':'#000000',emissiveIntensity:lava?.9:0});
  const u={uTime:WORLD_TIME,uCenter:{value:new T.Vector2(center.x,center.z)},uForward:{value:new T.Vector2(forward.x,forward.z)},uRight:{value:new T.Vector2(right.x,right.z)},uHalf:{value:new T.Vector2(halfWidth,halfLength)}};
- material.userData.liquid=u;material.userData.stylized='liquid';
+ assignSurface(material,'water');if(lava)material.roughness=.7;material.userData.liquid=u;material.userData.stylized='liquid';
  material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,u);
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vLiquidWorld;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvLiquidWorld = '+(local?'transformed':'( modelMatrix * vec4( transformed, 1.0 ) ).xyz')+';');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
@@ -114,22 +115,23 @@ function fernGeometry(){
  const p=[],c=[];for(let k=0;k<6;k++){const a=k/6*Math.PI*2,dx=Math.cos(a),dz=Math.sin(a),sx=-dz*.05,sz=dx*.05;const pts=[[0,0,0],[dx*.18+sx,.16,dz*.18+sz],[dx*.34,.2,dz*.34],[dx*.18-sx,.16,dz*.18-sz]];for(const[i,j,l]of[[0,1,2],[0,2,3]]){p.push(...pts[i],...pts[j],...pts[l]);c.push(.55,.6,.5,.9,.95,.85,1.1,1.1,1,.9,.95,.85,.55,.6,.5,1.1,1.1,1);}}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c.slice(0,p.length),3));g.computeVertexNormals();return g;
 }
-export function trailDressing(){
+export function trailDressing({widthAt=()=>TRAIL_WIDTH,heightAt=()=>0,clusterAt=null}={}){
  let seed=811;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
  const pebbles=[],flowers=[],ferns=[];
  for(let c=0;c<5;c++)for(const side of['left','right']){const points=chapterPath(c,side);for(let k=1;k<points.length;k++){const a=points[k-1],b=points[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),nx=-dz/len,nz=dx/len;
-  for(let d=.2;d<len;d+=.7){const at=(off)=>({x:a.x+dx*d/len+nx*off,z:a.z+dz*d/len+nz*off});if(Math.abs(a.x+dx*d/len)<2.4&&Math.abs(a.z+dz*d/len-(-c*CHAPTER_LENGTH+2))<6)continue;
-   for(const edge of[-1,1]){const p=at(edge*(TRAIL_WIDTH-.6+rnd()*1.6));pebbles.push({...p,s:.03+rnd()*.06,r:rnd()*6,seed:rnd()});if(rnd()<.4){const q=at(edge*(TRAIL_WIDTH+.1+rnd()*1.4));flowers.push({...q,s:1.3+rnd()*.8,r:rnd()*6,hue:rnd()});}if(rnd()<.2){const q=at(edge*(TRAIL_WIDTH+.5+rnd()*1.6));ferns.push({...q,s:1.4+rnd()*1.4,r:rnd()*6});}}
-   if(rnd()<.35){const p=at((rnd()-.5)*TRAIL_WIDTH*1.4);pebbles.push({...p,s:.02+rnd()*.035,r:rnd()*6,seed:rnd()});}}}}
+  for(let d=.2;d<len;d+=.7){const at=(off)=>({x:a.x+dx*d/len+nx*off,z:a.z+dz*d/len+nz*off}),center=at(0),width=widthAt(center.x,center.z);if(Math.abs(center.x)<2.4&&Math.abs(center.z-(-c*CHAPTER_LENGTH+2))<6)continue;
+   for(const edge of[-1,1]){const p=at(edge*(width-(clusterAt?.7:.6)+rnd()*(clusterAt?.9:1.6)));if(clusterAt&&rnd()>clusterAt(p.x,p.z))continue;pebbles.push({...p,s:(clusterAt?.045:.03)+rnd()*(clusterAt?.09:.06),r:rnd()*6,seed:rnd()});if(rnd()<.4){const q=at(edge*(width+(clusterAt?-.30:.1)+rnd()*(clusterAt?.45:1.4)));flowers.push({...q,s:1.3+rnd()*.8,r:rnd()*6,hue:rnd()});}if(rnd()<.2){const q=at(edge*(width+(clusterAt?-.45:.5)+rnd()*(clusterAt?.45:1.6)));ferns.push({...q,s:1.4+rnd()*1.4,r:rnd()*6});}}
+   if(rnd()<.35&&(!clusterAt||(((-center.z%CHAPTER_LENGTH+CHAPTER_LENGTH)%CHAPTER_LENGTH)<25))){const p=at((rnd()-.5)*width*1.4);pebbles.push({...p,s:.02+rnd()*.035,r:rnd()*6,seed:rnd()});}}}}
  const group=new T.Group();group.name='trail-dressing';
  const stone=new T.MeshStandardMaterial({color:'#9b9583',roughness:.95,flatShading:true}),bloom=new T.MeshStandardMaterial({vertexColors:true,roughness:.8,side:T.DoubleSide}),fern=new T.MeshStandardMaterial({color:'#5b8a4c',vertexColors:true,roughness:.9,side:T.DoubleSide});
+ assignSurface(stone,'stone');assignSurface(bloom,'organic');assignSurface(fern,'foliage');
  stone.userData.stylized='pebble';bloom.userData.stylized='flower';fern.userData.stylized='fern';
  const petals=['#f4e2a1','#f0b6c8','#ffffff','#c9b8f2','#f6c27a'].map(h=>new T.Color(h));
  const add=list=>{for(const m of list){m.castShadow=false;group.add(m);}return list;};
  const pebble=new T.IcosahedronGeometry(1,0),pp=pebble.attributes.position;for(let i=0;i<pp.count;i++)pp.setY(i,Math.max(-.3,pp.getY(i)));pebble.computeVertexNormals();
- add(chunkedInstances(pebble,stone,pebbles,(o,v)=>{o.position.set(v.x,v.s*.15,v.z);o.rotation.set(v.seed,v.r,0);o.scale.set(v.s*1.2,v.s*.7,v.s);},'trail-pebbles'));
- const blooms=add(chunkedInstances(flowerGeometry(),bloom,flowers,(o,v)=>{o.position.set(v.x,0,v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s);},'trail-flowers'));
+ add(chunkedInstances(pebble,stone,pebbles,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z)+v.s*.15,v.z);o.rotation.set(v.seed,v.r,0);o.scale.set(v.s*1.2,v.s*.7,v.s);},'trail-pebbles'));
+ const blooms=add(chunkedInstances(flowerGeometry(),bloom,flowers,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z),v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s);},'trail-flowers'));
  for(const mesh of blooms){const list=flowers.filter(f=>mesh.name.endsWith('-'+chunkOf(f.z)));list.forEach((f,i)=>mesh.setColorAt(i,petals[Math.floor(f.hue*petals.length)]));}
- add(chunkedInstances(fernGeometry(),fern,ferns,(o,v)=>{o.position.set(v.x,0,v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s*.6);},'trail-ferns'));
+ add(chunkedInstances(fernGeometry(),fern,ferns,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z),v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s*.6);},'trail-ferns'));
  group.userData={pebbles:pebbles.length,flowers:flowers.length,ferns:ferns.length,materials:{stone,fern}};return group;
 }

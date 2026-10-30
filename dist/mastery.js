@@ -1,4 +1,4 @@
-// Spaced repetition per language item. Levels are earned through mastery, not by repeating set counts.
+// Spaced recall drives Wordex stars and review selection. Current creature forms follow path-growth.js; legacy thresholds remain available for older journeys.
 // Each item sits in a box 0–5. A correct answer while the item is due moves it up one box;
 // a miss drops it one box and makes it due again in the same run, so missed words come back later.
 export const BOX_DAYS=[0,0,1,3,7,16];
@@ -33,7 +33,7 @@ export function dueCount(j,{day=dayNumber(),run=j.runCount||0}={}){let n=0;for(c
 export function itemIds(task,index,unit){
  const item=task.kind==='pairs'?task.pairs[index]:task.rounds[index];if(!item?.id)return[];
  if(['listen-multi','instructions'].includes(task.type)){const byWord=new Map((unit?.vocabulary||[]).map(v=>[v.en,v.id]));return(item.answer||[]).map(w=>byWord.get(w)).filter(Boolean);}
- if(task.type==='intruder'||String(item.id).startsWith('number-'))return[];
+ if(task.type==='intruder'||task.type==='numbers'||String(item.id).startsWith('number-')||String(item.id).startsWith('ordinal-'))return[];
  const ids=[item.id];if(['definition','clue'].includes(task.type)&&unit){const word=task.kind==='pairs'?item.left:item.answer,v=unit.vocabulary.find(x=>x.en===word);if(v)ids.push(v.id);}
  return ids;
 }

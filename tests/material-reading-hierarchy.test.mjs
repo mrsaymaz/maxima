@@ -1,0 +1,30 @@
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import{execFileSync}from'node:child_process';import * as T from'../dist/vendor/three.module.min.js';
+import{SURFACES,surfaceMaterial,assignSurface,cueMaterial}from'../dist/surface-materials.js';import{propKind,stylizeProps,edgeGrass}from'../dist/world-style.js';
+import{VisualHierarchy,demandingEncounter}from'../dist/visual-hierarchy.js';import{makeTask,actTask}from'../dist/trail-tasks.js';import{mechanismPlan,mechanismMarkup,WorldMechanism}from'../dist/world-mechanisms.js';
+import{freshJourney,freshExpedition}from'../dist/expedition.js';import{sectionsFor,localPoint}from'../dist/traversal-layout.js';import{makeTrialScenery}from'../dist/path-trial-props.js';
+import{makeTraversalScenery}from'../dist/traversal-props.js';import{makeTaskGate}from'../dist/task-gates.js';import{makeArenaArt}from'../dist/arena-art.js';
+const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+test('surface identity, roughness and texture scale depend on authored roles rather than colour',()=>{
+ for(const color of['#64d645','#a57531','#3c88d9']){for(const kind of['stone','wood','foliage','metal']){const m=surfaceMaterial(kind,color);assert.equal(m.userData.surface,kind);assert.equal(m.roughness,SURFACES[kind].roughness);assert.equal(m.metalness,SURFACES[kind].metalness);assert.equal(propKind(m),SURFACES[kind].detail||null);}}
+ for(const color of['#64d645','#a57531'])assert.equal(propKind(new T.MeshStandardMaterial({color})),null,'unknown material must not be guessed');
+ assert.throws(()=>assignSurface(new T.MeshStandardMaterial(),'guess'));const cue=cueMaterial('#f5b94e',{emissive:'#ffb000',emissiveIntensity:1,transparent:true,opacity:.5});assert.ok(cue.isMeshBasicMaterial);assert.equal(cue.toneMapped,false);assert.equal(cue.userData.surface,'cue');assert.equal(cue.opacity,.5);
+});
+test('gate, challenge, terrain and arena factories provide explicit identities to their owned standard materials',()=>{
+ for(const area of[0,1,2]){const e=Object.assign(freshExpedition(freshJourney(),'g5u1',area),{adventureVersion:1});e.choices.fill('left');const sections=sectionsFor(e),groups=[makeArenaArt(area),makeTaskGate('translation',{area}).group,makeTaskGate('qa-pairs',{area}).group,...sections.map(s=>makeTraversalScenery(s)),...sections.filter(s=>s.trial).map(makeTrialScenery)];for(const g of groups)g.traverse(o=>{for(const m of o.material?(Array.isArray(o.material)?o.material:[o.material]):[])if(m.isMeshStandardMaterial)assert.ok(SURFACES[m.userData.surface],g.name+' '+m.color.getHexString());});}
+});
+test('demanding encounters quiet decoration with smooth transitions and do not mutate enemy or trial clocks',()=>{
+ const e=Object.assign(freshExpedition(freshJourney(),'g5u1',0),{adventureVersion:1});e.choices.fill('left');const section=sectionsFor(e).find(s=>s.trial),p=localPoint(section,section.length/2),enemy={active:true,phase:'windup',timer:.5,x:p.x,z:p.z},nav={player:p,state:e,section,combat:{group:[enemy]},courseTime:12};const before=JSON.stringify(nav),h=new VisualHierarchy();assert.ok(demandingEncounter(nav).active);for(let i=0;i<60;i++)h.update(1/60,nav);assert.ok(h.strength>.98);assert.ok(h.scenicTime<.5);assert.equal(JSON.stringify(nav),before);for(let i=0;i<120;i++)h.update(1/60,nav,{enabled:false});assert.equal(h.strength,0);
+});
+test('grass quieting uniforms coexist with existing sway and are not overwritten by material detailing',()=>{
+ const g=edgeGrass(),hook=g.material.onBeforeCompile;stylizeProps(g);assert.equal(g.material.onBeforeCompile,hook);const s={uniforms:{},vertexShader:'#include <common>\n#include <begin_vertex>',fragmentShader:'#include <common>\n#include <color_fragment>'};hook(s);assert.equal(s.uniforms.uQuietness.value,0);assert.ok(s.vertexShader.includes('uQuietRadius'));assert.ok(s.fragmentShader.includes('vGrassCalm'));assert.ok(s.uniforms.uTime);
+});
+test('Turkish context stays in task data and on an inspectable physical support with accessible text',()=>{
+ const t=makeTask(units[0],'halves','meaning'),before=JSON.stringify(t),p=mechanismPlan(t),left=p.entries.find(e=>e.action==='pair-left'&&e.supportContext);assert.ok(left);assert.ok(mechanismMarkup(p).includes(left.supportContext.replace(/&/g,'&amp;')));assert.equal(JSON.stringify(t),before);actTask(t,{kind:'left',index:left.index});const selected=mechanismPlan(t);assert.equal(selected.entries.find(e=>e.role==='inscription').text,left.supportContext);assert.ok(selected.entries.filter(e=>e.action==='pair-left').length===3);assert.ok(selected.entries.filter(e=>e.action==='pair-right').length===3);
+});
+test('long definitions get wider physical sockets and all sampled phone labels fit at 13 px or above',()=>{
+ const audit=JSON.parse(execFileSync(process.execPath,['scripts/audit-label-fit.mjs'],{encoding:'utf8'}));assert.equal(audit.overflows,0);assert.ok(audit.labels>9000);
+ const t=makeTask(units[1],'definition','read',units[1].id+'definition10',{},10),p=mechanismPlan(t);assert.equal(p.readingLayout,'paired-wide');const left=p.entries.find(e=>e.action==='pair-left'),right=p.entries.find(e=>e.action==='pair-right');assert.ok(right.w>left.w);assert.ok(right.h>1.05);
+});
+test('text skins follow their physical pieces; idle, selected and completed material variants keep their surface',()=>{
+ const types={translation:'stone',picture:'crate',halves:'timber','qa-pairs':'scroll',ending:'leaf',numbers:'bronze','listen-word':'petal'};for(const[type,skin]of Object.entries(types)){const t=makeTask(units[0],type,'skin'),s=new WorldMechanism(new T.Scene()),p=s.render(t,{x:0,z:-10,index:0,chapter:0,side:'left'});assert.ok(mechanismMarkup(p).includes(`data-surface="${skin}"`));for(const v of s.entries.values())if(v.looks){const kinds=[v.looks.idle,v.looks.selected,v.looks.done].map(m=>m.userData.surface);assert.ok(kinds.every(k=>k===kinds[0]));if(['stone','wood','foliage'].includes(kinds[0]))assert.ok(v.looks.selected.userData.stylized);}s.clear();}
+});

@@ -1,0 +1,1 @@
+Original Maxima menu illustrations: Whisperwood woodland spring, Skyreach highland crossing and Stormglass crystal gate. These are small authored SVG thumbnails for arena buttons; the 3D game environments are retained. Element shields in launch-ui.js are authored SVG interface symbols.

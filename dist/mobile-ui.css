@@ -2,9 +2,9 @@
 body.playing button,body.in-task button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}body.playing img,body.in-task img{-webkit-user-drag:none}button:focus-visible{outline:3px solid #fff5bd;outline-offset:3px}
 body.playing #save-indicator{display:none}.play-status{position:fixed;left:210px;top:24px;z-index:8;display:flex;align-items:center;gap:8px;min-height:44px;padding:3px 10px;border:1px solid #b1c3a64d;border-radius:22px;background:#133b30e8;color:#f5e9c8;font-size:12px;pointer-events:auto}.play-status img{width:28px;height:32px;object-fit:contain}.play-status b{font-size:12px;color:#f5d589;white-space:nowrap}.play-status>span{white-space:nowrap}
 .play-dock{position:fixed;bottom:14px;left:24px;right:24px;height:104px;z-index:7;pointer-events:none}.play-dock button,.play-dock .joystick{pointer-events:auto}.play-dock .traversal-hint{position:absolute;top:0;left:110px;right:170px;bottom:auto;transform:none;width:auto;max-width:none;max-height:36px;overflow:hidden;padding:2px 8px;font-size:12px;line-height:17px;background:none;text-align:center;text-shadow:0 1px 4px #092b22;pointer-events:none}.play-dock .attack-button,.play-dock .jump-button{position:absolute;bottom:0;width:64px;height:64px}.play-dock .jump-button{right:0}.play-dock .attack-button{right:78px}.play-dock .context-action{position:absolute;left:0;right:auto;bottom:8px;width:64px;text-align:center}.play-dock .context-action>small{display:none}.play-dock .context-action button{width:64px;min-width:44px;height:52px;padding:0;font-size:24px;border-radius:12px}.play-dock .context-action button small{display:block;color:inherit;font:10px sans-serif;margin:0}.fork-actions{position:absolute;right:0;bottom:0;display:flex;gap:12px;pointer-events:auto}.fork-actions button{width:64px;height:64px;border:1px solid #dacb9f;background:#244d3ee8;border-radius:16px;color:#f5e4b7;font-size:27px}.fork-actions small{display:block;font:11px sans-serif}.play-dock .joystick{display:none}
-/* A task's own tools live outside its camera viewport, on every screen size. */
+/* Task tools overlay the full world; the camera reserves their measured bounds. */
 body.playing.in-task{--play-dock:var(--task-dock)}body.playing.in-task.guardian-choice{--play-dock:180px}body.playing.in-task .topbar{display:none}
-body.playing.in-task #world{top:calc(var(--play-head) + var(--safe-top))!important;bottom:calc(var(--play-dock) + var(--safe-bottom))!important;left:var(--safe-left)!important;right:var(--safe-right)!important;width:calc(100% - var(--safe-left) - var(--safe-right))!important;height:calc(100dvh - var(--play-head) - var(--play-dock) - var(--safe-top) - var(--safe-bottom))!important}
+body.playing.in-task #world{inset:0!important;width:100%!important;height:100dvh!important}
 body.playing.in-task .mechanism-hud{top:var(--safe-top);left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));height:var(--play-head);margin:0;text-shadow:none}.mechanism-hud span{font-size:10px;letter-spacing:0;color:#edcf94}.mechanism-hud strong{font:14px sans-serif;max-width:calc(100vw - 90px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.mechanism-hud>button{flex:0 0 44px;min-height:44px}
 body.playing.in-task .mechanism-tools{position:fixed;bottom:0;left:var(--safe-left);right:var(--safe-right);height:calc(var(--task-dock) + var(--safe-bottom));padding:5px 12px calc(6px + var(--safe-bottom));box-sizing:border-box;background:#11372f;text-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px}.mechanism-tools p{font-size:12px;line-height:14px;max-height:42px;min-height:14px;margin:0;width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}.mechanism-tools>div{gap:8px}.mechanism-tools button{min-height:44px;padding:7px 15px;font-size:12px}.mechanism-tools small{display:none}
 body.playing.in-task .guardian-status{top:var(--safe-top);left:12px;right:12px;height:var(--play-head);text-shadow:none}.guardian-status h2{font:15px sans-serif;margin:3px}.guardian-status .eyebrow{font-size:10px}.guardian-status p{display:none}.guardian-actions{bottom:0;left:var(--safe-left);right:var(--safe-right);transform:none;width:auto;height:calc(180px + var(--safe-bottom));box-sizing:border-box;padding:8px 12px calc(6px + var(--safe-bottom));background:#12382f}.guardian-actions .ability{min-height:88px}.guardian-actions .ability strong{font-size:17px}.guardian-actions .ability small{font-size:10px}.guardian-actions>.text-button{margin:3px 0;padding:8px;min-height:44px}.guardian-choice .milestone-toast{left:var(--safe-left);right:var(--safe-right);bottom:0;transform:none;width:auto;max-height:calc(180px + var(--safe-bottom));box-sizing:border-box;overflow:auto;border-radius:0;padding:10px 14px calc(8px + var(--safe-bottom))}.milestone-toast>strong{font-size:20px}
@@ -23,7 +23,7 @@ body.playing.in-task .guardian-status{top:var(--safe-top);left:12px;right:12px;h
 
 body.playing .topbar{pointer-events:none}body.playing .topbar button{pointer-events:auto}.play-status{z-index:13}
 /* Short landscape screens use a side rail instead of consuming vertical world space. */
-@media(max-height:520px) and (orientation:landscape){body.playing.in-task:not(.guardian-choice) #world{right:calc(176px + var(--safe-right))!important;bottom:var(--safe-bottom)!important;width:calc(100% - 176px - var(--safe-left) - var(--safe-right))!important;height:calc(100dvh - var(--play-head) - var(--safe-top) - var(--safe-bottom))!important}body.playing.in-task:not(.guardian-choice) .mechanism-hud{right:calc(188px + var(--safe-right))}body.playing.in-task:not(.guardian-choice) .mechanism-tools{top:calc(var(--play-head) + var(--safe-top));bottom:0;left:auto;right:var(--safe-right);width:176px;height:calc(100dvh - var(--play-head) - var(--safe-top));padding:10px 9px calc(8px + var(--safe-bottom));justify-content:space-between}.mechanism-tools p{display:block;max-height:128px;overflow:auto;-webkit-line-clamp:unset}.mechanism-tools>div{display:flex;flex-direction:column;width:100%;gap:6px}.mechanism-tools button{width:100%;min-height:44px}}
+
 .play-status{overflow:hidden}.play-status>b{display:block;max-width:72px;overflow:hidden;text-overflow:ellipsis}
 
 /* Physical press feedback stays inside the existing control dock. */
@@ -67,3 +67,31 @@ body.playing:not(.in-task) #toast{top:calc(58px + var(--safe-top));bottom:auto;l
 body.playing:not(.in-task) #toast.toast-shown{transform:translate(-50%,0)}
 body.playing:not(.in-task).hud-notice .traversal-hint{visibility:visible}
 }
+
+/* Full-bleed task presentation: small edge overlays, no opaque letterbox bands. */
+body.playing.in-task .mechanism-hud{height:60px;box-sizing:border-box;padding:4px 0;background:none;text-shadow:0 1px 5px #08251f}
+body.playing.in-task .mechanism-hud>div{max-width:calc(100% - 56px);padding:5px 9px;border-radius:12px;background:#10382ed9}
+body.playing.in-task .mechanism-tools{height:auto;min-height:92px;left:calc(8px + var(--safe-left));right:calc(8px + var(--safe-right));bottom:calc(6px + var(--safe-bottom));padding:5px 8px 6px;border:1px solid #dfd8b329;border-radius:16px;background:linear-gradient(0deg,#10382eef,#10382ea6);gap:5px;justify-content:center}
+body.playing.in-task .mechanism-tools p{max-height:34px;min-height:16px;font-size:12px;line-height:16px;text-shadow:0 1px 3px #08251f}
+body.playing.in-task .mechanism-tools button{min-height:44px;padding:7px 12px;font-size:13px;background:#164538db}
+body.playing.in-task .guardian-actions{background:linear-gradient(0deg,#10382ef2,#10382e99);border-radius:18px 18px 0 0}
+@media(min-width:760px) and (min-height:540px){body.playing.in-task .mechanism-tools{left:50%;right:auto;transform:translateX(-50%);width:min(680px,calc(100% - 32px))}}
+@media(max-height:539px) and (orientation:landscape){body.playing.in-task .mechanism-hud{height:48px}body.playing.in-task .mechanism-tools{min-height:64px;padding:4px 8px;gap:3px;flex-direction:row;justify-content:space-between}body.playing.in-task .mechanism-tools p{max-height:48px;max-width:52%;text-align:left}body.playing.in-task .mechanism-tools>div{gap:6px}body.playing.in-task .mechanism-tools button{padding:7px 10px;font-size:12px}}
+
+body.playing.in-task .mechanism-tools .correction-card{position:static;left:auto;right:auto;bottom:auto;transform:none;flex:none;margin:0;width:100%;max-width:none;box-sizing:border-box;max-height:130px;overflow:auto;pointer-events:auto;touch-action:pan-y;padding:7px 10px;box-shadow:none;animation:none}
+body.playing.in-task .mechanism-tools .correction-card p{max-height:none;font-size:12px;line-height:1.35;color:#33483b;text-shadow:none;text-align:left}
+body.playing.in-task .mechanism-tools .correction-answer{font-size:14px}
+@media(max-height:539px) and (orientation:landscape){body.playing.in-task .mechanism-tools:has(.correction-card){flex-wrap:wrap}body.playing.in-task .mechanism-tools .correction-card{max-height:70px}body.playing.in-task .mechanism-tools .correction-top small{display:none}}
+
+@media(max-height:539px) and (orientation:landscape){
+ body.playing.in-task .mechanism-hud{right:calc(178px + var(--safe-right))}
+ body.playing.in-task .mechanism-tools{left:auto;right:calc(8px + var(--safe-right));top:calc(8px + var(--safe-top));bottom:calc(8px + var(--safe-bottom));width:156px;min-height:0;height:auto;flex-direction:column;flex-wrap:nowrap;justify-content:center;gap:8px;padding:8px;background:linear-gradient(90deg,#10382ea6,#10382ee8)}
+ body.playing.in-task .mechanism-tools p{max-width:none;width:100%;max-height:72px;text-align:center}
+ body.playing.in-task .mechanism-tools>div{width:100%;flex-direction:column;gap:6px}
+ body.playing.in-task .mechanism-tools button{width:100%;min-height:44px}
+ body.playing.in-task .mechanism-tools:has(.correction-card){flex-direction:column;flex-wrap:nowrap}
+ body.playing.in-task .mechanism-tools .correction-card{max-height:100px}
+}
+
+body.playing.in-task .mechanism-tools>div{flex-wrap:wrap;gap:5px}
+body.playing.in-task .mechanism-tools button{padding:7px 9px;font-size:12px}

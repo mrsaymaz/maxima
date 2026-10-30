@@ -1,0 +1,15 @@
+# Maxima Rush v0.32.0
+
+This is the first speed-and-coin platformer conversion of the existing creature adventure. It reuses the branching valleys, meadow art, all four partners, Level 0–10 forms, 44 language units, 20 formats, difficulty modes and saved world-object checkpoints.
+
+Open coin sections accelerate during manual movement from the original 2.6 world units/second to 5.6. A short boost reaches up to 8.5. Tap the context button marked Boost while manually moving, or press Shift. The same context slot shows Follow while stopped, so the control dock gains no additional button. Jump and elemental cast remain independent. Coins refill boost and start a 3.5-active-second collection chain. The compact status displays fuel percent and chain size; the run summary records expedition coin count and best chain. No bonus currency or English mastery is awarded for speed.
+
+Eligible open sections have twelve extra winding pickups with stable appended IDs, including two coins requiring a jump. Their minimum foot height is relative to raised approach terrain, so standing on a rise cannot collect them for free. Trial layouts retain their original authored pickups. Safe movement substeps are unchanged; speed is capped to the original 2.6 near rivals, trials, rocks, plants, steps and within seven world units of the next gate. Wall contact and retries cancel boost and break the chain. Banked coins and accepted English work remain safe.
+
+English mechanisms still pause the action and open the route. Menus and hidden tabs stop Rush simulation time. The app marks the active expedition with rushVersion 1 without changing its identity or language data. Original coin IDs remain intact, preventing duplicate payment after upgrading. The collected-ID limit increases to 2,500 to support the extra pickups. Best-chain state belongs to its expedition and does not leak into another unit journey.
+
+Validation: 407 automated tests passed, then all 18 app tests passed after compacting the HUD label. Build validation passed. New tests cover acceleration, boost fuel, immediate gate braking, original coin identity, exclusion from hazard layouts, collision/navigation integration, safe retry, and jump-only pickup/deduplication. ZIP/configuration and 1,180 media/data byte-preservation checks passed during packaging.
+
+The preview browser was opened and reported GL_VENDOR = Disabled and GL_RENDERER = Disabled. Rendered gameplay, high-speed readability, animation cadence, touch ergonomics and phone FPS/heat are unverified. Treat this as the first Rush build, then playtest on iPhone Safari and Android Chrome before further increasing speed. Start with the first open coin trail, steer manually, hop through the raised coins, activate boost, then verify braking and the next English checkpoint. Reopen the save and check collected coins do not pay again.
+
+Netlify manual upload: extract the Drop ZIP and upload the folder containing index.html, corridor-app.js, assets and data. Repository deployment: keep package.json, scripts and the prebuilt dist together; use npm run build and publish dist.

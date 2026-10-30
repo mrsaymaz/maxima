@@ -1,0 +1,112 @@
+[
+  {
+    "level": 0,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.8,
+    "groundErrorInHeights": [
+      -0.0004508331298280022,
+      0.0012420291541645916
+    ],
+    "maxRootStepInHeights": 0.00279420597864553
+  },
+  {
+    "level": 1,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.815,
+    "groundErrorInHeights": [
+      -0.0004508331692899641,
+      0.0011306600788556348
+    ],
+    "maxRootStepInHeights": 0.003404844966058392
+  },
+  {
+    "level": 2,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.83,
+    "groundErrorInHeights": [
+      -0.00044619568311202515,
+      0.0008587414752323164
+    ],
+    "maxRootStepInHeights": 0.0014623904653237002
+  },
+  {
+    "level": 3,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.8465,
+    "groundErrorInHeights": [
+      -0.0003206987353246524,
+      0.00046464770154847437
+    ],
+    "maxRootStepInHeights": 0.0007295998451088706
+  },
+  {
+    "level": 4,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.8645,
+    "groundErrorInHeights": [
+      -0.0004508331166740438,
+      0.0013715659057081126
+    ],
+    "maxRootStepInHeights": 0.0032551909086148815
+  },
+  {
+    "level": 5,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.8855,
+    "groundErrorInHeights": [
+      -0.0020140906272773994,
+      0.0010856779197205755
+    ],
+    "maxRootStepInHeights": 0.0022760140533864257
+  },
+  {
+    "level": 6,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.9095,
+    "groundErrorInHeights": [
+      -0.0003177702466654141,
+      0.00045000519300963975
+    ],
+    "maxRootStepInHeights": 0.0007178858296477175
+  },
+  {
+    "level": 7,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.935,
+    "groundErrorInHeights": [
+      -0.001053705433050466,
+      0.0019030544946125611
+    ],
+    "maxRootStepInHeights": 0.005243476263324047
+  },
+  {
+    "level": 8,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.9635,
+    "groundErrorInHeights": [
+      -0.00031777025347074877,
+      0.0004500052017707194
+    ],
+    "maxRootStepInHeights": 0.0007178858266315783
+  },
+  {
+    "level": 9,
+    "duration": 0.72,
+    "playbackSpeedWorld": 1.995,
+    "groundErrorInHeights": [
+      -0.00017284595704339736,
+      0.0005434687609011302
+    ],
+    "maxRootStepInHeights": 0.0009534425199962132
+  },
+  {
+    "level": 10,
+    "duration": 0.72,
+    "playbackSpeedWorld": 2.0295,
+    "groundErrorInHeights": [
+      -0.00012055908643905064,
+      0.00005484340948511198
+    ],
+    "maxRootStepInHeights": 0.0007600124341894913
+  }
+]

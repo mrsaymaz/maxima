@@ -1,0 +1,121 @@
+who|Who is mentioned?|Kimden söz ediliyor?
+where|Where does this take place?|Bu nerede gerçekleşir?
+when|When does this happen?|Bu ne zaman gerçekleşir?
+pastWhere|Where did this take place?|Bu nerede gerçekleşti?
+pastWhen|When did this happen?|Bu ne zaman gerçekleşti?
+time|What clock time is stated?|Saat kaç belirtiliyor?
+howOften|How often does this happen?|Bu ne sıklıkta gerçekleşir?
+howMany|How many are mentioned?|Kaç tane belirtiliyor?
+why|What reason does the message give?|Mesaj hangi nedeni veriyor?
+duration|How long does it last?|Ne kadar sürer?
+withWho|Who is the person with?|Kişi kiminle birlikte?
+fromWho|Who is it from?|Kimden geliyor?
+what|What item or activity is mentioned?|Hangi eşya veya etkinlik belirtiliyor?
+object|Which object is described?|Hangi nesne anlatılıyor?
+how|How is the action done?|Eylem nasıl yapılıyor?
+rule|What rule does the message give?|Mesaj hangi kuralı veriyor?
+whichSubject|Which school subject is mentioned?|Hangi okul dersi belirtiliyor?
+hair|What is the hair like?|Saçlar nasıl?
+colour|What colour is stated?|Hangi renk belirtiliyor?
+smaller|Which is smaller in this comparison?|Bu karşılaştırmada hangisi daha küçük?
+larger|Which is larger in this comparison?|Bu karşılaştırmada hangisi daha büyük?
+wider|Which is wider?|Hangisi daha geniş?
+narrower|Which is narrower?|Hangisi daha dar?
+cheaper|Which costs less?|Hangisi daha ucuz?
+moreExpensive|Which costs more?|Hangisi daha pahalı?
+quieter|Which is quieter?|Hangisi daha sessiz?
+noisier|Which is noisier?|Hangisi daha gürültülü?
+soup|Which soup is offered?|Hangi çorba sunuluyor?
+sideDish|Which side dish is offered?|Hangi yardımcı yemek sunuluyor?
+drink|Which drink is mentioned?|Hangi içecek belirtiliyor?
+quantity|What quantity is stated?|Hangi miktar belirtiliyor?
+ingredient|Which ingredient is mentioned?|Hangi malzeme belirtiliyor?
+mainCourse|What is the main course?|Ana yemek nedir?
+meal|Which meal is mentioned?|Hangi öğün belirtiliyor?
+payment|How does the customer pay?|Müşteri nasıl ödeme yapıyor?
+taste|How does it taste?|Tadı nasıl?
+container|Which container is used?|Hangi kap kullanılıyor?
+animal|Which animal is described?|Hangi hayvan anlatılıyor?
+heavier|Which animal is heavier?|Hangi hayvan daha ağır?
+lighter|Which animal is lighter?|Hangi hayvan daha hafif?
+ability|What can this animal do?|Bu hayvan ne yapabilir?
+inability|What can this animal not do?|Bu hayvan ne yapamaz?
+bodyPart|Which body feature is mentioned?|Vücudun hangi özelliği belirtiliyor?
+faster|Which animal is faster?|Hangi hayvan daha hızlı?
+slower|Which animal is slower?|Hangi hayvan daha yavaş?
+tallest|Which animal is the tallest in this group?|Bu grupta hangi hayvan en uzun?
+group|Which group is described?|Hangi grup anlatılıyor?
+response|What response does the message describe?|Mesaj hangi cevabı anlatıyor?
+reasonFactor|What factor does the message identify?|Mesaj hangi etkeni belirtiyor?
+quality|Which friendship quality is shown?|Hangi arkadaşlık özelliği gösteriliyor?
+event|Which event is mentioned?|Hangi etkinlik belirtiliyor?
+itemNeeded|What does the message ask for?|Mesajda ne isteniyor?
+audience|Who is the message for?|Mesaj kimlere yönelik?
+itemOffered|What does the person offer to bring?|Kişi ne getirmeyi teklif ediyor?
+politeExpression|Which polite expression is used?|Hangi kibar ifade kullanılıyor?
+preference|What is the stated preference?|Belirtilen tercih nedir?
+activity|Which activity is mentioned?|Hangi etkinlik belirtiliyor?
+opinion|What opinion is expressed?|Hangi görüş belirtiliyor?
+clothes|What kind of clothes are mentioned?|Ne tür kıyafetler belirtiliyor?
+instrument|Which musical instrument is mentioned?|Hangi müzik aleti belirtiliyor?
+otherChoice|What is the other choice in the comparison?|Karşılaştırmadaki diğer seçenek nedir?
+music|What kind of music is mentioned?|Ne tür müzik belirtiliyor?
+firstStep|What is the first step?|İlk adım nedir?
+nextStep|What happens next?|Sonra ne olur?
+ingredients|Which ingredients are used?|Hangi malzemeler kullanılıyor?
+tool|Which tool is used?|Hangi araç kullanılıyor?
+action|What action is described or requested?|Hangi eylem anlatılıyor veya isteniyor?
+finalStep|What is the final step?|Son adım nedir?
+dish|Which dish is mentioned?|Hangi yemek belirtiliyor?
+requestedPerson|Which person is named in the request?|İstekte hangi kişinin adı geçiyor?
+requestedNumber|Which number is requested?|Hangi numara isteniyor?
+details|Which details are recorded?|Hangi bilgiler kaydediliyor?
+place|Which place is mentioned?|Hangi yer belirtiliyor?
+problem|What is the stated problem?|Belirtilen sorun nedir?
+result|What result does the message describe?|Mesaj hangi sonucu anlatıyor?
+privacy|What is the account's privacy status?|Hesabın gizlilik durumu nedir?
+itemProvided|What equipment is provided?|Hangi ekipman sağlanıyor?
+accommodation|What kind of accommodation is described?|Ne tür konaklama anlatılıyor?
+measurement|What is being measured?|Ne ölçülüyor?
+topic|What is the topic of the message?|Mesajın konusu nedir?
+period|Which time period is referred to?|Hangi zaman dönemine gönderme yapılıyor?
+cause|What cause is identified?|Hangi neden belirtiliyor?
+possibleResult|What might happen according to the message?|Mesaja göre ne olabilir?
+firstHazard|Which natural event is named first?|İlk olarak hangi doğa olayının adı geçiyor?
+secondHazard|Which natural event is named second?|İkinci olarak hangi doğa olayının adı geçiyor?
+weather|What weather conditions are mentioned?|Hangi hava koşulları belirtiliyor?
+grouping|How are the pupils grouped?|Öğrenciler nasıl gruplandırılıyor?
+genre|What kind of text is described?|Ne tür metin anlatılıyor?
+ordinal|Which position in the sequence is mentioned?|Sıralamada hangi konum belirtiliyor?
+morePatient|Who is more patient in this comparison?|Bu karşılaştırmada kim daha sabırlı?
+comparisonOther|Who or what is the other side of the comparison?|Karşılaştırmanın diğer tarafı kim veya ne?
+mostOrganised|Who is the most organised?|Kim en düzenli?
+owner|Whose is it?|Kimin?
+taller|Who is taller?|Kim daha uzun?
+shorter|Who is shorter?|Kim daha kısa?
+personality|Which personality feature is described?|Hangi kişilik özelliği anlatılıyor?
+cleaner|Which is cleaner?|Hangisi daha temiz?
+language|Which language is mentioned?|Hangi dil belirtiliyor?
+purpose|What use is described?|Hangi kullanım anlatılıyor?
+energy|Which kind of energy is mentioned?|Hangi enerji türü belirtiliyor?
+moreOutgoing|Who is more outgoing?|Kim daha dışa dönük?
+faceFeature|Which facial feature is described?|Yüzün hangi özelliği anlatılıyor?
+hairstyle|What hairstyle is described?|Hangi saç modeli anlatılıyor?
+accessory|Which accessory is worn?|Hangi aksesuar takılıyor?
+faceShape|What is the shape of the face?|Yüzün şekli nasıl?
+sport|Which sport is mentioned?|Hangi spor belirtiliyor?
+sports|Which sports are offered?|Hangi sporlar sunuluyor?
+job|What is the person's job?|Kişinin mesleği nedir?
+until|Until when did this continue?|Bu ne zamana kadar sürdü?
+programme|What kind of programme is mentioned?|Ne tür program belirtiliyor?
+prediction|What prediction is made?|Hangi tahmin yapılıyor?
+goal|What goal or hope is described?|Hangi hedef veya umut anlatılıyor?
+materials|Which materials are mentioned?|Hangi malzemeler belirtiliyor?
+preferredItem|Which item is used instead?|Yerine hangi eşya kullanılıyor?
+avoidedItem|Which item is replaced?|Hangi eşyanın yerine başka bir şey kullanılıyor?
+transport|What kind of transport is encouraged?|Hangi ulaşım türü teşvik ediliyor?
+reusedItem|What is reused?|Ne yeniden kullanılıyor?
+hotter|Which planet is hotter?|Hangi gezegen daha sıcak?
+cooler|Which planet is cooler?|Hangi gezegen daha serin?
+planet|Which planet is named?|Hangi gezegenin adı geçiyor?
+material|What material is used?|Hangi malzeme kullanılıyor?

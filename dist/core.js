@@ -1,8 +1,8 @@
 export const TYPES=['match','sentence','qa'];
 export const AREAS=[
- {name:'Whisperwood',subtitle:'THE WOODLAND AWAKENS',colour:'#9de2bc',levels:'Forms 0–3',story:'A spring has fallen silent. Bring the valley back to life as your creature.',guardian:'Mossback Warden'},
- {name:'Skyreach',subtitle:'THE WINDS ABOVE',colour:'#c6d8ef',levels:'Forms 3–6',story:'Follow the rising wind. Restore the sky bridges and awaken the highland beacons.',guardian:'Galecrest Warden'},
- {name:'Stormglass',subtitle:'THE LAST ELEMENTAL GATE',colour:'#c5b8ed',levels:'Forms 6–10',story:'Beyond the violet mist, an ancient guardian protects the heart of the sanctuary.',guardian:'Stormglass Sentinel'}
+ {name:'Whisperwood',subtitle:'THE WOODLAND AWAKENS',colour:'#9de2bc',levels:'Forms 0–4',story:'A spring has fallen silent. Bring the valley back to life as your creature.',guardian:'Mossback Warden'},
+ {name:'Skyreach',subtitle:'THE WINDS ABOVE',colour:'#c6d8ef',levels:'Forms 4–8',story:'Follow the rising wind. Restore the sky bridges and awaken the highland beacons.',guardian:'Galecrest Warden'},
+ {name:'Stormglass',subtitle:'THE LAST ELEMENTAL GATE',colour:'#c5b8ed',levels:'Forms 8–10',story:'Beyond the violet mist, an ancient guardian protects the heart of the sanctuary.',guardian:'Stormglass Sentinel'}
 ];
 export const STORAGE='maxima.save.v1';
 export function freshJourney(){return {level:0,sets:{match:0,sentence:0,qa:0},guardians:[],completed:false,seen:{},stats:{correct:0,mistakes:0,hints:0},active:null,pending:{},history:[],runs:0};}

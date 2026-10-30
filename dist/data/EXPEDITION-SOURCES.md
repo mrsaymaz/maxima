@@ -121,3 +121,16 @@ Every unit has at least three independent records in each language record bucket
 
 ## Maxima benchmark review extension v1
 Grade 8 Units 11 and 12 each received 15 explicitly authored text vocabulary/definition records and four contextual questions. Existing records and asset paths are unchanged. IDs contain `maxima-review-v1` or `maxima-context-v1`; vocabulary and questions also carry a source label. No new emoji art is inferred. These additions support text/listening practice; image matching retains the supplied picture bank. See `scripts/extend-thin-units.py` for exact text and Turkish meanings. Structural checks do not certify curriculum alignment; teacher review remains appropriate.
+
+
+## v0.35.0 original curriculum expansion
+
+Adds original bilingual vocabulary, definitions, example sentences, contextual questions, grammar gaps and repairs. Grade 5–6 scope is mapped to the regular 2025 Maarif programme, Grade 7–8 to the requested 2018 programme. See curriculum-manifest.json for PDF page references, outcome-code inventories and source hashes. These are original authored examples, not copied textbook exercises or MEB-approved items. Independent teacher review remains pending. Existing source records and their IDs are preserved.
+
+- [MEB English regular programme 2025, Years 2–8](https://mufredat.meb.gov.tr/Dosyalar/202591011405337-26-08-ekli-english-regular.pdf) — accessed 2026-10-29; document hash in curriculum-manifest.json.
+- [MEB English programme 2018, Years 2–8](https://mufredat.meb.gov.tr/Dosyalar/201812411191321-%C4%B0NG%C4%B0L%C4%B0ZCE%20%C3%96%C4%9ERET%C4%B0M%20PROGRAMI%20Klas%C3%B6r%C3%BC.pdf) — accessed 2026-10-29; document hash in curriculum-manifest.json.
+
+
+## v0.35.1 explicit Fluent Emoji mappings
+
+33 newly introduced vocabulary records gain sense-specific approved Fluent images; 702 receive an explicit text-only decision. See picture-review.json for all decisions and fluent-assets.json for the 14 pinned official additions. The Microsoft MIT notice is retained in assets/emoji/LICENSE.txt. No broad spelling-based mapping was used: Sports train and planetary ring remain unpictured. Original word IDs and legacy mappings remain. Picture selection excludes shared files and confusable groups, including group 0 and transitive aliases. See docs/FLUENT-v0.35.1.md in the Source package.

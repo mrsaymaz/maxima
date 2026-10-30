@@ -1,0 +1,69 @@
+/* Final shared tokens replace competing legacy presentation rules. */
+:root{--ink:#fff4d8;--muted:#d4dfcd;--surface:#123b30;--line:#e6cf9b70;--gold:#e7c788;--type-small:12px;--type-body:14px;--type-title:20px;--radius-control:16px}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.ui-icon{display:inline-block;width:24px;height:24px;vertical-align:middle;flex:none;pointer-events:none}
+.top-actions .ui-icon{width:22px;height:22px}.top-actions button,.mechanism-hud>button{display:grid;place-items:center}
+.play-dock button{border-radius:var(--radius-control);color:var(--ink);font:600 var(--type-small)/1.15 system-ui,sans-serif;transition:background .12s,border-color .12s,opacity .12s}
+.play-dock button .ui-icon{width:25px;height:25px}.play-dock button small{display:block!important;font:600 12px/1.1 system-ui,sans-serif;letter-spacing:0;margin-top:3px;color:inherit}
+.play-dock button:disabled{opacity:.48;filter:saturate(.55);box-shadow:none!important;transform:none!important}
+.play-dock button.pressed,.play-dock button:active{background:#486d54!important;border-color:#fff0be;transform:translateY(1px) scale(.97);filter:none}
+.play-dock .attack-button.opening{border-color:#fff0b6;box-shadow:0 0 0 2px #fff0b670}
+button[aria-pressed=true],button[aria-selected=true],button.selected,.shop-items button.equipped{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+button:focus-visible,a:focus-visible{outline:3px solid #fff2bd;outline-offset:3px}
+.camp-card .camp-actions button,.segmented button,.shop-tabs button,.graphics-grid button{border-radius:12px;font-size:14px}
+.camp-card .camp-head small,.camp-card .camp-actions small,.quest-list,.streak-row small,.growth-bar small,.modal p,.mechanism-tools p{font-size:var(--type-small);line-height:1.4}
+.camp-actions b .ui-icon{width:26px;height:26px}.quest-icon .ui-icon{width:20px;height:20px}.flame .ui-icon{width:18px;height:18px;margin-right:4px}.chest-icon .ui-icon{width:56px;height:56px}
+.play-status{font-size:12px}.play-status>b{display:flex;align-items:center;gap:4px;max-width:90px}.play-status>b .ui-icon{width:17px;height:17px}.play-status small{font-size:12px!important;letter-spacing:0!important}
+.mechanism-tools button{font:600 14px/1.2 system-ui,sans-serif;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}.mechanism-tools .ui-icon{width:18px;height:18px}
+.mechanism-hud strong{font:600 16px/1.2 system-ui,sans-serif}.mechanism-hud span{font-size:12px!important;letter-spacing:0!important;text-transform:none}
+.mechanism-tools p{font-size:13px!important;line-height:1.3!important}
+/* Quiet feedback stays beside the manipulated piece. Major rewards retain the broad effects. */
+.fx-float{font-size:20px;letter-spacing:0;-webkit-text-stroke:0;text-shadow:0 1px 3px #12271ce6;animation-duration:var(--fx-duration,560ms)}
+.fx-crit{font-size:24px;color:#ffe2a0;text-shadow:0 1px 3px #12271ce6}.fx-praise{font-size:18px;color:#fff3c7}.fx-blocked{font-size:14px}.fx-crack{font-size:18px}
+@keyframes fx-float{0%{transform:translate(-50%,-30%) scale(.95);opacity:0}18%{opacity:1;transform:translate(-50%,-70%) scale(1)}100%{transform:translate(calc(-50% + var(--drift,0px)),-160%);opacity:0}}
+.fx-spark{animation-duration:var(--fx-duration,300ms);box-shadow:none}.fx-ring{border-width:2px}.fx-bump{animation-duration:.22s}
+@keyframes fx-bump{45%{transform:scale(1.12);color:#fff2c4}}
+.fx-flash-reward{background:radial-gradient(ellipse at center,transparent 65%,#ffe28a28 100%)}
+/* Full-screen exploration, with controls confined to the bottom corners and a clear central sight line. */
+@media(max-width:759px),(pointer:coarse){
+ body.playing:not(.cinematic):not(.in-task){--play-dock:104px}
+ body.playing:not(.in-task) .play-dock{height:calc(var(--play-dock) + var(--safe-bottom));background:linear-gradient(to top,#08201b80,transparent 95%)}
+ body.playing:not(.in-task) .play-dock .joystick{left:var(--control-stick-x,12px);bottom:calc(var(--control-stick-bottom,14px) + var(--safe-bottom));width:var(--control-stick-size,88px);height:var(--control-stick-size,88px);background:#102e2860;border:1px solid #f2e9c780;backdrop-filter:none}
+ body.playing:not(.in-task) .play-dock #joystick-thumb{left:calc((var(--control-stick-size,88px) - 40px)/2);top:calc((var(--control-stick-size,88px) - 40px)/2);width:40px;height:40px;background:#efe3bccc}
+ body.playing:not(.in-task) .play-dock .attack-button{left:var(--control-attack-x);right:auto;bottom:calc(var(--control-attack-bottom,14px) + var(--safe-bottom));width:var(--control-attack-size,60px);height:var(--control-attack-size,60px)}
+ body.playing:not(.in-task) .play-dock .jump-button{left:var(--control-jump-x);right:auto;bottom:calc(var(--control-jump-bottom,30px) + var(--safe-bottom));width:var(--control-jump-size,60px);height:var(--control-jump-size,60px)}
+ body.playing:not(.in-task) .play-dock .context-action{left:var(--control-context-x);bottom:calc(var(--control-context-bottom,22px) + var(--safe-bottom));width:44px}
+ body.playing:not(.in-task) .play-dock .context-action button{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;height:58px;padding:3px 0;border-radius:14px}
+ body.playing:not(.in-task) .play-dock .traversal-hint{position:fixed;top:calc(62px + var(--safe-top));bottom:auto;left:calc(12px + var(--safe-left));right:calc(12px + var(--safe-right));width:auto;max-width:440px;max-height:56px;margin:0 auto;padding:5px 10px;background:#10392ed9;border:1px solid #c7d3b12b;border-radius:12px;color:var(--ink);font-size:13px;line-height:1.35;display:block;text-shadow:none;transition:opacity .2s;overflow:auto}
+ body.playing:not(.in-task) .play-dock .traversal-hint:empty{display:none}
+ .play-dock .traversal-hint.hint-resting{opacity:0;visibility:hidden}.play-dock .traversal-hint[data-urgent=true]{border-color:#e4c38988}
+ body.playing:not(.in-task) #toast{top:calc(126px + var(--safe-top));max-height:64px;overflow:auto;font-size:13px;background:#10392eed;pointer-events:none}
+ body.playing.hud-notice:not(.in-task) .play-dock .traversal-hint:not([data-urgent=true]){visibility:hidden}
+ body.playing:not(.in-task) .fork-actions{right:var(--control-edge,12px);bottom:calc(18px + var(--safe-bottom));gap:16px}
+ body.playing:not(.in-task) .fork-actions button{width:60px;height:60px}
+}
+@media(max-height:520px) and (orientation:landscape){body.playing:not(.in-task) .play-dock .traversal-hint{left:calc(140px + var(--safe-left));right:calc(160px + var(--safe-right));top:calc(54px + var(--safe-top));font-size:12px;max-height:48px}body.playing:not(.in-task) #toast{top:calc(110px + var(--safe-top))}}
+@media(prefers-reduced-motion:reduce){.fx-spark,.fx-ring,.fx-flash{display:none}.fx-float{animation:none;transform:translate(-50%,-100%)}.play-dock button,.play-dock .traversal-hint{transition:none}}
+
+.camp-actions small .ui-icon{width:14px;height:14px}.modal-header .close{display:grid;place-items:center}
+body.playing:not(.in-task) .play-status{min-height:44px}.play-status .status-text small{line-height:1.2}
+@media(max-width:350px){body.playing:not(.in-task) .play-status{left:52px;right:102px;gap:4px}.play-status img{display:none}.play-status .status-growth{display:none}.play-status small{font-size:12px!important}}
+
+button:disabled:not(.world-piece){cursor:default;opacity:.48;box-shadow:none}button:disabled:not(.world-piece):active{transform:none;filter:none}
+
+#threat-layer{position:fixed;inset:0;z-index:12;pointer-events:none;overflow:hidden}body:not(.playing) #threat-layer,body.in-task #threat-layer,body.cinematic #threat-layer{display:none}.threat-pin{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border:1px solid #ffd991;background:#203c34e8;border-radius:50%;box-shadow:0 1px 4px #10282080}.threat-pin svg{width:28px;height:28px;transform:rotate(var(--threat-angle));fill:#ffcc78;stroke:#fff0ba;stroke-width:1.2}.threat-pin svg circle{fill:#30483e;stroke:none}
+
+/* Phase 1: short landscape screens keep guidance out of the central sight line. */
+@media(max-height:520px) and (orientation:landscape){
+ body.playing:not(.in-task) .play-dock .traversal-hint{top:calc(51px + var(--safe-top));left:calc(112px + var(--safe-left));right:calc(160px + var(--safe-right));max-height:40px;padding:3px 8px;font-size:12px}
+ body.playing:not(.in-task) #toast{top:calc(96px + var(--safe-top));max-height:40px}
+}
+
+/* A short focus dissolve masks the change of scale while the real plates unfold. */
+body.task-arriving #world{animation:gate-focus .82s ease-out both}body.task-arriving .world-pieces{animation:gate-ink .82s ease-out both;pointer-events:none}body.task-arriving .mechanism-hud{animation:gate-ink .82s ease-out both}
+@keyframes gate-focus{0%{filter:brightness(.5) blur(1.5px)}100%{filter:brightness(1) blur(0)}}@keyframes gate-ink{0%,35%{opacity:0}100%{opacity:1}}
+body.returning-to-play #world{animation:back-to-trail .48s ease-out both}body.returning-to-play .play-dock{animation:gate-ink .48s ease-out both}
+@keyframes back-to-trail{0%{filter:brightness(.3) blur(2px)}100%{filter:brightness(1) blur(0)}}
+@media(prefers-reduced-motion:reduce){body.task-arriving #world,body.task-arriving .world-pieces,body.task-arriving .mechanism-hud,body.returning-to-play #world,body.returning-to-play .play-dock{animation-duration:.18s}}
+
+body.task-arriving .world-piece{pointer-events:none!important}

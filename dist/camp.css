@@ -143,3 +143,5 @@ body.onboarding .topbar .top-actions{opacity:.6}
 .shop-items>button b{font-size:11px;color:#f1d49a}
 .wardrobe h3{font:22px Georgia,serif}
 @media(min-width:760px) and (pointer:fine){body.playing .play-status{left:250px}}
+
+.run-story{padding:12px 14px;border-left:3px solid #c9ba86;background:#244b3e;border-radius:0 10px 10px 0;line-height:1.55;font-size:14px}.run-story strong{color:#f4dfaa}

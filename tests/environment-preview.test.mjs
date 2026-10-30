@@ -1,0 +1,11 @@
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
+import{TASK_TYPES}from'../dist/expedition.js';
+let source=fs.readFileSync('dist/environment-preview.js','utf8');const bindings={};for(const m of source.matchAll(/import\{([^}]+)\}from'([^']+)';/g)){const mod=await import(new URL('../dist/'+m[2].slice(2),import.meta.url));for(const name of m[1].split(','))bindings[name]=mod[name];}source=source.replace(/import\{[^}]+\}from'[^']+';/g,'');
+class StubWorld{constructor(el,fn,nav){this.nav=nav;this.viewRig={};}setArea(area){this.area=area;this.nav.setArea(area);}async loadForm(form){this.level=form;this.nav.setLevel(form);}setView(){}}
+
+test('the isolated environment reviewer switches every arena/chapter/form with valid temporary task identities and no save access',async()=>{
+ const els=new Map();for(const[id,value]of Object.entries({area:'0',chapter:'0',form:'0',quality:'balanced'}))els.set('#'+id,{value,checked:false,selectedOptions:[{textContent:id}],addEventListener(){}});for(const id of ['#world','#caption','#status','#restored','#reduced','#recenter'])els.set(id,{textContent:'',checked:false,addEventListener(){}});
+ const document={querySelector:s=>els.get(s)},AsyncFunction=Object.getPrototypeOf(async function(){}).constructor,run=new AsyncFunction(...Object.keys(bindings),'document','devicePixelRatio',source+'\nreturn{show,state:()=>e,world:()=>world};'),h=await run(...Object.entries(bindings).map(([name,value])=>name==='TrailWorld'?StubWorld:value),document,1);
+ for(let area=0;area<3;area++)for(let chapter=0;chapter<5;chapter++)for(const form of [0,10]){els.get('#area').value=String(area);els.get('#chapter').value=String(chapter);els.get('#form').value=String(form);await h.show();const e=h.state();assert.equal(e.area,area);assert.equal(e.index,chapter*4);assert.equal(h.world().level,form);assert.ok(e.completed.every((r,i)=>r.index===i&&r.id===e.id+':'+i&&TASK_TYPES.includes(r.type)));assert.equal(els.get('#status').textContent,'');assert.ok(h.world().nav.support()!==null);}
+ assert.ok(!source.includes('localStorage'));assert.ok(fs.readFileSync('dist/environment-preview.html','utf8').includes('does not alter your saved journeys'));
+});

@@ -1,3 +1,4 @@
+import{surfaceMaterial,assignSurfaceRoles,replaceCueMaterials}from'./surface-materials.js';
 import{bevelBox,carvedCylinder,roundBoulderGeometry,rockLump}from'./prop-art.js';
 import * as T from './vendor/three.module.min.js';
 import {boulderPose,gustState,thornState,movingPose,crystalState} from './path-trials-layout.js';
@@ -14,8 +15,9 @@ function leafGeo(){const points=[[0,0,0],[-.20,0,.27],[0,.06,.57],[.20,0,.27],[0
 export function makeTrialScenery(section){
  const trial=section?.trial;if(!trial||!['boulders','wind','moving','thorns','crystals','bonus'].includes(trial.kind))throw new Error('Unknown path trial');
  const group=new T.Group();group.name='path-trial-'+trial.kind;const palette=PALETTES[section.area]||PALETTES[0],cache=new Map();
- const material=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.86,...extra});
+ const material=(color,extra={})=>surfaceMaterial('stone',color,extra);
  const m={stone:material(palette[0]),pale:material(palette[1]),moss:material(palette[2]),root:material(palette[3]),air:material('#91d9cf',{emissive:'#68a69b',emissiveIntensity:.5,roughness:.45}),gold:material('#dfbc65',{emissive:'#a47f31',emissiveIntensity:.28,metalness:.18,roughness:.5}),amber:material('#f4bd59',{emissive:'#d79030',emissiveIntensity:.65}),green:material('#a7d18a',{emissive:'#6a9f62',emissiveIntensity:.45}),warning:material('#f4bd59',{transparent:true,opacity:.24,depthWrite:false,emissive:'#e4a749',emissiveIntensity:.6,side:T.DoubleSide}),safe:material('#8ec77d',{transparent:true,opacity:.24,depthWrite:false,emissive:'#69ad63',emissiveIntensity:.38,side:T.DoubleSide}),shield:material('#9fded5',{transparent:true,opacity:.19,depthWrite:false,emissive:'#64bcb4',emissiveIntensity:.45,side:T.DoubleSide}),shell:material(palette[1]),crystal:material('#a8e8d9',{emissive:'#77cbb5',emissiveIntensity:.75,roughness:.35}),dark:material('#465954')};
+ assignSurfaceRoles(m,{"stone": ["stone", "pale", "shell", "dark"], "foliage": ["moss"], "wood": ["root"], "metal": ["gold"], "effect": ["air", "amber", "green"], "cue": ["warning", "safe", "shield"], "glass": ["crystal"]});replaceCueMaterials(m,["warning", "safe", "shield"]);
  const geo=(key,fn)=>{if(!cache.has(key))cache.set(key,fn());return cache.get(key);};
  const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
  const cyl=(a,b,h,n=12)=>geo(`c${a},${b},${h},${n}`,()=>carvedCylinder(a,b,h,n));

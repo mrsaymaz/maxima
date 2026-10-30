@@ -1,3 +1,7 @@
+import{makeAqueductChannel}from'./aqueduct-channel.js';
+import{eyeBlink,blinkFigures}from'./eye-blink.js';
+import{mechanismHardware,taskMechanismState}from'./mechanism-hardware.js';
+import{surfaceMaterial,assignSurfaceRoles,assignSurface}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 import{bevelBox,carvedCylinder,rockLump,liquidMaterial}from'./prop-art.js';
 // Themed task gates. Each English task type gets its own obstacle on the trail and its own dressing on the task
@@ -17,8 +21,9 @@ const UP=new T.Vector3(0,1,0);
 
 export function gateKit(area=0){
  const p=PALETTES[area]||PALETTES[0],materials=[],cache=new Map();
- const mat=(color,extra={})=>{const m=new T.MeshStandardMaterial({color,roughness:.86,...extra});materials.push(m);return m;};
+ const mat=(color,extra={},kind='organic')=>{const m=surfaceMaterial(kind,color,extra);materials.push(m);return m;};
  const m={stone:mat(p.stone),dark:mat(p.dark),moss:mat(p.moss),wood:mat(p.wood),metal:mat(p.metal,{metalness:.4,roughness:.42}),glow:mat(p.glow,{emissive:p.glow,emissiveIntensity:.9,roughness:.35}),bramble:mat(p.bramble,{roughness:.95}),thorn:mat(p.thorn),leaf:mat(p.leaf,{side:T.DoubleSide}),petal:mat(p.petal,{side:T.DoubleSide,emissive:p.bell,emissiveIntensity:.08}),bell:mat(p.bell,{side:T.DoubleSide,emissive:p.bell,emissiveIntensity:.12}),ink:mat(p.ink),chasm:mat('#141a17',{roughness:1})};
+ assignSurfaceRoles(m,{stone:['stone','dark','ink'],wood:['wood','bramble','thorn'],foliage:['moss','leaf'],metal:['metal'],effect:['glow'],organic:['petal','bell'],soil:['chasm']});
  const geo=(key,make)=>{if(!cache.has(key))cache.set(key,make());return cache.get(key);};
  const mesh=(geometry,material,x=0,y=0,z=0,parent)=>{const o=new T.Mesh(geometry,material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent?.add(o);return o;};
  const box=(w,h,d,bevel)=>geo(`b${w},${h},${d},${bevel}`,()=>bevelBox(w,h,d,bevel));
@@ -45,14 +50,19 @@ function runeBridge(k,g){
  const beams=[0,1,2].map(i=>{const beam=rod(m.glow,.045,g);stretch(beam,new T.Vector3(-2.75,1.25+i*.62,.12),new T.Vector3(2.75,1.25+i*.62,.12));beam.castShadow=false;return beam;});
  // The deck is hinged at the far edge of the chasm and stands upright until it drops toward the traveller.
  const hinge=new T.Group();hinge.position.set(0,.03,-1.2);g.add(hinge);
- for(let i=0;i<7;i++){const plank=mesh(box(.62,2.25,.05,.012),i%2?m.wood:k.mat(k.p.wood,{color:new T.Color(k.p.wood).multiplyScalar(.86)}),(i-3)*.66,1.12,0,hinge);plank.rotation.z=(i%3-1)*.012;}
+ for(let i=0;i<7;i++){const plank=mesh(box(.62,2.25,.05,.012),i%2?m.wood:k.mat(k.p.wood,{color:new T.Color(k.p.wood).multiplyScalar(.86)},'wood'),(i-3)*.66,1.12,0,hinge);plank.rotation.z=(i%3-1)*.012;}
  for(const y of[.35,1.9])mesh(box(4.6,.14,.05,.02),m.dark,0,y,.04,hinge);for(const x of[-1.7,1.7])mesh(box(.12,2.1,.05,.02),m.metal,x,1.12,.045,hinge);const emblem=mesh(k.geo('emblem',()=>new T.TorusGeometry(.42,.05,6,28)),m.metal,0,1.15,.05,hinge);emblem.castShadow=false;for(const s of[-1,1]){const bar=mesh(box(.09,.55,.03,.01),m.glow,s*.11,1.15,.06,hinge);bar.rotation.z=s*.35;}
  const chains=[-1,1].map(s=>rod(m.metal,.025,g));
- return f=>{
-  runes.forEach(r=>{r.glyph.emissiveIntensity=smooth(span(f,r.index*.2,r.index*.2+.18))*1.4;});
-  beams.forEach((b,i)=>{const on=span(f,i*.2+.08,i*.2+.2);b.visible=on>0&&f<1;b.scale.x=b.scale.z=.045*(.3+on);});
+ hinge.name='drawbridge-hinge';mesh(cyl(.04,.04,5.8,10),m.metal,0,.02,-1.2,g).rotation.z=Math.PI/2;
+ for(const x of[-2.8,2.8]){mesh(box(.16,.16,.24,.02),m.dark,x,.08,-1.2,g);mesh(box(.22,.035,.06,.01),m.metal,x,2.25,0,hinge);}
+ const weights=[-1,1].map(s=>{const weight=mesh(box(.28,.55,.28,.03),m.stone,s*3.25,2.4,-.3,g),line=rod(m.ink,.02,g),pulley=mesh(k.geo('bridge-sheave',()=>new T.TorusGeometry(.16,.045,5,16)),m.metal,s*2.9,3.3,-.15,g);return{weight,line,pulley,s};});
+ return(f,time,state)=>{
+  const value=i=>state?.groups[i]?.steps[0]??smooth(span(f,i*.2,i*.2+.18));
+  runes.forEach(r=>{r.glyph.emissiveIntensity=value(r.index)*.6;});
+  beams.forEach((b,i)=>{const on=value(i);b.visible=on>0&&f<1;b.scale.x=b.scale.z=.045*(.3+on);});
   const drop=span(f,.62,1),bounce=drop<1?Math.sin(drop*Math.PI*2.5)*(1-drop)*.12:0;hinge.rotation.x=Math.min(Math.PI/2,(smooth(drop)+bounce)*Math.PI/2);
-  const tip=new T.Vector3(0,2.25,0).applyEuler(hinge.rotation).add(hinge.position);chains.forEach((c,i)=>{const s=i?1:-1;stretch(c,new T.Vector3(s*2.9,3.3,-.15),new T.Vector3(s*2.25,tip.y,tip.z));c.visible=f<1;});
+  const tip=new T.Vector3(0,2.25,0).applyEuler(hinge.rotation).add(hinge.position);chains.forEach((c,i)=>{const s=i?1:-1;stretch(c,new T.Vector3(s*2.9,3.3,-.15),new T.Vector3(s*2.8,tip.y,tip.z));c.visible=true;});
+  for(const q of weights){q.weight.position.y=2.4-smooth(drop)*1.7;stretch(q.line,new T.Vector3(q.s*2.9,3.3,-.15),q.weight.position);q.pulley.rotation.z=smooth(drop)*Math.PI*2;}
  };
 }
 
@@ -63,7 +73,7 @@ function steppingStones(k,g){
  for(const s of[-1,1]){mesh(cyl(.32,.48,2.2,7),m.stone,s*3.2,1.1,0,g);mesh(box(.6,.42,.16,.04),m.dark,s*3.1,1.75,.5,g);for(let i=0;i<4;i++){const l=mesh(rockLump(i+1),i%2?m.moss:m.stone,s*(2.95+i%2*.3),.12,(i-1.5)*.62,g);l.scale.set(.32,.28,.3);}}
  const reeds=new T.Group();g.add(reeds);const reedGeo=geo('reed',()=>new T.ConeGeometry(.035,1,4));
  for(let i=0;i<34;i++){const x=-2.35+(i*.142)%4.7,z=-.75+((i*37)%17)/17*1.5,h=.65+((i*13)%7)/10,r=mesh(reedGeo,m.leaf,x,h/2,z,reeds);r.scale.y=h;r.rotation.z=((i*29)%11-5)*.03;if(i%4===0){mesh(cyl(.045,.045,.22,6),m.wood,x,h*.82,z,reeds);}}
- const stones=[[-.5,.85],[.55,.35],[-.45,-.15],[.5,-.62],[-.2,-1.0]].map(([x,z],i)=>{const s=mesh(geo('stone'+i,()=>{const b=bevelBox(.95,.2,.72,.08);b.translate(0,-.1,0);return b;}),i%2?m.stone:k.mat(new T.Color(k.p.stone).multiplyScalar(.9).getStyle()),x,-.3,z,g);s.rotation.y=i*.7;return s;});
+ const stones=[[-.5,.85],[.55,.35],[-.45,-.15],[.5,-.62],[-.2,-1.0]].map(([x,z],i)=>{const s=mesh(geo('stone'+i,()=>{const b=bevelBox(.95,.2,.72,.08);b.translate(0,-.1,0);return b;}),i%2?m.stone:k.mat(new T.Color(k.p.stone).multiplyScalar(.9).getStyle(),{},'stone'),x,-.3,z,g);s.rotation.y=i*.7;return s;});
  const rings=stones.map(s=>{const r=mesh(geo('ring',()=>new T.TorusGeometry(.55,.025,4,24)),m.petal,s.position.x,.03,s.position.z,g);r.rotation.x=Math.PI/2;r.castShadow=false;return r;});
  return f=>{
   stones.forEach((s,i)=>{const t=span(f,.08+i*.16,.24+i*.16);s.position.y=-.3+smooth(t)*.365;s.visible=t>0;const ring=rings[i];ring.visible=t>0&&t<1;ring.scale.setScalar(.6+t*1.4);});
@@ -121,8 +131,8 @@ function balanceGate(k,g){
  const weights=[0,1,2].map(i=>{const w=mesh(cyl(.13,.15,.2,8),m.metal,(i-1)*.22,.14,(i%2)*.1,pan);w.visible=false;return w;});
  const ropes=[0,1,2].map(()=>rod(m.ink,.012,g));
  const dial=new T.Group();dial.position.set(3.05,2.1,.22);g.add(dial);mesh(cyl(.3,.3,.04,16),m.petal,0,0,0,dial).rotation.x=Math.PI/2;const needle=new T.Group();needle.position.z=.04;dial.add(needle);mesh(box(.035,.24,.02,.004),m.ink,0,.1,0,needle);
- return f=>{
-  weights.forEach((w,i)=>{const t=span(f,i*.2,i*.2+.12);w.visible=t>0;w.position.y=.14+(1-smooth(t))*.9;});
+ return(f,time,state)=>{
+  weights.forEach((w,i)=>{const t=state?.groups[i]?.steps[0]??span(f,i*.2,i*.2+.12);w.visible=t>0;w.position.y=.14+(1-smooth(t))*.9;});
   const lift=smooth(span(f,.62,1));pivot.rotation.z=-.1+lift*(Math.PI/2+.1)-(f<.62?0:0);
   const end=new T.Vector3(-.62-.55,0,0).applyEuler(pivot.rotation).add(pivot.position);pan.position.set(end.x,Math.max(.3,end.y-1.05-(1-lift)*.02),end.z);
   ropes.forEach((r,i)=>stretch(r,end,new T.Vector3(pan.position.x+Math.cos(i*2.1)*.36,pan.position.y+.04,pan.position.z+Math.sin(i*2.1)*.36)));
@@ -133,7 +143,7 @@ function balanceGate(k,g){
 
 // Fruit tree: two heavy branches reach across the path; the fruit ripens and drops, then the branches swing aside.
 function fruitTree(k,g){
- const{m,mesh,geo,tube,mat}=k,bark=mat(new T.Color(k.p.wood).multiplyScalar(.7).getStyle()),fruitMat=mat('#8fb860',{emissive:'#f0a050',emissiveIntensity:0}),leafGeo=geo('clump',()=>{const c=new T.IcosahedronGeometry(.5,1);c.scale(1,.7,1);return c;});
+ const{m,mesh,geo,tube,mat}=k,bark=mat(new T.Color(k.p.wood).multiplyScalar(.7).getStyle(),{},'wood'),fruitMat=mat('#8fb860',{emissive:'#f0a050',emissiveIntensity:0}),leafGeo=geo('clump',()=>{const c=new T.IcosahedronGeometry(.5,1);c.scale(1,.7,1);return c;});
  tube([[-3.95,0,0],[-3.85,1.4,.1],[-3.95,2.8,-.05],[-4.05,3.6,0]],.34,bark,g,14);for(let i=0;i<4;i++){const r=mesh(rockLump(i+1),bark,-3.95+Math.cos(i*1.6)*.45,.12,Math.sin(i*1.6)*.45,g);r.scale.set(.3,.22,.3);}
  for(let i=0;i<4;i++){const c=mesh(leafGeo,m.leaf,-4.15+Math.cos(i*1.7)*.5,3.75+(i%2)*.45,Math.sin(i*1.7)*.6,g);c.scale.setScalar(1.25);}
  const fruits=[],branches=[[1.85,1],[2.55,-1]].map(([y,turn],b)=>{const pivot=new T.Group();pivot.position.set(-3.85,y,b?.15:-.1);g.add(pivot);
@@ -153,11 +163,11 @@ function signposts(k,g){
  for(const s of[-1,1]){mesh(cyl(.13,.18,2.7,8),m.wood,s*3.05,1.35,0,g);mesh(cyl(.2,.16,.12,8),m.dark,s*3.05,2.74,0,g);}
  const rope=rod(m.ink,.018,g);stretch(rope,new T.Vector3(-3.0,2.35,0),new T.Vector3(3.0,2.35,0));
  const arrow=geo('arrow',()=>{const b=bevelBox(1.25,.38,.09,.03),tip=new T.ConeGeometry(.27,.32,4);tip.rotateZ(-Math.PI/2);tip.rotateX(Math.PI/4);tip.scale(1,1,.33);tip.translate(.78,0,0);const pos=[...b.attributes.position.array],nor=[...b.attributes.normal.array],t2=tip.toNonIndexed();pos.push(...t2.attributes.position.array);nor.push(...t2.attributes.normal.array);const out=new T.BufferGeometry();out.setAttribute('position',new T.Float32BufferAttribute(pos,3));out.setAttribute('normal',new T.Float32BufferAttribute(nor,3));return out;});
- const signs=[-1.7,0,1.7].map((x,i)=>{const sign=new T.Group();sign.position.set(x,1.75,.05);g.add(sign);const plank=mesh(arrow,i===1?mat(k.p.wood,{emissive:k.p.glow,emissiveIntensity:0}):m.wood,0,0,0,sign);plank.rotation.y=i===0?Math.PI:0;for(let j=0;j<3;j++)mesh(box(.22+((i+j)%2)*.16,.04,.02,.008),m.ink,-.35+j*.33,.03,.06,sign);const strings=[-.4,.4].map(dx=>{const r=rod(m.ink,.01,g);return{r,dx};});return{sign,plank,strings,x,i};});
+ const signs=[-1.7,0,1.7].map((x,i)=>{const sign=new T.Group();sign.position.set(x,1.75,.05);g.add(sign);const plank=mesh(arrow,i===1?mat(k.p.wood,{emissive:k.p.glow,emissiveIntensity:0},'wood'):m.wood,0,0,0,sign);plank.rotation.y=i===0?Math.PI:0;for(let j=0;j<3;j++)mesh(box(.22+((i+j)%2)*.16,.04,.02,.008),m.ink,-.35+j*.33,.03,.06,sign);const strings=[-.4,.4].map(dx=>{const r=rod(m.ink,.01,g);return{r,dx};});return{sign,plank,strings,x,i};});
  const puffs=[];for(let i=0;i<9;i++){const p=mesh(geo('puff',()=>{const q=new T.SphereGeometry(.8,10,6);q.scale(1,.42,.8);return q;}),fog,-2.5+i*.62,.35+(i%2)*.1,(i%3-1)*.35,g);p.castShadow=false;puffs.push(p);}
  return(f,time=0)=>{
   for(const s of signs){if(s.i===1){const t=smooth(span(f,.5,1));s.sign.position.set(s.x+t*3.0,1.75+Math.sin(t*Math.PI)*.6-t*.15,.05+t*.22);s.sign.rotation.set(0,t*Math.PI/2,Math.sin(time*1.3)*.04*(1-t));s.plank.material.emissiveIntensity=.7*smooth(span(f,.35,.6));}
-   else{const t=span(f,s.i?.2:.05,s.i?.45:.3);s.sign.rotation.z=(s.i?-1:1)*smooth(t)*1.1;s.sign.position.y=1.75-smooth(t)*1.6;s.sign.scale.setScalar(Math.max(.001,1-smooth(span(t,.55,1))));s.sign.visible=t<1;}
+   else{const t=smooth(span(f,s.i?.2:.05,s.i?.45:.3)),side=s.i?1:-1;s.sign.rotation.z=-side*t*1.3;s.sign.position.set(s.x+(side*3.4-s.x)*t,1.75-t*.25,.05+t*.2);s.sign.visible=true;}
    for(const st of s.strings){st.r.visible=f<.5&&s.sign.visible;stretch(st.r,new T.Vector3(s.sign.position.x+st.dx,2.35,0),new T.Vector3(s.sign.position.x+st.dx,s.sign.position.y+.2,s.sign.position.z));}}
   rope.visible=f<.55;fog.opacity=.62*(1-smooth(span(f,.25,.8)));for(const p of puffs){p.visible=f<.8;p.position.x+=Math.sin(time*.4+p.position.z)*.0008;}
  };
@@ -181,16 +191,14 @@ function mushroomRing(k,g){
 
 // Crystal chimes: chimes hang across the path from a split beam; each rings and shatters, then the beam folds up.
 function crystalChimes(k,g){
- const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,glass=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.55,roughness:.15,metalness:.1,transparent:true,opacity:.85});
- for(const s of[-1,1]){mesh(cyl(.2,.28,3.1,6),m.stone,s*3.05,1.55,0,g);mesh(box(.6,.2,.6,.05),m.dark,s*3.05,3.15,0,g);}
- const halves=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*3.0,3.0,0);g.add(pivot);mesh(box(3.0,.16,.2,.04),m.wood,-s*1.5,0,0,pivot);return{pivot,s};});
- const chimeGeo=geo('chime',()=>{const c=new T.OctahedronGeometry(.22,0);c.scale(.8,2.2,.8);return c;}),shardGeo=geo('shard',()=>new T.OctahedronGeometry(.07,0));
- const chimes=[-2.4,-1.6,-.8,0,.8,1.6,2.4].map((x,i)=>{const len=1.3+((i*5)%4)*.25,c=mesh(chimeGeo,glass,x,3.0-len,0,g);const string=rod(m.ink,.008,g);stretch(string,new T.Vector3(x,2.95,0),new T.Vector3(x,3.0-len+.45,0));const shards=[0,1,2,3].map(j=>{const s=mesh(shardGeo,glass,x,3.0-len,0,g);s.visible=false;s.castShadow=false;return s;});return{c,string,shards,x,y:3.0-len,i};});
- return(f,time=0)=>{
-  for(const ch of chimes){const t=span(f,.05+ch.i*.085,.2+ch.i*.085);ch.c.rotation.z=Math.sin(time*2+ch.i)*.06+(t>0&&t<.4?Math.sin(t*60)*.15:0);ch.c.visible=t<.4;ch.string.visible=t<.4;
-   ch.shards.forEach((s,j)=>{const a=j*Math.PI/2+ch.i,u=span(t,.4,1);s.visible=u>0&&u<1;s.position.set(ch.x+Math.cos(a)*u*.9,ch.y+u*.5-u*u*1.6,Math.sin(a)*u*.9);s.scale.setScalar(1-u*.7);});}
-  const fold=smooth(span(f,.72,1));for(const h of halves)h.pivot.rotation.z=-h.s*fold*Math.PI/2;
- };
+ const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,glass=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.15,roughness:.2,transparent:true,opacity:.88});
+ for(const side of[-1,1]){mesh(cyl(.2,.28,3.1,6),m.stone,side*3.05,1.55,0,g);mesh(box(.6,.2,1.6,.05),m.dark,side*3.05,3.15,0,g);}
+ const arms=[];
+ for(let i=0;i<3;i++){const side=i===1?1:-1,pivot=new T.Group();pivot.position.set(side*3.05,2.9,(i-1)*.5);g.add(pivot);mesh(cyl(.09,.09,.5,10),m.metal,side*3.05,2.9,(i-1)*.5,g);mesh(box(2.7,.14,.18,.025),m.wood,-side*1.35,0,0,pivot);
+  for(let j=0;j<3;j++){const x=-side*(.7+j*.82),y=-.75-j*.22,chime=mesh(geo('tuned-chime',()=>{const q=new T.OctahedronGeometry(.17,0);q.scale(.8,2,.8);return q;}),glass,x,y,0,pivot),string=rod(m.ink,.01,pivot);stretch(string,new T.Vector3(x,-.05,0),new T.Vector3(x,y+.34,0));chime.name='chime-'+i+'-'+j;}
+  const stop=mesh(box(.18,.25,.28,.025),m.metal,side*3.05,2.75,(i-1)*.5,g);stop.name='chime-bearing-'+i;arms.push({pivot,side,i});
+ }
+ return(f,time=0,state)=>{for(const a of arms){const value=state?.groups[a.i]?.steps[0]??span(f,a.i/3,(a.i+1)/3);a.pivot.rotation.y=a.side*smooth(value)*Math.PI/2;}};
 }
 
 // Split-log bridge: broken log halves jut up from a murky stream; they swing down and join into a crossing.
@@ -198,14 +206,14 @@ function splitLogs(k,g){
  const{m,mesh,box,cyl,geo,mat}=k,water=liquidMaterial(new T.Color(k.p.water).lerp(new T.Color(k.p.moss),.45).getStyle(),{local:true,halfWidth:3.3,halfLength:1.15});k.materials.push(water);
  const stream=mesh(new T.BoxGeometry(6.6,.04,2.3),water,0,0,0,g);stream.castShadow=false;
  for(const s of[-1,1])for(let i=0;i<5;i++){const l=mesh(rockLump(i+1),i%2?m.moss:m.stone,s*(2.95+(i%2)*.3),.12,(i-2)*.5,g);l.scale.set(.34,.3,.32);}
- const split=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.45).getStyle()),bark=mat(new T.Color(k.p.wood).multiplyScalar(.72).getStyle()),barkShell=mat(new T.Color(k.p.wood).multiplyScalar(.62).getStyle(),{side:T.DoubleSide});
+ const split=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.45).getStyle(),{},'wood'),bark=mat(new T.Color(k.p.wood).multiplyScalar(.72).getStyle(),{},'wood'),barkShell=mat(new T.Color(k.p.wood).multiplyScalar(.62).getStyle(),{side:T.DoubleSide},'wood');
  const halves=[];[-1.25,0,1.25].forEach((x,i)=>{for(const end of[-1,1]){const pivot=new T.Group();pivot.position.set(x,.03,end*1.15);g.add(pivot);
   // Each half reaches from its bank to the middle; its flat split face stays on top when it lies down.
   mesh(box(.62,.05,1.15,.02),split,0,0,-end*.575,pivot);const shell=mesh(geo('bark',()=>{const c=new T.CylinderGeometry(.31,.31,1.15,10,1,true,-Math.PI/2,Math.PI);c.rotateX(Math.PI/2);return c;}),barkShell,0,-.02,-end*.575,pivot);shell.scale.y=.75;
   const tip=mesh(geo('splinter',()=>new T.ConeGeometry(.08,.3,4)),split,(end>0?.15:-.15),0,-end*1.15,pivot);tip.rotation.x=-end*Math.PI/2;tip.name='splinter';
-  halves.push({pivot,end,i,tip});}});
- return f=>{
-  for(const h of halves){const t=span(f,.08+h.i*.24,.38+h.i*.24),drop=smooth(t),bounce=t>0&&t<1?Math.sin(t*Math.PI*3)*(1-t)*.08:0;h.pivot.rotation.x=h.end*(1-drop)*1.15+bounce*h.end;h.tip.visible=t<1;h.tip.scale.setScalar(t<1?1:.001);}
+  mesh(cyl(.035,.035,.75,8),m.metal,x,.025,end*1.15,g).rotation.z=Math.PI/2;for(const dx of[-.32,.32])mesh(box(.06,.06,.18,.01),m.metal,x+dx,.035,end*1.15,g);halves.push({pivot,end,i,tip});}});
+ return(f,time,state)=>{
+  for(const h of halves){const t=state?.groups[h.i]?.steps[0]??span(f,.08+h.i*.24,.38+h.i*.24),drop=smooth(t),bounce=t>0&&t<1?Math.sin(t*Math.PI*3)*(1-t)*.08:0;h.pivot.rotation.x=h.end*(1-drop)*1.15+bounce*h.end;h.tip.visible=t<1;h.tip.scale.setScalar(t<1?1:.001);}
  };
 }
 
@@ -214,7 +222,7 @@ function bird(k,color){
  const{mesh,geo,mat}=k,g=new T.Group(),body=mat(color),belly=mat(new T.Color(color).lerp(new T.Color('#fff4dc'),.55).getStyle()),beak=mat('#e8a83a');
  const b=mesh(geo('bbody',()=>{const q=new T.SphereGeometry(.2,10,7);q.scale(.85,.8,1.15);return q;}),body,0,.2,0,g);mesh(geo('bbelly',()=>{const q=new T.SphereGeometry(.15,8,6);q.scale(.8,.8,.6);return q;}),belly,0,.15,.1,g);
  mesh(geo('bhead',()=>new T.SphereGeometry(.13,10,7)),body,0,.4,.12,g);const bk=mesh(geo('bbeak',()=>new T.ConeGeometry(.04,.12,5)),beak,0,.39,.27,g);bk.rotation.x=Math.PI/2;
- for(const s of[-1,1]){mesh(geo('beye',()=>new T.SphereGeometry(.025,6,4)),k.m.ink,s*.07,.43,.22,g);}
+ const birdEyes=[];for(const s of[-1,1]){birdEyes.push(mesh(geo('beye',()=>new T.SphereGeometry(.025,6,4)),k.m.ink,s*.07,.43,.22,g));}g.userData.blink=eyeBlink(birdEyes,g.id);
  const tail=mesh(geo('btail',()=>{const q=new T.ConeGeometry(.08,.28,4);q.rotateX(-Math.PI/2-.4);return q;}),body,0,.22,-.24,g);
  const wings=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*.15,.27,0);g.add(pivot);const w=mesh(geo('bwing',()=>{const q=new T.SphereGeometry(.17,8,5);q.scale(.35,.12,1);q.translate(0,0,-.02);return q;}),body,s*.05,0,0,pivot);w.rotation.z=s*.3;return{pivot,s};});
  g.userData.flap=(t,amount)=>{for(const w of wings)w.pivot.rotation.z=w.s*(-.2+Math.sin(t)*amount);};
@@ -223,14 +231,14 @@ function bird(k,color){
 
 // Message birds: birds holding message scrolls sit on a rope across the path; they fly off and the rope halves drop.
 function messageBirds(k,g){
- const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,paper=mat('#efe2c4');
+ const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,paper=mat('#efe2c4',{},'paper');
  for(const s of[-1,1]){mesh(cyl(.12,.16,2.5,8),m.wood,s*3.05,1.25,0,g);mesh(box(.5,.12,.5,.03),m.dark,s*3.05,2.52,0,g);}
  const halves=[-1,1].map(s=>{const pivot=new T.Group();pivot.position.set(s*3.0,2.3,0);g.add(pivot);const r=rod(m.ink,.02,pivot);stretch(r,new T.Vector3(0,0,0),new T.Vector3(-s*3.0,-.25,0));return{pivot,s};});
  const colours=['#5f86b8','#c8783a','#7a9c4c','#b85f6a','#d6b04a'],birds=[-2.3,-1.15,0,1.15,2.3].map((x,i)=>{const b=bird(k,colours[i]);b.position.set(x,2.08-Math.cos(x/3*Math.PI/2)*.22+.0,0);b.scale.setScalar(1.25);g.add(b);
   const scroll=new T.Group();scroll.position.set(0,-.05,.18);b.add(scroll);const string=rod(m.ink,.008,scroll);stretch(string,new T.Vector3(0,0,0),new T.Vector3(0,-.55,0));mesh(geo('scroll',()=>{const q=new T.CylinderGeometry(.06,.06,.42,10);q.rotateZ(Math.PI/2);return q;}),paper,0,-.62,0,scroll);mesh(box(.36,.3,.01,.004),paper,0,-.82,0,scroll);
   return{b,x,i,y:b.position.y};});
- return(f,time=0)=>{
-  for(const q of birds){const t=span(f,.04+q.i*.12,.3+q.i*.12),side=q.x<0||(q.x===0&&q.i%2)?-1:1;q.b.position.set(q.x+side*smooth(t)*4.5,q.y+smooth(t)*3.2,smooth(t)*-1.5);q.b.rotation.y=side*smooth(span(t,0,.2))*.9;q.b.userData.flap(time*(t>0?22:3)+q.i,t>0?1.1:.08);q.b.visible=t<1;}
+ return(f,time=0,state)=>{
+  for(const q of birds){const t=state?.groups[q.i%3]?.steps[0]??span(f,.04+q.i*.12,.3+q.i*.12),side=q.x<0||(q.x===0&&q.i%2)?-1:1;q.b.position.set(q.x+side*smooth(t)*4.5,q.y+smooth(t)*3.2,smooth(t)*-1.5);q.b.rotation.y=side*smooth(span(t,0,.2))*.9;q.b.userData.flap(time*(t>0?22:3)+q.i,t>0?1.1:.08);q.b.visible=t<1;}
   const drop=smooth(span(f,.72,1));for(const h of halves)h.pivot.rotation.z=h.s*drop*(Math.PI/2-.08);
  };
 }
@@ -240,16 +248,17 @@ function waterWheel(k,g){
  const{m,mesh,box,cyl,geo,rod,stretch,mat}=k,water=liquidMaterial(k.p.water,{local:true,halfWidth:.4,halfLength:1.4});k.materials.push(water);
  for(const s of[-1,1]){mesh(box(.42,3.0,.5,.06),m.stone,s*2.95,1.5,0,g);mesh(box(.6,.2,.66,.05),m.dark,s*2.95,3.08,0,g);}
  const gate=new T.Group();g.add(gate);for(let i=0;i<9;i++)mesh(box(.12,2.5,.12,.03),m.dark,-2.4+i*.6,1.25,0,gate);for(const y of[.5,1.4,2.3])mesh(box(5.0,.14,.1,.03),m.dark,0,y,.06,gate);for(let i=0;i<9;i++){const tip=mesh(geo('spike',()=>new T.ConeGeometry(.08,.22,4)),m.metal,-2.4+i*.6,-.08,0,gate);tip.rotation.x=Math.PI;}
- const wheel=new T.Group();wheel.position.set(3.75,1.3,.2);g.add(wheel);const rim=mesh(geo('rim',()=>{const q=new T.TorusGeometry(1.05,.06,6,28);q.rotateY(Math.PI/2);return q;}),m.wood,0,0,0,wheel);rim.castShadow=true;
+ const wheel=new T.Group();wheel.name='water-drive-wheel';wheel.position.set(3.75,1.3,.2);g.add(wheel);const rim=mesh(geo('rim',()=>{const q=new T.TorusGeometry(1.05,.06,6,28);q.rotateY(Math.PI/2);return q;}),m.wood,0,0,0,wheel);rim.castShadow=true;
  for(let i=0;i<6;i++){const sp=mesh(box(.08,2.05,.08,.02),m.wood,0,0,0,wheel);sp.rotation.x=i*Math.PI/6;}mesh(cyl(.16,.16,.4,10),m.metal,0,0,0,wheel).rotation.z=Math.PI/2;
  const paddles=[];for(let i=0;i<8;i++){const a=i*Math.PI/4,p=mesh(box(.42,.06,.36,.015),m.wood,0,Math.cos(a)*1.08,Math.sin(a)*1.08,wheel);p.rotation.x=-a;paddles.push({p,i});}
- const chute=mesh(box(.6,.12,1.6,.03),m.wood,3.75,2.65,-1.1,g);chute.rotation.x=.18;const fall=mesh(new T.BoxGeometry(.4,1.3,.1),water,3.75,1.95,-.35,g);fall.castShadow=false;
+ for(const x of[3.4,4.1])mesh(box(.14,1.35,.35,.025),m.stone,x,.67,.2,g);for(const z of[-.15,.15])mesh(box(.08,.20,1.6,.015),m.wood,3.75+z*1.65,2.70,-1.1,g);for(const x of[-2.7,2.7])mesh(box(.12,2.65,.18,.02),m.metal,x,1.3,0,g);mesh(box(5.6,.035,.28,.01),m.dark,0,.03,0,g);
+ const chute=mesh(box(.6,.12,1.6,.03),m.wood,3.75,2.65,-1.1,g);chute.rotation.x=.18;const fall=mesh(new T.BoxGeometry(.4,1.3,.1),water,3.75,1.95,-.35,g);fall.name='wheel-feed-flow';fall.castShadow=false;
  const ropes=[-1,1].map(()=>rod(m.ink,.02,g));
  let angle=0,last=0;
  return(f,time=0)=>{
   const dt=Math.max(0,Math.min(.1,time-last));last=time;
   paddles.forEach(q=>{const on=span(f,q.i*.07,q.i*.07+.06)>0||q.i%2;q.p.visible=!!on;});
-  angle+=dt*(.2+smooth(span(f,.4,1))*2.2);wheel.rotation.x=angle;fall.visible=f>.05;
+  angle+=dt*f*2.2;wheel.rotation.x=angle;fall.visible=f>.05;
   const lower=smooth(span(f,.55,1));gate.position.y=-lower*2.62;gate.visible=lower<1;ropes.forEach((r,i)=>{const s=i?1:-1;stretch(r,new T.Vector3(s*2.9,3.1,0),new T.Vector3(s*2.4,2.5+gate.position.y,0));r.visible=lower<1;});
  };
 }
@@ -272,14 +281,14 @@ function sealStone(k,g){
 
 // A large friendly owl (body, face discs, eyes, tufts, wings, toes) facing +z; returns the figure and its head.
 function owlFigure(k){
- const{mesh,geo,mat}=k,feather=mat(new T.Color(k.p.wood).lerp(new T.Color('#c9a87a'),.4).getStyle()),face=mat('#f1e3c4'),eyeM=mat('#f6f2e6'),pupil=mat('#203028'),beakM=mat('#e0a23c');
+ const{mesh,geo,mat}=k,feather=mat(new T.Color(k.p.wood).lerp(new T.Color('#c9a87a'),.4).getStyle(),{},'wood'),face=mat('#f1e3c4'),eyeM=mat('#f6f2e6'),pupil=mat('#203028'),beakM=mat('#e0a23c');
  const owl=new T.Group();const body=mesh(geo('obody',()=>{const q=new T.SphereGeometry(.75,16,12);q.scale(1,1.15,.9);return q;}),feather,0,.86,0,owl);
  mesh(geo('obelly',()=>{const q=new T.SphereGeometry(.55,12,8);q.scale(1,1.1,.5);return q;}),face,0,.75,.42,owl);
  const head=new T.Group();head.position.set(0,1.7,0);owl.add(head);mesh(geo('ohead',()=>{const q=new T.SphereGeometry(.55,16,12);q.scale(1.1,.9,.95);return q;}),feather,0,0,0,head);
- for(const s of[-1,1]){mesh(geo('odisc',()=>{const q=new T.CircleGeometry(.24,16);return q;}),face,s*.22,.02,.5,head);const eye=mesh(geo('oeye',()=>new T.SphereGeometry(.13,10,8)),eyeM,s*.22,.03,.47,head);eye.scale.z=.6;mesh(geo('opupil',()=>new T.SphereGeometry(.07,8,6)),pupil,s*.22,.03,.55,head);const tuft=mesh(geo('otuft',()=>new T.ConeGeometry(.12,.35,5)),feather,s*.38,.48,0,head);tuft.rotation.z=-s*.4;}
+ const owlEyes=[];for(const s of[-1,1]){mesh(geo('odisc',()=>{const q=new T.CircleGeometry(.24,16);return q;}),face,s*.22,.02,.5,head);const eye=mesh(geo('oeye',()=>new T.SphereGeometry(.13,10,8)),eyeM,s*.22,.03,.47,head);eye.scale.z=.6;owlEyes.push(eye,mesh(geo('opupil',()=>new T.SphereGeometry(.07,8,6)),pupil,s*.22,.03,.55,head));const tuft=mesh(geo('otuft',()=>new T.ConeGeometry(.12,.35,5)),feather,s*.38,.48,0,head);tuft.rotation.z=-s*.4;}
  const beak=mesh(geo('obeak',()=>new T.ConeGeometry(.07,.2,5)),beakM,0,-.12,.55,head);beak.rotation.x=Math.PI/2+.4;
  for(const s of[-1,1]){const w=mesh(geo('owing',()=>{const q=new T.SphereGeometry(.45,10,8);q.scale(.35,1,.8);return q;}),feather,s*.72,.9,-.05,owl);w.rotation.z=s*.15;for(let j=0;j<3;j++){const toe=mesh(geo('otoe',()=>new T.ConeGeometry(.05,.18,4)),beakM,s*.25+(j-1)*.08,.05,.35,owl);toe.rotation.x=Math.PI/2;}}
- return{owl,head};
+ owl.userData.blink=eyeBlink(owlEyes,owl.id);return{owl,head};
 }
 
 // Woodland visitor: a large owl sits in the middle of the path; it nods, then hops aside and settles.
@@ -294,7 +303,7 @@ function woodlandVisitor(k,g){
 
 // Supply carts: two handcarts block the path; crates and sacks drop in, then the carts turn and roll to the sides.
 function supplyCarts(k,g){
- const{m,mesh,box,cyl,geo,mat}=k,sack=mat('#c9b48a'),crate=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle()),signM=mat('#efe2c4');
+ const{m,mesh,box,cyl,geo,mat}=k,sack=mat('#c9b48a'),crate=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle(),{},'wood'),signM=mat('#efe2c4',{},'paper');
  const carts=[-1,1].map((s,ci)=>{const c=new T.Group();c.position.set(s*1.3,0,0);g.add(c);mesh(box(2.0,.12,1.05,.03),m.wood,0,.62,0,c);for(const z of[-.5,.5])mesh(box(2.0,.42,.07,.02),m.wood,0,.86,z,c);for(const x of[-1,1])mesh(box(.07,.42,1.05,.02),m.wood,x*.98,.86,0,c);
   const wheels=[-1,1].map(z=>{const w=mesh(geo('cwheel',()=>{const q=new T.CylinderGeometry(.42,.42,.08,14);q.rotateX(Math.PI/2);return q;}),m.dark,.45,.42,z*.6,c);return w;});mesh(box(.06,.06,1.3,.01),m.metal,.45,.42,0,c);
   const handle=mesh(box(.9,.07,.07,.02),m.wood,-1.38,.85,0,c);handle.rotation.z=-.4;const sign=mesh(box(.9,.42,.05,.02),signM,0,1.42,.55,c);mesh(box(.06,.4,.06,.02),m.wood,0,1.12,.55,c);
@@ -318,35 +327,35 @@ function totemFigure(k,h=2.4){
 // Word totems: three sleeping totems stand across the path; their eyes open, then they slide aside.
 function wordTotems(k,g){
  const totems=[-1.75,0,1.75].map((x,i)=>{const t=totemFigure(k,2.3+(i%2)*.35);t.g.position.set(x,0,0);g.add(t.g);return{...t,x,i};});
- return f=>{
-  for(const t of totems){const wake=smooth(span(f,t.i*.15,t.i*.15+.2));t.eye.emissiveIntensity=wake*1.4;t.lids.forEach(l=>l.position.y=t.h*.72+.03+wake*.12);
-   const move=smooth(span(f,.6+t.i*.05,.95+t.i*.02));if(t.i===1){t.g.position.y=-move*(t.h+.3);t.g.visible=move<1;}else{t.g.position.x=t.x+Math.sign(t.x)*move*1.85;t.g.rotation.y=-Math.sign(t.x)*move*.3;}}
+ return(f,time,state)=>{
+  for(const t of totems){const wake=state?.groups[t.i]?.steps[0]??smooth(span(f,t.i*.15,t.i*.15+.2));t.eye.emissiveIntensity=wake*1.4;t.lids.forEach(l=>l.position.y=t.h*.72+.03+wake*.12);
+   const move=state?wake:smooth(span(f,.6+t.i*.05,.95+t.i*.02));if(t.i===1){t.g.position.y=-move*(t.h+.3);t.g.visible=move<1;}else{t.g.position.x=t.x+Math.sign(t.x)*move*1.85;t.g.rotation.y=-Math.sign(t.x)*move*.3;}}
  };
 }
 
 // Crate wall: picture crates stacked across the path; lids pop and the crates slide off and stack at the sides.
 function crateWall(k,g){
- const{m,mesh,box,geo,mat}=k,woodL=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle()),label=mat('#efe2c4');
- const crate=(parent)=>{mesh(box(.9,.9,.9,.05),woodL,0,.45,0,parent);for(const y of[.12,.78])mesh(box(.94,.1,.94,.02),m.wood,0,y,0,parent);for(const x of[-1,1])mesh(box(.1,.9,.94,.02),m.wood,x*.42,.45,0,parent);mesh(box(.45,.36,.02,.01),label,0,.46,.47,parent);const lid=mesh(box(.94,.07,.94,.02),m.wood,0,.93,0,parent);return lid;};
+ const{m,mesh,box,cyl,geo,mat}=k,woodL=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle(),{},'wood'),label=mat('#efe2c4',{},'paper');
+ const crate=(parent)=>{mesh(box(.9,.9,.9,.05),woodL,0,.45,0,parent);for(const y of[.12,.78])mesh(box(.94,.1,.94,.02),m.wood,0,y,0,parent);for(const x of[-1,1])mesh(box(.1,.9,.94,.02),m.wood,x*.42,.45,0,parent);mesh(box(.45,.36,.02,.01),label,0,.46,.47,parent);const lid=new T.Group();lid.position.set(0,.9,-.47);parent.add(lid);mesh(box(.94,.07,.94,.02),m.wood,0,.035,.47,lid);mesh(cyl(.04,.04,.9,8),m.metal,0,.9,-.47,parent).rotation.z=Math.PI/2;return lid;};
  const crates=[];for(let r=0;r<2;r++)for(let c=0;c<5;c++){if(r&&(c===0||c===4))continue;const grp=new T.Group(),x=(c-2)*.95,y=r*.9;grp.position.set(x,y,0);g.add(grp);const lid=crate(grp);crates.push({grp,lid,x,y,n:crates.length});}
  const sides=[];crates.forEach((q,i)=>{const s=q.x<0||(q.x===0&&i%2)?-1:1,count=sides.filter(v=>v===s).length;sides.push(s);q.side=s;q.slot=count;});
- return f=>{
-  for(const q of crates){const t=smooth(span(f,.05+q.n*.11,.22+q.n*.11)),pop=span(f,.02+q.n*.11,.1+q.n*.11);q.lid.position.y=.93+Math.sin(pop*Math.PI)*.35;q.lid.rotation.z=Math.sin(pop*Math.PI)*.4;
+ return(f,time,state)=>{
+  for(const q of crates){const t=state?.groups[q.n%3]?.steps[0]??smooth(span(f,.05+q.n*.11,.22+q.n*.11)),pop=state?.groups[q.n%3]?.steps[0]??span(f,.02+q.n*.11,.1+q.n*.11);q.lid.rotation.x=-smooth(pop)*1.1;
    const tx=q.side*3.12,ty=Math.floor(q.slot/2)*.9,tz=(q.slot%2)*.95-.45;q.grp.position.set(q.x+(tx-q.x)*t,q.y+(ty-q.y)*t+Math.sin(t*Math.PI)*.8,tz*t);q.grp.rotation.y=Math.sin(t*Math.PI)*q.side*.3;}
  };
 }
 
 // Buried cache: a riddle stone and a dirt mound; the mound bursts, a chest rises and opens, then both sink away.
 function buriedCache(k,g){
- const{m,mesh,box,cyl,geo,mat}=k,dirt=mat(new T.Color(k.p.wood).lerp(new T.Color('#6b5a44'),.6).getStyle(),{roughness:1}),gold=m.metal,glyph=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.9});
+ const{m,mesh,box,cyl,geo,mat}=k,dirt=mat(new T.Color(k.p.wood).lerp(new T.Color('#6b5a44'),.6).getStyle(),{roughness:1},'wood'),gold=m.metal,glyph=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.9});
  const stone=new T.Group();g.add(stone);mesh(box(1.6,2.6,.45,.14),m.stone,0,1.3,-.6,stone);mesh(geo('qmark',()=>new T.TorusGeometry(.32,.07,6,16,Math.PI*1.4)),glyph,0,1.75,-.36,stone).rotation.z=-.6;mesh(box(.12,.3,.06,.02),glyph,.02,1.25,-.36,stone);mesh(geo('qdot',()=>new T.SphereGeometry(.08,8,6)),glyph,.02,.95,-.36,stone);
  for(const s of[-1,1])mesh(cyl(.12,.16,1.4,6),m.wood,s*2.95,.7,0,g);const rope=k.rod(m.ink,.02,g);k.stretch(rope,new T.Vector3(-2.9,1.1,0),new T.Vector3(2.9,1.1,0));
  const mound=new T.Group();g.add(mound);const clods=[];for(let i=0;i<14;i++){const a=i*2.4,r=.4+(i%4)*.35,c=mesh(rockLump(i%5+1),dirt,Math.cos(a)*r*1.6,.15,Math.sin(a)*r*.7+.3,mound);c.scale.set(.45,.35,.4);clods.push({c,a,r,home:c.position.clone()});}
  const chest=new T.Group();chest.position.set(0,-1.2,.35);g.add(chest);mesh(box(1.1,.6,.7,.05),m.wood,0,.3,0,chest);for(const x of[-1,1])mesh(box(.08,.64,.74,.02),gold,x*.45,.3,0,chest);const lid=new T.Group();lid.position.set(0,.6,-.35);chest.add(lid);mesh(box(1.12,.18,.72,.05),m.wood,0,.09,.36,lid);mesh(box(.16,.2,.08,.02),gold,0,.02,.72,lid);const shine=mesh(geo('shine',()=>new T.OctahedronGeometry(.18,0)),glyph,0,.75,0,chest);
  return(f,time=0)=>{
   const burst=span(f,.05,.35);clods.forEach(q=>{q.c.position.set(q.home.x+Math.cos(q.a)*burst*2.2,q.home.y+Math.sin(burst*Math.PI)*1.1-burst*.4,q.home.z+Math.sin(q.a)*burst*.8);q.c.scale.setScalar(.42*(1-smooth(span(burst,.7,1))));});mound.visible=burst<1;
-  const rise=smooth(span(f,.25,.5)),sink=smooth(span(f,.75,1));chest.position.y=-1.2+rise*1.2-sink*1.6;lid.rotation.x=-smooth(span(f,.45,.65))*1.9;shine.visible=f>.5&&f<.9;shine.rotation.y=time*3;chest.visible=sink<1;
-  stone.position.y=-sink*3.2;stone.visible=sink<1;rope.visible=f<.7;
+  const rise=smooth(span(f,.25,.5)),sink=smooth(span(f,.75,1));chest.position.set(sink*3.25,-1.2+rise*1.2,.35);lid.rotation.x=-smooth(span(f,.45,.65))*1.9;shine.visible=f>.5&&f<.9;shine.rotation.y=time*3;chest.visible=true;
+  stone.position.x=-sink*3.5;stone.visible=true;rope.visible=f<.7;
  };
 }
 
@@ -377,35 +386,40 @@ function hungryCreature(k,g){
 
 // Packing station: a packing bench bars the path; items jump into the pack in order, then the bench swings up aside.
 function packingStation(k,g){
- const{m,mesh,box,cyl,geo,mat}=k,canvas=mat('#7a9c6a'),strap=mat('#5a4030');
+ const{m,mesh,box,cyl,geo,mat}=k,canvas=mat('#7a9c6a',{},'fabric'),strap=mat('#5a4030');
  for(const s of[-1,1])mesh(cyl(.13,.17,2.2,8),m.wood,s*3.0,1.1,0,g);
- const bench=new T.Group();bench.position.set(-2.9,0,0);g.add(bench);mesh(box(5.7,.12,1.0,.03),m.wood,2.85,.9,0,bench);const legs=[.4,2.85,5.3].map(x=>mesh(box(.12,.84,.8,.03),m.wood,x,.42,0,bench));
- const note=mesh(box(.5,.65,.03,.01),mat('#efe2c4'),3.0,1.8,.12,g);note.name='packing-note';
+ const bench=new T.Group();bench.position.set(-2.9,0,0);g.add(bench);mesh(box(5.7,.12,1.0,.03),m.wood,2.85,.9,0,bench);const legs=[.4,2.85,5.3].map(x=>{const pivot=new T.Group();pivot.position.set(x,.84,0);bench.add(pivot);mesh(box(.12,.84,.8,.03),m.wood,0,-.42,0,pivot);mesh(cyl(.04,.04,.9,8),m.metal,x,.84,0,bench).rotation.x=Math.PI/2;return pivot;});mesh(cyl(.08,.08,1.2,10),m.metal,-2.9,.0,0,g).rotation.x=Math.PI/2;
+ const note=mesh(box(.5,.65,.03,.01),mat('#efe2c4',{},'paper'),3.0,1.8,.12,g);note.name='packing-note';
  const pack=new T.Group();pack.position.set(.4,.96,0);g.add(pack);mesh(geo('pack',()=>{const q=new T.SphereGeometry(.5,12,10);q.scale(.9,1.1,.7);return q;}),canvas,0,.5,0,pack);const flap=mesh(box(.7,.12,.5,.04),canvas,0,.98,.08,pack);for(const x of[-.2,.2])mesh(box(.07,.9,.06,.02),strap,x,.5,.36,pack);
  const colours=['#d6493a','#e8b84a','#5a8fc4'],items=colours.map((c,i)=>{const it=mesh(box(.32,.28,.28,.04),mat(c),-1.7+i*.8,1.1,0,g);return{it,i,home:it.position.clone()};});
  return f=>{
   items.forEach(q=>{const t=span(f,.05+q.i*.13,.17+q.i*.13),e=smooth(t);q.it.position.set(q.home.x+(pack.position.x-q.home.x)*e,q.home.y+Math.sin(t*Math.PI)*1.0+(1.4-q.home.y)*e,q.home.z);q.it.visible=t<1;});
   flap.rotation.x=f>.45?-.0:.6;const fly=smooth(span(f,.5,.75));pack.position.set(.4+fly*2.85,.96-fly*.96+Math.sin(fly*Math.PI)*1.2,fly*.6);
-  const lift=smooth(span(f,.7,1));bench.rotation.z=lift*Math.PI/2;legs.forEach(l=>l.scale.y=1-lift*.9);
+  const lift=smooth(span(f,.7,1));bench.rotation.z=lift*Math.PI/2;legs.forEach(l=>l.rotation.z=lift*Math.PI/2);
  };
 }
 
 const BUILDERS={translation:runeBridge,sentence:steppingStones,intruder:brambleWall,'listen-word':bellFlowers,numbers:balanceGate,ending:fruitTree,correct:signposts,spelling:mushroomRing,'listen-tr':crystalChimes,halves:splitLogs,'qa-pairs':messageBirds,gap:waterWheel,repair:sealStone,answer:woodlandVisitor,sort:supplyCarts,definition:wordTotems,picture:crateWall,clue:buriedCache,'listen-multi':hungryCreature,instructions:packingStation};
-export function makeTaskGate(type,{area=0}={}){const k=gateKit(area),g=new T.Group();g.name='task-gate-'+type;const update=BUILDERS[type](k,g);g.userData.materials=k.materials;return{group:g,update};}
+export function makeTaskGate(type,{area=0}={}){const k=gateKit(area),g=new T.Group();g.name='task-gate-'+type;const animate=BUILDERS[type](k,g),blinks=blinkFigures(g),hardware=mechanismHardware(k,type);g.add(hardware.root);g.userData.materials=k.materials;let state=null,last=0;return{group:g,hardware,setTask(task,{immediate=true}={}){state=taskMechanismState(task);hardware.setState(state,{immediate});},update(f,time=0){if(!state)hardware.setState({fraction:f,complete:f===1},{immediate:true});hardware.update(Math.max(0,Math.min(.1,time-last)),time);last=time;animate(f,time,state);blinks(time);}};}
 
 // Task-stage dressing for the same five types. The stage keeps the shared layout (piece positions, sizes and touch
 // targets come from mechanismPlan); only the scenery behind the pieces, the pieces' own shapes and the link style change.
 export function themeStage(type,plan,area=0){
  if(!THEMED_GATES.includes(type))return null;
  const k=gateKit(area),{m,mesh,box,cyl,tube,geo,mat}=k,object=new T.Group();object.name='themed-stage-'+type;
- const H=plan.height,entries=plan.entries,pieces=entries.filter(e=>e.action),animated=[];
- const looks=(idle,selectedColor,doneColor)=>({idle,selected:mat(selectedColor,{emissive:selectedColor,emissiveIntensity:.25}),done:mat(doneColor,{emissive:doneColor,emissiveIntensity:.3})});
+ const H=plan.height,entries=plan.entries,pieces=entries.filter(e=>e.action),animated=[],targets=[],motion={wheelAngle:0,lastTime:0};
+ const driven=(object,point=[0,0,0])=>{targets.push({object,point:new T.Vector3(...point)});return object;};
+ const looks=(idle,selectedColor,doneColor)=>({idle,selected:mat(selectedColor,{emissive:selectedColor,emissiveIntensity:.09},idle.userData.surface),done:mat(doneColor,{emissive:doneColor,emissiveIntensity:.06},idle.userData.surface)});
  let piece,link=null;
  if(type==='translation'){
   for(const s of[-1,1]){mesh(box(3.0,H-1.05,.6,.12),m.stone,s*1.62,(H-1.05)/2,-.32,object);for(let i=0;i<3;i++){const l=mesh(rockLump(i+1),i%2?m.moss:m.stone,s*(1.1+i*.55),.15,.15,object);l.scale.set(.35,.3,.3);}}
   mesh(box(6.3,.95,.5,.1),m.dark,0,H-.7,-.25,object);mesh(box(.3,H-1.2,.2,.03),m.chasm,0,(H-1.2)/2,-.5,object);
-  const hinge=new T.Group();hinge.position.set(0,.05,.38);object.add(hinge);for(let i=0;i<5;i++)mesh(box(.5,2.3,.06,.015),i%2?m.wood:k.mat(new T.Color(k.p.wood).multiplyScalar(.82).getStyle()),(i-2)*.53,1.15,0,hinge);for(const y of[.4,1.9])mesh(box(2.7,.12,.05,.02),m.metal,0,y,.04,hinge);mesh(geo('emblem',()=>new T.TorusGeometry(.32,.045,6,24)),m.metal,0,1.15,.05,hinge);for(const s of[-1,1]){const bar=mesh(box(.07,.42,.03,.01),m.glow,s*.08,1.15,.06,hinge);bar.rotation.z=s*.35;}
-  animated.push(f=>{hinge.rotation.x=smooth(f)*Math.PI/2;});
+  const hinge=new T.Group();hinge.position.set(0,.05,.38);object.add(hinge);for(let i=0;i<5;i++)mesh(box(.5,2.3,.06,.015),i%2?m.wood:k.mat(new T.Color(k.p.wood).multiplyScalar(.82).getStyle(),{},'wood'),(i-2)*.53,1.15,0,hinge);for(const y of[.4,1.9])mesh(box(2.7,.12,.05,.02),m.metal,0,y,.04,hinge);mesh(geo('emblem',()=>new T.TorusGeometry(.32,.045,6,24)),m.metal,0,1.15,.05,hinge);for(const s of[-1,1]){const bar=mesh(box(.07,.42,.03,.01),m.glow,s*.08,1.15,.06,hinge);bar.rotation.z=s*.35;}
+  // Bearings, winch lines and counterweights remain attached throughout the lowering.
+  mesh(cyl(.075,.075,2.9,10),m.metal,0,.05,.38,object).rotation.z=Math.PI/2;
+  for(const x of[-1.45,1.45])mesh(box(.15,.18,.3,.025),m.dark,x,.09,.38,object);
+  for(const s of[-1,1]){const top=new T.Vector3(s*2.80,2.65,-.08),pulley=mesh(geo('bridge-pulley',()=>new T.TorusGeometry(.15,.04,5,16)),m.metal,top.x,top.y,top.z,object),counter=mesh(box(.28,.48,.28,.03),m.stone,s*2.8,2.15,-.32,object),rope=k.rod(m.ink,.018,object),back=k.rod(m.ink,.018,object);animated.push(f=>{const tip=hinge.localToWorld(new T.Vector3(s*1.1,2.25,0));object.worldToLocal(tip);k.stretch(rope,top,tip);counter.position.y=2.15-smooth(f)*1.55;k.stretch(back,new T.Vector3(top.x,top.y,-.32),counter.position);pulley.rotation.z=smooth(f)*Math.PI*2;});}
+  driven(hinge,[1.1,1.9,0]);animated.unshift(f=>{hinge.rotation.x=smooth(f)*Math.PI/2;});
   const stone=looks(m.stone,k.p.metal,k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.2,.07),stone.idle,0,0,0,g);for(const s of[-1,1]){const glyph=mesh(box(.07,e.h*.62,.05,.015),m.glow,s*(e.w/2-.16),0,.11,g);glyph.rotation.z=s*.12;}return{face,looks:stone};};
   link={material:m.glow,radius:.06};
@@ -414,30 +428,34 @@ export function themeStage(type,plan,area=0){
   const beam=new T.Group();beam.position.set(0,H-.15,-.3);object.add(beam);mesh(box(6.4,.2,.24,.05),m.wood,0,0,0,beam);mesh(cyl(.16,.16,.36,10),m.metal,0,0,0,beam).rotation.x=Math.PI/2;for(const s of[-1,1])mesh(box(.24,.32,.3,.04),m.metal,s*3.1,0,0,beam);
   for(const s of[-1,1]){const r=k.rod(m.ink,.015,object);k.stretch(r,new T.Vector3(s*1.53,H-.25,-.2),new T.Vector3(s*1.53,1.0,-.2));const pan=mesh(cyl(.6,.45,.1,14),m.metal,s*1.53,1.05,-.1,object);pan.name='pan';}
   const pile=[0,1,2].map(i=>{const w=mesh(cyl(.16,.18,.22,8),m.metal,-1.53+(i-1)*.36,1.21,-.1,object);w.visible=false;return w;});
-  animated.push(f=>{beam.rotation.z=(1-smooth(f))*.11;pile.forEach((w,i)=>w.visible=f>=(i+1)/3-.001);});
+  driven(beam,[1.53,0,0]);animated.push((f,time,values)=>{beam.rotation.z=(1-smooth(f))*.11;pile.forEach((w,i)=>{w.visible=values[i]>.001;w.position.y=1.21+(1-values[i])*.4;});});
   const brass=looks(m.metal,'#f1cf78',k.p.glow),wood=looks(m.wood,'#e6c27a',k.p.glow);
   piece=(e,g)=>{const left=e.action==='pair-left',face=mesh(box(e.w,e.h,left?.24:.12,left?.09:.04),left?brass.idle:wood.idle,0,0,0,g);const ring=mesh(geo('hook',()=>new T.TorusGeometry(.1,.025,5,12)),m.metal,0,e.h/2+.1,-.02,g);ring.castShadow=false;return{face,looks:left?brass:wood};};
   link={material:m.metal,radius:.035};
  }else if(type==='sentence'){
+  const hydraulic=makeAqueductChannel({area,compact:true});hydraulic.root.position.set(0,.07,-.50);object.add(hydraulic.root);k.materials.push(...hydraulic.materials);object.userData.hydraulic=hydraulic.state;animated.push((f,time)=>hydraulic.update(f,time,{reduced:typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches}));
   const water=liquidMaterial(k.p.water,{local:true,halfWidth:3.2,halfLength:1.1});k.materials.push(water);const stream=mesh(new T.BoxGeometry(6.4,.04,2.2),water,0,0,1.55,object);stream.castShadow=false;stream.receiveShadow=false;
   for(let i=0;i<9;i++){const l=mesh(rockLump(i%5+1),i%3?m.stone:m.moss,-3+i*.75,.2,.3+(i%2)*.15,object);l.scale.set(.42,.36,.34);}
   for(const s of[-1,1]){mesh(cyl(.26,.4,H-.4,7),m.stone,s*3.05,(H-.4)/2,-.3,object);mesh(box(.7,.25,.7,.06),m.moss,s*3.05,H-.3,-.3,object);}
   mesh(box(6.4,.5,.4,.1),m.dark,0,H-.65,-.4,object);
-  const tones=[m.stone,mat(new T.Color(k.p.stone).multiplyScalar(.9).getStyle()),mat(new T.Color(k.p.stone).lerp(new T.Color(k.p.moss),.25).getStyle())],picked=looks(m.stone,'#e9c983',k.p.glow);
+  const tones=[m.stone,mat(new T.Color(k.p.stone).multiplyScalar(.9).getStyle(),{},'stone'),mat(new T.Color(k.p.stone).lerp(new T.Color(k.p.moss),.25).getStyle(),{},'stone')],picked=looks(m.stone,'#e9c983',k.p.glow);
+  // Accepted fragments already form the crossing; visible runners and piston sleeves explain their support.
+  for(let i=0;i<pieces.length;i++){const row=Math.floor(i/3),socket=driven(mesh(box(.92,.06,.64,.025),m.dark,-.8+(i%3)*.8,.14+row*.12,1.2+row*.65,object));for(const x of[-.25,.25])mesh(cyl(.07,.09,.16+row*.12,8),m.metal,socket.position.x+x,.07+row*.06,socket.position.z,object);}
   piece=(e,g)=>{const tone=tones[(e.index||0)%3],l={...picked,idle:tone},face=mesh(box(e.w,e.h,.36,.16),tone,0,0,0,g);return{face,looks:l};};
  }else if(type==='intruder'){
   const vines=[];for(const s of[-1,1]){tube([[s*3.0,0,-.3],[s*3.15,H*.35,-.25],[s*2.9,H*.7,-.35],[s*3.05,H-.3,-.3]],.2,m.bramble,object,14);}
   const rows=[...new Set(pieces.map(e=>e.y))];rows.forEach((y,i)=>{const top=y+.62,v=new T.Group();object.add(v);tube([[-3.0,top,-.2],[-1.6,top+.18,-.1],[0,top-.12,-.18],[1.6,top+.16,-.1],[3.0,top,-.2]],.11,m.bramble,v,24);tube([[-3.0,top-.3,-.25],[-1.5,top+.05,-.05],[0,top+.12,-.25],[1.5,top-.04,-.05],[3.0,top-.25,-.25]],.07,m.bramble,v,24);for(let j=0;j<7;j++){const leaf=mesh(geo('vleaf',()=>{const l=new T.SphereGeometry(.2,7,4);l.scale(1,.12,.5);return l;}),m.leaf,-2.7+j*.9,top+(j%2?.12:-.1),-.02,v);leaf.rotation.set(.4,j*1.3,j%2?.5:-.5);if(j%3===1){const b=mesh(geo('bloom',()=>new T.IcosahedronGeometry(.1,0)),m.bell,-2.7+j*.9+.12,top+.2,.04,v);b.scale.y=.7;}}for(let j=0;j<12;j++){const th=mesh(geo('thorn',()=>new T.ConeGeometry(.045,.18,4)),m.thorn,-2.8+j*.5,top+(j%2?.08:-.08),-.12,v);th.rotation.z=j%2?.7:-.7;}vines.push(v);});
   const tag=looks(m.wood,'#e7c37a',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w*.94,e.h*.9,.12,.05),tag.idle,0,0,0,g);for(const s of[-1,1]){tube([[s*(e.w/2+.08),-e.h*.15,-.05],[s*(e.w/2-.02),e.h*.38,.1],[s*(e.w/2-.3),e.h/2+.02,.12],[s*(e.w/2-.62),e.h/2+.2,-.04]],.05,m.bramble,g,10);for(let j=0;j<2;j++){const th=mesh(geo('thorn',()=>new T.ConeGeometry(.045,.18,4)),m.thorn,s*(e.w/2-.1-j*.25),e.h/2+.06+j*.06,.12,g);th.rotation.z=s*(j?.4:1.2);}}return{face,looks:tag};};
-  animated.push(f=>{const dry=smooth(f);m.bramble.color.set(k.p.bramble).lerp(new T.Color(k.p.thorn),dry*.6);vines.forEach((v,i)=>{v.scale.y=1-dry*.06*(i+1);});});
+  vines.forEach(v=>driven(v));animated.push((f,time,values)=>{const dry=smooth(f);m.bramble.color.set(k.p.bramble).lerp(new T.Color(k.p.thorn),dry*.6);vines.forEach((v,i)=>{v.position.x=-values[Math.min(i,2)]*2.7;});});
 
  }else if(type==='ending'){
   // A fruit tree: trunk at the side, branches over the plaques, one fruit per answer that ripens as the task goes on.
-  const bark=mat(new T.Color(k.p.wood).multiplyScalar(.7).getStyle()),fruit=mat('#8fb860',{emissive:'#f0a050',emissiveIntensity:0}),clump=geo('clump',()=>{const c=new T.IcosahedronGeometry(.6,1);c.scale(1,.7,1);return c;});
+  const bark=mat(new T.Color(k.p.wood).multiplyScalar(.7).getStyle(),{},'wood'),fruit=mat('#8fb860',{emissive:'#f0a050',emissiveIntensity:0}),clump=geo('clump',()=>{const c=new T.IcosahedronGeometry(.6,1);c.scale(1,.7,1);return c;});
   tube([[-3.05,0,-.45],[-2.95,H*.45,-.4],[-3.1,H*.8,-.45],[-2.6,H+.1,-.5]],.3,bark,object,14);tube([[-2.9,H-.2,-.45],[-1,H+.15,-.4],[1.2,H,-.45],[3.0,H-.25,-.5]],.14,bark,object,16);
   for(let i=0;i<7;i++){const c=mesh(clump,m.leaf,-3+i*1.0,H-.15+(i%2)*.25,-.75,object);c.scale.setScalar(1.15);}for(let i=0;i<4;i++){const c=mesh(clump,m.leaf,-3.15+(i%2)*.35,H*.45+i*.5,-.6,object);c.scale.setScalar(.9);}for(let i=0;i<3;i++){const r=mesh(rockLump(i+1),bark,-3.05+Math.cos(i*2)*.4,.1,-.45+Math.sin(i*2)*.3,object);r.scale.set(.3,.2,.3);}
   const fruits=[],plaque=looks(mat(new T.Color(k.p.petal).lerp(new T.Color(k.p.leaf),.18).getStyle()),'#f3d58c',k.p.glow);
+  const basket=driven(new T.Group());basket.position.set(-1.7,.12,1.0);object.add(basket);mesh(cyl(.38,.28,.3,10),m.wood,0,.15,0,basket);for(let i=0;i<3;i++){const fruitBit=mesh(geo('caught-fruit',()=>new T.IcosahedronGeometry(.12,1)),fruit,(i-1)*.18,.32,0,basket);animated.push((f,time,values)=>{fruitBit.visible=values[i]>.01;fruitBit.position.y=.32+(1-values[i])*.5;});}
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.14,Math.min(.25,e.h*.4)),plaque.idle,0,0,0,g);const f=mesh(geo('fruit',()=>new T.IcosahedronGeometry(.2,1)),fruit,e.w/2-.22,e.h/2+.05,.12,g);fruits.push(f);mesh(geo('fleaf',()=>{const q=new T.SphereGeometry(.16,7,4);q.scale(1,.25,.5);return q;}),m.leaf,e.w/2-.02,e.h/2+.2,.08,g).rotation.z=-.6;return{face,looks:plaque};};
   animated.push((f,time)=>{fruit.color.set('#8fb860').lerp(new T.Color('#f2994a'),smooth(f));fruit.emissiveIntensity=.3*smooth(f);fruits.forEach((q,i)=>{q.rotation.z=Math.sin(time*1.4+i)*.12;});});
  }else if(type==='correct'){
@@ -446,21 +464,23 @@ export function themeStage(type,plan,area=0){
   const fog=mat('#f4f1e8',{transparent:true,opacity:.55,depthWrite:false,roughness:1}),puffs=[];for(let i=0;i<8;i++){const p=mesh(geo('puff',()=>{const q=new T.SphereGeometry(.9,10,6);q.scale(1,.4,.7);return q;}),fog,-3+i*.86,.32+(i%2)*.1,.6+(i%3)*.25,object);p.castShadow=false;puffs.push(p);}
   const sign=looks(m.wood,'#e7c37a',k.p.glow);
   piece=(e,g)=>{const s=e.x<0?-1:1,face=mesh(box(e.w,e.h,.12,.04),sign.idle,0,0,0,g),tip=mesh(geo('signtip',()=>{const c=new T.ConeGeometry(.5,.36,4);c.rotateZ(-Math.PI/2);c.rotateX(Math.PI/4);c.scale(1,1,.25);return c;}),sign.idle,s*(e.w/2+.17),0,0,g);tip.scale.set(s,e.h/1.0,1);return{face,looks:sign,tints:[tip]};};
-  animated.push(f=>{fog.opacity=.55*(1-smooth(f)*.85);});
+  const signDrive=driven(mesh(box(.4,.16,.22,.025),m.metal,0,.8,-.5,object));animated.push(f=>{signDrive.rotation.y=f*Math.PI/2;fog.opacity=.55*(1-smooth(f));});
  }else if(type==='spelling'){
   // Corrupted mushrooms: tall caps at the sides and a cap above each word; they heal as faulty words are found.
   const sick=mat('#8a5aa8',{emissive:'#a070d0',emissiveIntensity:.45}),stem=mat('#d9cdb8'),spotM=mat('#efe6f6',{emissive:'#d8c8f0',emissiveIntensity:.3}),cap=geo('cap',()=>{const c=new T.SphereGeometry(.5,14,8,0,Math.PI*2,0,Math.PI/2);c.scale(1,.62,1);return c;});
   for(const s of[-1,1])for(let i=0;i<2;i++){const h=H*(.55-i*.18),x=s*(3.0-i*.15),z=-.4+i*.5;mesh(cyl(.14,.2,h,8),stem,x,h/2,z,object);const c=mesh(cap,sick,x,h,z,object);c.scale.setScalar(1.6-i*.4);}
   const spores=[];for(let i=0;i<12;i++){const sp=mesh(geo('spore',()=>new T.OctahedronGeometry(.045,0)),spotM,-2.8+((i*7)%12)*.5,1,-.2+(i%3)*.2,object);sp.castShadow=false;spores.push(sp);}
-  const tag=looks(mat('#efe4d0'),'#f3d58c',k.p.glow);
+  const tag=looks(mat('#efe4d0',{},'paper'),'#f3d58c',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.14,.06),tag.idle,0,0,0,g);mesh(cyl(.07,.09,.28,7),stem,-e.w/2+.3,e.h/2+.1,.02,g);const c=mesh(cap,sick,-e.w/2+.3,e.h/2+.22,.02,g);c.scale.setScalar(.75);return{face,looks:tag};};
   const healthy=new T.Color('#c45a3c'),purple=new T.Color('#8a5aa8');
+  const filter=driven(mesh(cyl(.15,.2,.45,10),m.metal,1.5,.3,.8,object));mesh(cyl(.18,.18,.06,10),m.dark,1.5,.55,.8,object);animated.push(f=>filter.position.y=.3-f*.15);
   animated.push((f,time)=>{sick.color.copy(purple).lerp(healthy,smooth(f));sick.emissiveIntensity=.45*(1-smooth(f))+.05*Math.sin(time*2.2);spores.forEach((sp,i)=>{sp.visible=f<.95;sp.position.y=.6+((time*.22+i*.11)%1)*(H-1);});});
  }else if(type==='listen-tr'){
   // Crystal chimes on a beam: spoken words hang as crystals, Turkish meanings as wooden tags, joined by light threads.
   mesh(box(6.4,.22,.26,.05),m.wood,0,H-.12,-.25,object);for(const s of[-1,1]){mesh(cyl(.18,.26,H,6),m.stone,s*3.05,H/2,-.3,object);}
+  for(let i=0;i<3;i++){const tuner=driven(mesh(cyl(.10,.10,.24,8),m.metal,-.8+i*.8,.35,.5,object));tuner.rotation.z=Math.PI/2;animated.push((f,time,values)=>tuner.rotation.x=values[i]*Math.PI);}
   for(const e of pieces){const r=k.rod(m.ink,.01,object);k.stretch(r,new T.Vector3(e.x,H-.2,-.2),new T.Vector3(e.x,e.y+e.h/2,-.05));}
-  const glass=looks(mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.35,roughness:.2}),'#f3e2a0','#c9f7dc'),tag=looks(m.wood,'#e7c37a',k.p.glow);
+  const glass=looks(mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.18},'glass'),'#f3e2a0','#c9f7dc'),tag=looks(m.wood,'#e7c37a',k.p.glow);
   piece=(e,g)=>{const left=e.action==='pair-left',face=mesh(box(e.w,e.h,left?.3:.12,left?.16:.04),left?glass.idle:tag.idle,0,0,0,g);if(left)for(const s of[-1,1]){const c=mesh(geo('pcrystal',()=>{const q=new T.OctahedronGeometry(.18,0);q.scale(.7,1.8,.7);return q;}),glass.idle,s*(e.w/2+.05),-.05,0,g);c.rotation.z=s*.2;}return{face,looks:left?glass:tag};};
   link={material:m.glow,radius:.035};
   animated.push((f,time)=>{glass.idle.emissiveIntensity=.3+.12*Math.sin(time*2.4);});
@@ -468,39 +488,52 @@ export function themeStage(type,plan,area=0){
   // Split logs over a murky stream: each sentence half is a log end; matched halves are pinned together.
   const water=liquidMaterial(new T.Color(k.p.water).lerp(new T.Color(k.p.moss),.45).getStyle(),{local:true,halfWidth:3.2,halfLength:1.1});k.materials.push(water);const stream=mesh(new T.BoxGeometry(6.4,.04,2.2),water,0,0,1.55,object);stream.castShadow=false;
   for(let i=0;i<9;i++){const l=mesh(rockLump(i%5+1),i%3?m.stone:m.moss,-3+i*.75,.2,.3+(i%2)*.15,object);l.scale.set(.42,.36,.34);}
-  const bark=looks(mat(new T.Color(k.p.wood).multiplyScalar(.85).getStyle()),'#e2b86e',k.p.glow),ring=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.55).getStyle()),rings=mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle());
+  const bark=looks(mat(new T.Color(k.p.wood).multiplyScalar(.85).getStyle(),{},'wood'),'#e2b86e',k.p.glow),ring=mat(new T.Color(k.p.wood).lerp(new T.Color('#f0d9a8'),.55).getStyle(),{},'wood'),rings=mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle(),{},'wood');
   piece=(e,g)=>{const left=e.action==='pair-left',s=left?1:-1,face=mesh(box(e.w,e.h,.4,.18),bark.idle,0,0,0,g);const cap=mesh(geo('endgrain',()=>{const c=new T.CylinderGeometry(.5,.5,.06,16);c.rotateZ(Math.PI/2);return c;}),ring,s*(e.w/2+.02),0,0,g);cap.scale.set(1,e.h*.88,.42/.5*.9);for(const r of[.3,.18]){const t=mesh(geo('grain'+r,()=>{const q=new T.TorusGeometry(r,.012,4,20);q.rotateY(Math.PI/2);return q;}),rings,s*(e.w/2+.06),0,0,g);t.scale.set(1,e.h*.88/1,.8);}return{face,looks:bark};};
-  link={material:mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle()),radius:.07};
+  link={material:mat(new T.Color(k.p.wood).multiplyScalar(.6).getStyle(),{},'wood'),radius:.07};
+  // Three independent log couplers; out-of-order pairs seat their own crossing, not the next one in a list.
+  for(let i=0;i<3;i++){const pivot=driven(new T.Group());pivot.position.set((i-1)*.82,.08,.55);object.add(pivot);mesh(box(.65,.09,1.7,.04),m.wood,0,0,.85,pivot);mesh(cyl(.06,.06,.8,8),m.metal,pivot.position.x,.08,.55,object).rotation.z=Math.PI/2;const pin=mesh(cyl(.07,.07,.2,8),m.metal,0,.10,1.6,pivot);animated.push((f,time,values)=>{pivot.rotation.x=-(1-values[i])*.95;pin.position.y=.10+(1-values[i])*.25;});}
 
  }else if(type==='qa-pairs'){
   // Message birds: questions and answers are scrolls hanging from a branch where birds perch; each match sends a bird off.
-  const bark=mat(new T.Color(k.p.wood).multiplyScalar(.75).getStyle());tube([[-3.1,H-.5,-.35],[-1.5,H-.2,-.3],[0,H-.35,-.35],[1.5,H-.15,-.3],[3.1,H-.45,-.35]],.11,bark,object,18);for(const s of[-1,1])mesh(cyl(.13,.18,H-.4,8),m.wood,s*3.05,(H-.4)/2,-.35,object);
+  const bark=mat(new T.Color(k.p.wood).multiplyScalar(.75).getStyle(),{},'wood');tube([[-3.1,H-.5,-.35],[-1.5,H-.2,-.3],[0,H-.35,-.35],[1.5,H-.15,-.3],[3.1,H-.45,-.35]],.11,bark,object,18);for(const s of[-1,1])mesh(cyl(.13,.18,H-.4,8),m.wood,s*3.05,(H-.4)/2,-.35,object);
   for(const e of pieces){const r=k.rod(m.ink,.01,object);k.stretch(r,new T.Vector3(e.x+(e.x<0?-.6:.6),H-.3,-.3),new T.Vector3(e.x+(e.x<0?-.6:.6),e.y+e.h/2,-.05));}
-  const colours=['#5f86b8','#c8783a','#7a9c4c','#b85f6a','#d6b04a','#8a6ab0'],perchY=Math.min(...pieces.map(e=>e.y-e.h/2))-.55;tube([[-3.1,perchY-.15,.05],[-1.5,perchY+.05,.1],[0,perchY-.05,.05],[1.5,perchY+.06,.1],[3.1,perchY-.12,.05]],.07,bark,object,18);const birds=colours.map((c,i)=>{const b=bird(k,c);b.position.set(-2.5+i*1.0,perchY+.04+Math.sin(i*1.3)*.04,.08);b.scale.setScalar(.95);object.add(b);return{b,i};});
-  const scroll=looks(mat('#efe2c4'),'#f3d58c',k.p.glow);
+  const colours=['#5f86b8','#c8783a','#7a9c4c','#b85f6a','#d6b04a','#8a6ab0'],perchY=pieces.length?Math.min(...pieces.map(e=>e.y-e.h/2))-.55:1.6;tube([[-3.1,perchY-.15,.05],[-1.5,perchY+.05,.1],[0,perchY-.05,.05],[1.5,perchY+.06,.1],[3.1,perchY-.12,.05]],.07,bark,object,18);const birds=colours.map((c,i)=>{const b=bird(k,c);b.position.set(-2.5+i*1.0,perchY+.04+Math.sin(i*1.3)*.04,.08);b.scale.setScalar(.95);object.add(b);return{b,i};});
+  const scroll=looks(mat('#efe2c4',{},'paper'),'#f3d58c',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h*.86,.06,.02),scroll.idle,0,0,0,g);for(const y of[-1,1])mesh(geo('roll',()=>{const q=new T.CylinderGeometry(.075,.075,1,10);q.rotateZ(Math.PI/2);return q;}),scroll.idle,0,y*e.h*.45,.02,g).scale.set(e.w*1.04,1,1);return{face,looks:scroll};};
   link={material:mat('#b84a4a'),radius:.025};
-  animated.push((f,time)=>{const gone=Math.round(f*birds.length);birds.forEach(q=>{const away=q.i<gone;q.b.visible=!away;q.b.userData.flap(time*3+q.i,.08);q.b.rotation.y=Math.sin(time*.7+q.i)*.4;});});
+  for(let i=0;i<3;i++){const catchArm=driven(new T.Group());catchArm.position.set(-1.5+i*1.5,perchY-.12,.05);object.add(catchArm);mesh(box(.36,.045,.06,.012),m.metal,.18,0,0,catchArm);mesh(cyl(.045,.045,.14,8),m.metal,catchArm.position.x,perchY-.12,.05,object).rotation.x=Math.PI/2;animated.push((f,time,values)=>catchArm.rotation.z=-values[i]*Math.PI/2);}
+  animated.push((f,time,values)=>{birds.forEach(q=>{const fly=values[Math.floor(q.i/2)];q.b.position.y=perchY+.04+fly*1.0;q.b.position.z=.08-fly*.7;q.b.visible=fly<1;q.b.userData.flap(time*(fly>0?14:3)+q.i,fly>0?.7:.08);q.b.rotation.y=Math.sin(time*.7+q.i)*.4;});});
  }else if(type==='gap'){
   // Water wheel: a wheel turns beside a sluice; answers are paddles, and the wheel speeds up as the channel fills.
   const water=liquidMaterial(k.p.water,{local:true,halfWidth:3.2,halfLength:1.1});k.materials.push(water);const stream=mesh(new T.BoxGeometry(6.4,.04,2.2),water,0,0,1.55,object);stream.castShadow=false;
   for(const s of[-1,1])mesh(box(.42,H,.5,.06),m.stone,s*3.05,H/2,-.4,object);mesh(box(6.5,.3,.5,.06),m.dark,0,H-.15,-.4,object);
   const gate=new T.Group();object.add(gate);for(let i=0;i<9;i++)mesh(box(.1,1.4,.1,.02),m.dark,-2.4+i*.6,.7,-.6,gate);mesh(box(5.0,.12,.08,.02),m.dark,0,1.2,-.55,gate);
-  const wheel=new T.Group();wheel.position.set(-3.55,1.4,.3);object.add(wheel);mesh(geo('rim',()=>{const q=new T.TorusGeometry(1.15,.07,6,28);q.rotateY(Math.PI/2);return q;}),m.wood,0,0,0,wheel);for(let i=0;i<6;i++){const sp=mesh(box(.08,2.25,.08,.02),m.wood,0,0,0,wheel);sp.rotation.x=i*Math.PI/6;}for(let i=0;i<8;i++){const a=i*Math.PI/4,p=mesh(box(.45,.06,.38,.015),m.wood,0,Math.cos(a)*1.18,Math.sin(a)*1.18,wheel);p.rotation.x=-a;}
-  const paddle=looks(mat(new T.Color(k.p.wood).lerp(new T.Color('#e8cf9a'),.35).getStyle()),'#f0cf7a',k.p.glow);
+  const wheel=new T.Group();wheel.name='water-drive-wheel';wheel.position.set(-3.55,1.4,.3);object.add(wheel);mesh(geo('rim',()=>{const q=new T.TorusGeometry(1.15,.07,6,28);q.rotateY(Math.PI/2);return q;}),m.wood,0,0,0,wheel);for(let i=0;i<6;i++){const sp=mesh(box(.08,2.25,.08,.02),m.wood,0,0,0,wheel);sp.rotation.x=i*Math.PI/6;}for(let i=0;i<8;i++){const a=i*Math.PI/4,p=mesh(box(.45,.06,.38,.015),m.wood,0,Math.cos(a)*1.18,Math.sin(a)*1.18,wheel);p.rotation.x=-a;}
+  const paddle=looks(mat(new T.Color(k.p.wood).lerp(new T.Color('#e8cf9a'),.35).getStyle(),{},'wood'),'#f0cf7a',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.14,.04),paddle.idle,0,0,0,g);for(const s of[-1,1])mesh(box(.08,e.h+.04,.16,.02),m.metal,s*(e.w/2-.22),0,.02,g);return{face,looks:paddle};};
-  let angle=0;animated.push((f,time)=>{angle=time*(.4+f*1.8);wheel.rotation.x=angle;gate.position.y=-f*1.3;});
+  driven(gate,[2.4,1.2,-.55]);
+  // A fitted channel feeds the paddles; a shaft, drum and guided rack transmit rotation to the drop gate.
+  mesh(cyl(.11,.11,.68,10),m.metal,-3.55,1.4,.3,object).rotation.z=Math.PI/2;
+  for(const x of[-3.83,-3.24])mesh(box(.14,1.45,.36,.025),m.stone,x,.72,.3,object);
+  const flow=mesh(new T.BoxGeometry(.28,.85,.09),water,-3.55,1.8,-.3,object);flow.name='wheel-feed-flow';flow.castShadow=false;
+  mesh(box(.55,.08,1.0,.02),m.wood,-3.55,2.25,-.7,object);for(const s of[-1,1])mesh(box(.08,.20,1.0,.015),m.wood,-3.55+s*.25,2.32,-.7,object);
+  for(const x of[-2.6,2.6])mesh(box(.12,1.55,.18,.02),m.metal,x,.70,-.6,object);
+  mesh(box(5.4,.04,.25,.012),m.dark,0,.025,-.6,object);
+  animated.push((f,time)=>{motion.wheelAngle+=Math.max(0,Math.min(.1,time-motion.lastTime))*f*1.8;motion.lastTime=time;wheel.rotation.x=motion.wheelAngle;gate.position.y=-f*1.3;flow.visible=f>.001;flow.scale.x=Math.max(.001,f);});
  }else if(type==='repair'){
   // Seal stone: a great round seal stands behind the words; its crack glows until the broken word is replaced.
   const crack=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:1});for(const s of[-1,1])mesh(cyl(.3,.4,H,8),m.stone,s*3.1,H/2,-.5,object);
   const R=Math.min(3.0,H*.47),seal=new T.Group();seal.position.set(0,H*.5,-.55);object.add(seal);mesh(geo('seal'+R,()=>{const q=new T.CylinderGeometry(R,R,.4,40);q.rotateX(Math.PI/2);return q;}),m.stone,0,0,0,seal);mesh(geo('sealrim'+R,()=>new T.TorusGeometry(R-.08,.09,6,48)),m.dark,0,0,.21,seal);
   const lines=[[-.3,.9],[.2,.45],[-.15,0],[.25,-.45],[-.1,-.95]];for(let i=1;i<lines.length;i++){const a=lines[i-1],b=lines[i],len=Math.hypot(b[0]-a[0],b[1]-a[1])*R,c=mesh(box(.07,len,.02,.008),crack,(a[0]+b[0])/2*R,(a[1]+b[1])/2*R,.22,seal);c.rotation.z=Math.atan2(-(b[0]-a[0]),b[1]-a[1]);}
-  const tile=looks(mat(new T.Color(k.p.stone).multiplyScalar(1.08).getStyle()),'#f0cf7a',k.p.glow);
+  const tile=looks(mat(new T.Color(k.p.stone).multiplyScalar(1.08).getStyle(),{},'stone'),'#f0cf7a',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.16,.05),tile.idle,0,0,0,g);mesh(box(e.w+.08,e.h+.08,.08,.02),m.dark,0,0,-.06,g);return{face,looks:tile};};
+  driven(seal,[R*.6,0,.23]);for(let i=0;i<3;i++){const socket=mesh(box(.30,.22,.08,.02),m.dark,-.55+i*.55,.35,.8,object),key=mesh(box(.22,.16,.07,.015),m.metal,socket.position.x,.35,1.05,object);animated.push((f,time,values)=>{key.position.z=1.05-values[i]*.23;});}
   animated.push((f,time)=>{crack.emissiveIntensity=(1-f)*(.8+.3*Math.sin(time*3));seal.rotation.z=f*.25;});
  }else if(type==='answer'){
   // Woodland visitor: an owl waits beside the question; replies are leaf-cut plaques and it nods at each right answer.
   const{owl,head}=owlFigure(k);object.add(owl);owl.position.set(-3.2,0,.25);owl.scale.setScalar(.9);owl.rotation.y=.5;
+  const perchLatch=driven(new T.Group());perchLatch.position.set(-1.8,.5,.6);object.add(perchLatch);mesh(box(.7,.10,.12,.02),m.wood,.35,0,0,perchLatch);mesh(cyl(.065,.065,.20,8),m.metal,-1.8,.5,.6,object);animated.push(f=>perchLatch.rotation.y=-f*Math.PI/2);
   const plaque=looks(mat(new T.Color(k.p.petal).lerp(new T.Color(k.p.leaf),.15).getStyle()),'#f3d58c',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.12,Math.min(.25,e.h*.4)),plaque.idle,0,0,0,g);for(const s of[-1,1]){const l=mesh(geo('pleaf',()=>{const q=new T.SphereGeometry(.3,8,4);q.scale(1,.42,.12);return q;}),m.leaf,s*(e.w/2-.05),-e.h/2+.02,.06,g);l.rotation.z=s*-.5;}return{face,looks:plaque};};
   // The owl dips its head toward each new right answer and then looks around again.
@@ -509,48 +542,54 @@ export function themeStage(type,plan,area=0){
   // Supply carts: the word to sort sits on top; each category is a cart, filling with crates as words are sorted.
   const carts=pieces.filter(e=>e.action).map(e=>{const c=new T.Group();c.position.set(e.x,0,.35);object.add(c);mesh(box(2.2,.12,1.05,.03),m.wood,0,.62,0,c);for(const z of[-.5,.5])mesh(box(2.2,.42,.07,.02),m.wood,0,.86,z,c);for(const x of[-1,1])mesh(box(.07,.42,1.05,.02),m.wood,x*1.08,.86,0,c);for(const x of[-.65,.65])mesh(geo('cwheel',()=>{const q=new T.CylinderGeometry(.42,.42,.08,14);q.rotateX(Math.PI/2);return q;}),m.dark,x,.42,.58,c);mesh(box(.08,e.y-e.h/2-1.0,.08,.02),m.wood,0,(e.y-e.h/2+1.0)/2,-.4,c);return c;});
   const crates=[];carts.forEach((c,ci)=>{for(let i=0;i<3;i++){const it=mesh(i===1?geo('sack',()=>{const q=new T.SphereGeometry(.26,10,8);q.scale(1,.8,1);return q;}):box(.38,.34,.38,.04),i===1?mat('#c9b48a'):m.wood,(i-1)*.6,.9,0,c);it.visible=false;crates.push({it,n:ci*3+i});}});
-  const sign=looks(mat('#efe2c4'),'#f3d58c',k.p.glow);
+  const sign=looks(mat('#efe2c4',{},'paper'),'#f3d58c',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.1,.03),sign.idle,0,0,0,g);mesh(box(e.w+.12,e.h+.12,.06,.02),m.wood,0,0,-.05,g);return{face,looks:sign};};
-  animated.push(f=>{const n=Math.round(f*crates.length);crates.forEach(q=>q.it.visible=q.n<n);});
+  carts.slice(0,3).forEach(c=>driven(c));for(const c of carts)for(const x of[-.8,.8])mesh(box(.06,.06,1.5,.012),m.metal,c.position.x+x,.1,.35,object);
+  animated.push((f,time,values,task)=>{crates.forEach(q=>{const cartIndex=Math.floor(q.n/3),entry=pieces.filter(e=>e.action)[cartIndex];q.it.visible=values[q.n%3]>.01&&task?.rounds[q.n%3]?.answer===entry.textValue;});carts.forEach(c=>c.position.z=.35+f*.35);});
 
  }else if(type==='definition'){
   // Word totems: two sleeping totems flank the pillars; words are carved faces, definitions are tablets; matches wake the totems.
   const eyes=[];for(const s of[-1,1]){const t=totemFigure(k,H*.55);t.g.position.set(s*3.25,0,-.3);object.add(t.g);eyes.push(t);}
   mesh(box(6.3,.9,.5,.1),m.dark,0,H-.7,-.3,object);for(const s of[-1,1])mesh(box(.5,H-1.1,.5,.08),m.stone,s*.02,(H-1.1)/2,-.55,object);
-  const face=looks(m.stone,k.p.metal,k.p.glow),tablet=looks(mat(new T.Color(k.p.stone).multiplyScalar(1.12).getStyle()),k.p.metal,k.p.glow);
+  const face=looks(m.stone,k.p.metal,k.p.glow),tablet=looks(mat(new T.Color(k.p.stone).multiplyScalar(1.12).getStyle(),{},'stone'),k.p.metal,k.p.glow);
   piece=(e,g)=>{const left=e.action==='pair-left',f=mesh(box(e.w,e.h,left?.3:.16,left?.12:.05),left?face.idle:tablet.idle,0,0,0,g);if(left)for(const s of[-1,1])mesh(box(.2,.06,.04,.01),m.ink,s*(e.w/2-.3),e.h/2-.18,left?.16:.09,g);return{face:f,looks:left?face:tablet};};
   link={material:m.glow,radius:.045};
-  animated.push(f=>{for(const t of eyes){t.eye.emissiveIntensity=smooth(f)*1.4;t.lids.forEach(l=>l.position.y=t.h*.72+.03+smooth(f)*.12);}});
+  eyes.forEach(t=>driven(t.g));for(const s of[-1,1]){mesh(box(.9,.10,1.2,.02),m.dark,s*3.25,.05,-.3,object);for(const x of[-.3,.3])mesh(box(.06,.07,1.3,.01),m.metal,s*3.25+x,.12,-.3,object);}
+  animated.push(f=>{for(const t of eyes){t.eye.emissiveIntensity=smooth(f)*1.4;t.lids.forEach(l=>l.position.y=t.h*.72+.03+smooth(f)*.12);t.g.position.z=-.3-f*.5;}});
  }else if(type==='picture'){
   // Picture crates: words and pictures are crate faces; matched pairs are roped together and crates pile up at the sides.
-  const woodL=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle()),piles=[];for(const s of[-1,1])for(let i=0;i<3;i++){const c=new T.Group();c.position.set(s*(3.0+(i%2)*.15),Math.floor(i/2)*.9,-.3+(i%2)*.9);object.add(c);mesh(box(.9,.9,.9,.05),woodL,0,.45,0,c);for(const y of[.12,.78])mesh(box(.94,.1,.94,.02),m.wood,0,y,0,c);piles.push(c);}
+  const woodL=mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.3).getStyle(),{},'wood'),piles=[];for(const s of[-1,1])for(let i=0;i<3;i++){const c=new T.Group();c.position.set(s*(3.0+(i%2)*.15),Math.floor(i/2)*.9,-.3+(i%2)*.9);object.add(c);mesh(box(.9,.9,.9,.05),woodL,0,.45,0,c);for(const y of[.12,.78])mesh(box(.94,.1,.94,.02),m.wood,0,y,0,c);piles.push(c);}
   mesh(box(6.4,.16,.6,.04),m.wood,0,H-.4,-.3,object);for(const s of[-1,1])mesh(box(.16,H-.4,.16,.03),m.wood,s*3.05,(H-.4)/2,-.3,object);
   const crate=looks(woodL,'#f0cf7a',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.3,.05),crate.idle,0,0,0,g);for(const y of[-1,1])mesh(box(e.w+.04,.09,.32,.02),m.wood,0,y*(e.h/2-.04),0,g);for(const x of[-1,1])mesh(box(.09,e.h,.32,.02),m.wood,x*(e.w/2-.04),0,0,g);return{face,looks:crate};};
   link={material:m.ink,radius:.03};
+  piles.slice(0,3).forEach(c=>driven(c));for(const s of[-1,1])mesh(box(.6,.08,2.4,.02),m.metal,s*3.1,.06,.1,object);animated.push((f,time,values)=>piles.forEach((c,i)=>c.position.z=-.3+(i%2)*.9+values[i%3]*.4));
  }else if(type==='clue'){
   // Buried cache: a riddle stone behind the clue, answers on dug-up boards, and the chest rises as clues are solved.
-  const dirt=mat(new T.Color(k.p.wood).lerp(new T.Color('#6b5a44'),.6).getStyle(),{roughness:1}),glyph=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.8});
+  const dirt=mat(new T.Color(k.p.wood).lerp(new T.Color('#6b5a44'),.6).getStyle(),{roughness:1},'wood'),glyph=mat(k.p.glow,{emissive:k.p.glow,emissiveIntensity:.8});
   mesh(box(5.8,H-.6,.5,.2),m.stone,0,(H-.6)/2,-.7,object);for(const s of[-1,1]){const q=mesh(geo('qmark',()=>new T.TorusGeometry(.32,.07,6,16,Math.PI*1.4)),glyph,s*2.45,H*.55,-.42,object);q.rotation.z=-.6;mesh(geo('qdot',()=>new T.SphereGeometry(.08,8,6)),glyph,s*2.45+.02,H*.55-.75,-.42,object);}
   for(let i=0;i<10;i++){const c=mesh(rockLump(i%5+1),dirt,-3+i*.66,.15,.4+(i%3)*.2,object);c.scale.set(.42,.3,.38);}
-  const chest=new T.Group();chest.position.set(0,-.7,.9);object.add(chest);mesh(box(1.0,.55,.62,.05),m.wood,0,.27,0,chest);for(const x of[-1,1])mesh(box(.07,.58,.66,.02),m.metal,x*.4,.27,0,chest);const lid=mesh(box(1.02,.16,.64,.05),m.wood,0,.62,0,chest);
-  const board=looks(mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.35).getStyle()),'#f0cf7a',k.p.glow);
+  const chest=driven(new T.Group());chest.position.set(0,-.7,.9);object.add(chest);mesh(box(1.0,.55,.62,.05),m.wood,0,.27,0,chest);for(const x of[-1,1])mesh(box(.07,.58,.66,.02),m.metal,x*.4,.27,0,chest);const lid=new T.Group();lid.position.set(0,.55,-.31);chest.add(lid);mesh(box(1.02,.16,.64,.05),m.wood,0,.07,.31,lid);mesh(cyl(.045,.045,1.0,8),m.metal,0,.55,-.31,chest).rotation.z=Math.PI/2;
+  for(const x of[-.65,.65])mesh(box(.09,1.2,.14,.02),m.metal,x,.1,.9,object);
+  const board=looks(mat(new T.Color(k.p.wood).lerp(new T.Color('#e0c38a'),.35).getStyle(),{},'wood'),'#f0cf7a',k.p.glow);
   piece=(e,g)=>{const face=mesh(box(e.w,e.h,.12,.04),board.idle,0,0,0,g);for(const x of[-1,1]){const c=mesh(rockLump(3),dirt,x*(e.w/2-.25),-e.h/2-.05,.05,g);c.scale.set(.22,.14,.18);}return{face,looks:board};};
-  animated.push((f,time)=>{chest.position.y=-.7+smooth(f)*.7;lid.rotation.x=f>=1?-.9:0;glyph.emissiveIntensity=.6+.3*Math.sin(time*2);});
+  animated.push((f,time)=>{chest.position.y=-.7+smooth(f)*.7;lid.rotation.x=-smooth((f-.8)/.2)*1.2;glyph.emissiveIntensity=.6+.3*Math.sin(time*2);});
  }else if(type==='listen-multi'){
   // Hungry hedgehog: item cards lie on a market table, the basket is the deliver button, and it fills as requests are met.
   const{g:hog,basket}=hedgehogFigure(k);hog.position.set(-2.55,0,.85);hog.rotation.y=.5;hog.scale.setScalar(1.25);object.add(hog);
+  driven(basket);mesh(cyl(.04,.04,.5,8),m.metal,-2.25,.5,1.25,object);
   const hut=new T.Group();hut.position.set(3.0,0,-.4);object.add(hut);mesh(box(1.4,1.6,1.3,.05),m.wood,0,.8,0,hut);const roof=mesh(geo('roof',()=>new T.ConeGeometry(1.15,.9,4)),m.moss,0,2.05,0,hut);roof.rotation.y=Math.PI/4;mesh(box(.5,.9,.04,.02),m.dark,-.2,.45,.66,hut);
   const colours=['#d6493a','#e8b84a','#7aa850','#5a8fc4'],fruits=colours.map((c,i)=>{const it=mesh(geo('apple',()=>new T.IcosahedronGeometry(.11,1)),mat(c),(i%2-.5)*.18,.32,(i>1?.08:-.08),basket);it.visible=false;return it;});
-  const card=looks(mat('#efe2c4'),'#f3d58c',k.p.glow),weave=looks(mat('#c09a5a'),'#f3d58c',k.p.glow),voice=looks(m.bell,'#f3d58c',k.p.glow);
+  const card=looks(mat('#efe2c4',{},'paper'),'#f3d58c',k.p.glow),weave=looks(mat('#c09a5a',{},'wood'),'#f3d58c',k.p.glow),voice=looks(m.bell,'#f3d58c',k.p.glow);
   piece=(e,g)=>{const l=e.action==='confirm'?weave:e.action==='listen'?voice:card,face=mesh(box(e.w,e.h,.14,e.action==='confirm'?.3:.05),l.idle,0,0,0,g);if(e.action==='confirm')for(let i=0;i<4;i++)mesh(box(e.w-.2,.03,.02,.01),m.wood,0,-e.h/2+.18+i*.18,.08,g);return{face,looks:l};};
   animated.push((f,time)=>{const n=Math.round(f*fruits.length);fruits.forEach((q,i)=>q.visible=i<n);hog.position.y=Math.abs(Math.sin(time*2))*.04;});
  }else if(type==='instructions'){
   // Packing station: tags lie on a packing bench, the backpack is the secure button, and it fills as orders are packed.
   mesh(box(6.2,.12,1.0,.03),m.wood,0,.9,.25,object);for(const x of[-2.8,0,2.8])mesh(box(.12,.84,.8,.03),m.wood,x,.42,.25,object);
-  const pack=new T.Group();pack.position.set(-2.6,.96,.3);object.add(pack);mesh(geo('pack',()=>{const q=new T.SphereGeometry(.5,12,10);q.scale(.9,1.1,.7);return q;}),mat('#7a9c6a'),0,.5,0,pack);for(const x of[-.2,.2])mesh(box(.07,.9,.06,.02),mat('#5a4030'),x,.5,.36,pack);
+  const pack=new T.Group();pack.position.set(-2.6,.96,.3);object.add(pack);mesh(geo('pack',()=>{const q=new T.SphereGeometry(.5,12,10);q.scale(.9,1.1,.7);return q;}),mat('#7a9c6a',{},'fabric'),0,.5,0,pack);for(const x of[-.2,.2])mesh(box(.07,.9,.06,.02),mat('#5a4030'),x,.5,.36,pack);
+  driven(pack,[.2,.5,.36]);const buckle=mesh(geo('pack-buckle',()=>new T.TorusGeometry(.10,.025,4,12)),m.metal,.2,.45,.40,pack);animated.push(f=>buckle.rotation.x=(1-f)*.6);
   const boxes=['#d6493a','#e8b84a','#5a8fc4'].map((c,i)=>{const b=mesh(box(.32,.28,.28,.04),mat(c),-1.4+i*.75,1.1,.25,object);return b;});
-  const tag=looks(mat('#efe2c4'),'#f3d58c',k.p.glow),canvas=looks(mat('#7a9c6a'),'#f3d58c',k.p.glow);
+  const tag=looks(mat('#efe2c4',{},'paper'),'#f3d58c',k.p.glow),canvas=looks(mat('#7a9c6a',{},'fabric'),'#f3d58c',k.p.glow);
   piece=(e,g)=>{const l=e.action==='confirm'?canvas:tag,face=mesh(box(e.w,e.h,.14,e.action==='confirm'?.25:.04),l.idle,0,0,0,g);if(e.action!=='confirm'){const hole=mesh(geo('taghole',()=>new T.TorusGeometry(.07,.02,4,12)),m.metal,-e.w/2+.18,e.h/2-.16,.08,g);hole.castShadow=false;}return{face,looks:l};};
   animated.push(f=>{const n=Math.round(f*boxes.length);boxes.forEach((b,i)=>b.visible=i>=n);pack.scale.setScalar(1+smooth(f)*.15);});
  }else if(type==='listen-word'){
@@ -559,9 +598,9 @@ export function themeStage(type,plan,area=0){
   for(const s of[-1,1])for(let i=0;i<3;i++){const leaf=mesh(geo('leaf',()=>{const l=new T.SphereGeometry(.42,8,4);l.scale(1,.1,.4);return l;}),m.leaf,s*(2.6+i*.18),.3+i*.35,.1,object);leaf.rotation.set(0,i,s*.5);}
   const petal=looks(mat(new T.Color(k.p.petal).lerp(new T.Color(k.p.bell),.22).getStyle()),'#f3d58c',k.p.glow),voice=looks(m.bell,'#f3d58c',k.p.glow);
   piece=(e,g)=>{const l=e.action==='listen'?voice:petal,face=mesh(box(e.w,e.h,.14,Math.min(.3,e.h*.45)),l.idle,0,0,0,g);for(const s of[-1,1]){const leaf=mesh(geo('pleaf',()=>{const q=new T.SphereGeometry(.3,8,4);q.scale(1,.42,.12);return q;}),m.leaf,s*(e.w/2-.05),-e.h/2+.02,.06,g);leaf.rotation.z=s*-.5;}return{face,looks:l};};
-  animated.push((f,time)=>{heads.forEach((h,i)=>{h.rotation.z=Math.sin(time*1.7+i*1.3)*.08;h.scale.setScalar(1+smooth(f)*.25);});});
+  heads.slice(0,3).forEach(h=>driven(h));animated.push((f,time)=>{heads.forEach((h,i)=>{h.rotation.z=Math.sin(time*1.7+i*1.3)*.08;h.scale.setScalar(1+smooth(f)*.25);});});
  }
  // The scenery eases toward the task's progress, so each accepted answer (and the final opening) animates.
- let shown=null;
- return{type,object,materials:k.materials,piece,link,inscription:m.stone,shown:()=>shown??0,setShown(v){shown=v;},update(dt,f,time){shown=shown===null?f:shown+(f-shown)*(1-Math.exp(-dt*3.2));if(Math.abs(f-shown)<.002)shown=f;for(const a of animated)a(shown,time);}};
+ let shown=null,checkpoint=null;const blinks=blinkFigures(object),hardware=mechanismHardware(k,type,{stage:true,targets});object.add(hardware.root);
+ return{type,object,hardware,targets,materials:k.materials,piece,link,inscription:m.stone,captureMotion:()=>({...motion}),resumeMotion(saved){Object.assign(motion,saved);},shown:()=>shown??0,setShown(v){shown=v;},setTask(task,{immediate=false}={}){checkpoint=task;hardware.setState(taskMechanismState(task),{immediate});},update(dt,f,time){if(shown===null)shown=f;hardware.update(dt,time);shown=hardware.fraction();for(const a of animated)a(shown,time,hardware.units.map(u=>u.value),checkpoint);hardware.connect();blinks(time);}};
 }

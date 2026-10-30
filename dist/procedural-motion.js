@@ -1,3 +1,4 @@
+import{castPresentation}from'./combat-presentation.js';
 import * as T from './vendor/three.module.min.js';
 // Procedural motion for the nineteen forms supplied without a skeleton (Ravenclaw 0–8, Slytherin 0–9).
 // A vertex-shader layer bends the single mesh: birds flap their wings, step their feet and bob their heads;
@@ -31,7 +32,7 @@ const VERTEX=`#include <begin_vertex>
 export function needsProceduralMotion(partner,model){let skinned=false;model.traverse(o=>{if(o.isSkinnedMesh)skinned=true;});return!skinned&&(partner==='ravenclaw'||partner==='slytherin');}
 export class ProceduralMotion{
  constructor(model,{partner='ravenclaw',forward=[0,0,1]}={}){
-  this.kind=partner==='slytherin'?1:0;this.time=0;this.gait=0;this.move=0;this.flap=0;this.strike=0;
+  this.kind=partner==='slytherin'?1:0;this.time=0;this.gait=0;this.move=0;this.flap=0;this.strike=0;this.footfallSerial=0;
   const f=new T.Vector3(forward[0]||0,0,forward[2]??1).normalize(),r=new T.Vector3(f.z,0,-f.x);
   this.uniforms={uMotionCenter:{value:new T.Vector3()},uMotionBase:{value:0},uMotionFwd:{value:f},uMotionRight:{value:r},uMotionExt:{value:new T.Vector3(1,1,1)},uMotionTime:{value:0},uMotionGait:{value:0},uMotionMove:{value:0},uMotionFlap:{value:0},uMotionStrike:{value:0},uMotionKind:{value:this.kind},uMotionAmount:{value:1}};
   this.materials=[];model.traverse(o=>{if(!o.isMesh||o.isSkinnedMesh)return;const p=o.geometry.attributes.position;let minF=Infinity,maxF=-Infinity,minL=Infinity,maxL=-Infinity,minY=Infinity,maxY=-Infinity;const v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const a=v.dot(f),b=v.dot(r);minF=Math.min(minF,a);maxF=Math.max(maxF,a);minL=Math.min(minL,b);maxL=Math.max(maxL,b);minY=Math.min(minY,v.y);maxY=Math.max(maxY,v.y);}
@@ -41,9 +42,10 @@ export class ProceduralMotion{
  }
  // stage: ground | anticipation | air | landing. speed in world units per second.
  update(dt,{moving=false,speed=0,stage='ground',attack=null,enabled=true}={}){
-  if(dt<=0)return;this.time+=dt;const target=enabled&&moving?1:0;this.move+=(target-this.move)*(1-Math.exp(-dt*8));this.gait+=dt*(2.2+Math.min(3,speed)*3.2)*(this.move>.02?1:0);
+  if(dt<=0)return;this.time+=dt;const target=enabled&&moving?1:0;this.move+=(target-this.move)*(1-Math.exp(-dt*8));const beforeGait=this.gait;this.gait+=dt*(2.2+Math.min(3,speed)*3.2)*(this.move>.02?1:0);
+  if(this.kind===0&&enabled&&moving&&stage==='ground')this.footfallSerial+=Math.max(0,Math.floor((this.gait-Math.PI/2)/Math.PI)-Math.floor((beforeGait-Math.PI/2)/Math.PI));
   const air=stage==='air',flap=!enabled?0:stage==='anticipation'?-.25:air?.6*Math.sin(this.time*15):stage==='landing'?.35:attack?.ranged?.45:this.move>.1?.22*Math.sin(this.gait*2):.06*Math.sin(this.time*3.1);
-  this.flap+=(flap-this.flap)*(1-Math.exp(-dt*(air?30:12)));const strike=attack?Math.sin(Math.PI*Math.min(1,attack.age/Math.max(.01,attack.duration))):0;this.strike+=(strike-this.strike)*(1-Math.exp(-dt*20));
+  this.flap+=(flap-this.flap)*(1-Math.exp(-dt*(air?30:12)));const strike=attack?(attack.ranged?castPresentation(attack).release:Math.sin(Math.PI*Math.min(1,attack.age/Math.max(.01,attack.duration)))):0;this.strike+=(strike-this.strike)*(1-Math.exp(-dt*20));
   const u=this.uniforms;u.uMotionTime.value=this.time;u.uMotionGait.value=this.gait;u.uMotionMove.value=this.move;u.uMotionFlap.value=this.flap;u.uMotionStrike.value=this.strike;u.uMotionAmount.value=enabled?1:Math.max(0,u.uMotionAmount.value-dt*4);
  }
 }

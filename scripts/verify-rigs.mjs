@@ -1,0 +1,8 @@
+import fs from'node:fs';import path from'node:path';import{creatureAsset}from'../dist/world-layout.js';import{readGLB}from'./lib/glb.mjs';
+export function verifyRuntimeRigs(){const forms=[];for(const partner of['hufflepuff','gryffindor','ravenclaw','slytherin'])for(let level=0;level<=10;level++){
+ const asset=creatureAsset(level,partner).split('?')[0],file='dist/'+asset,j=file.endsWith('.gltf')?JSON.parse(fs.readFileSync(file)):readGLB(file).json;
+ if(!j.skins?.length)throw Error('Runtime form is unrigged: '+asset);for(const name of['Idle','Walk','Jump','Strike','AirStrike','TurnStrike','Hit','Cast'])if(!j.animations?.some(a=>a.name===name))throw Error(asset+' missing '+name);
+ for(const node of j.nodes.filter(n=>n.mesh!==undefined)){if(node.skin===undefined)throw Error(asset+' unweighted mesh node');for(const p of j.meshes[node.mesh].primitives)if(p.attributes.JOINTS_0===undefined||p.attributes.WEIGHTS_0===undefined)throw Error(asset+' unweighted primitive');}
+ if(file.endsWith('.gltf')){for(const b of j.buffers){const resolved=path.resolve(path.dirname(file),b.uri);if(!resolved.startsWith(path.resolve('dist/assets')+path.sep))throw Error('Rig buffer outside assets');if(fs.statSync(resolved).size!==b.byteLength)throw Error('Rig buffer size mismatch');}for(const v of j.bufferViews)if((v.byteOffset||0)+v.byteLength>j.buffers[v.buffer].byteLength)throw Error('Rig view outside buffer');}
+ forms.push({partner,level,asset,joints:j.skins[0].joints.length,clips:j.animations.map(a=>a.name),newRig:!!j.extras?.maximaRig,headCount:j.extras?.maximaRig?.headCount??null});
+ }return{release:'0.27.0',runtimeSkeletal:forms.length,unrigged:0,originalNative:forms.filter(f=>!f.newRig).length,newSkins:forms.filter(f=>f.newRig).length,forms};}

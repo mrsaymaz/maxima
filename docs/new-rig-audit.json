@@ -1,0 +1,442 @@
+{
+  "newSkins": 19,
+  "forms": [
+    {
+      "partner": "ravenclaw",
+      "level": 0,
+      "joints": 16,
+      "vertices": 12581,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.1883203387064773,
+        "minHeightRatio": 0.9564432831140115,
+        "maxHeightRatio": 1.0809000112825424
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 1,
+      "joints": 16,
+      "vertices": 6944,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.2119088110248525,
+        "minHeightRatio": 0.9387156865789582,
+        "maxHeightRatio": 1.0999515011084644
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 2,
+      "joints": 16,
+      "vertices": 13108,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.18280190639940105,
+        "minHeightRatio": 0.9949874686716792,
+        "maxHeightRatio": 1.0490133189128705
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 3,
+      "joints": 16,
+      "vertices": 12540,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.2151025919886339,
+        "minHeightRatio": 0.9754323224854249,
+        "maxHeightRatio": 1.0810989048487136
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 4,
+      "joints": 16,
+      "vertices": 13238,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.17620980887353052,
+        "minHeightRatio": 0.9744342930747482,
+        "maxHeightRatio": 1.069281646542375
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 5,
+      "joints": 16,
+      "vertices": 13469,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.22635770387430243,
+        "minHeightRatio": 0.9806336214319865,
+        "maxHeightRatio": 1.120757213407151
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 6,
+      "joints": 16,
+      "vertices": 12738,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.14175883424759478,
+        "minHeightRatio": 0.9758153268308585,
+        "maxHeightRatio": 1.0158482603527856
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 7,
+      "joints": 16,
+      "vertices": 14031,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.21869611382920306,
+        "minHeightRatio": 0.9686871183665215,
+        "maxHeightRatio": 1.0840010700350877
+      }
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 8,
+      "joints": 16,
+      "vertices": 13183,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.14338669583389846,
+        "minHeightRatio": 0.9500232441543979,
+        "maxHeightRatio": 1.0353972353711094
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 0,
+      "joints": 15,
+      "vertices": 6056,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.02360085632487333,
+        "minHeightRatio": 0.9976548645502418,
+        "maxHeightRatio": 1.0024240950198624
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 1,
+      "joints": 15,
+      "vertices": 6338,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.0235806094123846,
+        "minHeightRatio": 1,
+        "maxHeightRatio": 1.0015321233725856
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 2,
+      "joints": 15,
+      "vertices": 9933,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.025226231896830837,
+        "minHeightRatio": 0.9963364795782259,
+        "maxHeightRatio": 1.004077012842506
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 3,
+      "joints": 13,
+      "vertices": 11257,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.02448642434809199,
+        "minHeightRatio": 0.9958334164943309,
+        "maxHeightRatio": 1.0047077253846952
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 4,
+      "joints": 13,
+      "vertices": 10609,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.023602192983169366,
+        "minHeightRatio": 0.995655921902601,
+        "maxHeightRatio": 1.0032689608083705
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 5,
+      "joints": 13,
+      "vertices": 12434,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.024957095277652597,
+        "minHeightRatio": 0.9957728947041621,
+        "maxHeightRatio": 1.0029599332124353
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 6,
+      "joints": 13,
+      "vertices": 12380,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.02359657998497811,
+        "minHeightRatio": 1,
+        "maxHeightRatio": 1.0029013914668994
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 7,
+      "joints": 13,
+      "vertices": 12540,
+      "headCount": 1,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.02680689363216193,
+        "minHeightRatio": 0.992954377422243,
+        "maxHeightRatio": 1.0052080128065597
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 8,
+      "joints": 17,
+      "vertices": 11950,
+      "headCount": 3,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.02557983555988136,
+        "minHeightRatio": 0.9983943994179998,
+        "maxHeightRatio": 1.0046574042469414
+      }
+    },
+    {
+      "partner": "slytherin",
+      "level": 9,
+      "joints": 17,
+      "vertices": 13033,
+      "headCount": 3,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "validation": {
+        "samplesPerClip": 33,
+        "maxDisplacementInHeights": 0.02359747878032249,
+        "minHeightRatio": 0.9994396376566254,
+        "maxHeightRatio": 1.0001952486139407
+      }
+    }
+  ]
+}

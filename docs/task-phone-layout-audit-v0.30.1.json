@@ -1,0 +1,50 @@
+{
+  "release": "0.30.1",
+  "scope": {
+    "units": 44,
+    "formats": 20,
+    "languageLevels": [
+      0,
+      10
+    ],
+    "board": "initial board/first round per task; deterministic per-unit type seed",
+    "renderer": "DOM text plus Three.js CPU projections; WebGL unavailable",
+    "realPhoneTested": false
+  },
+  "viewports": [
+    {
+      "width": 320,
+      "height": 568,
+      "canvas": [
+        0,
+        0,
+        320,
+        568
+      ],
+      "labels": 9757,
+      "escapedInk": 0,
+      "overlappingActiveTargets": 0,
+      "scrollLabels": 42
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "canvas": [
+        0,
+        0,
+        844,
+        390
+      ],
+      "labels": 9757,
+      "escapedInk": 0,
+      "overlappingActiveTargets": 0,
+      "scrollLabels": 542
+    }
+  ],
+  "automatedTests": {
+    "total": 397,
+    "pass": 397,
+    "fail": 0
+  },
+  "build": "passed"
+}

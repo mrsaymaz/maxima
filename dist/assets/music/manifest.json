@@ -23,6 +23,17 @@
    "loop": 48.0,
    "bpm": 80,
    "base": "camp-base.mp3"
+  },
+  "guardian": {
+   "loop": 29.090909,
+   "bpm": 132,
+   "base": "guardian-battle.mp3"
+  },
+  "evolution": {
+   "loop": 20,
+   "bpm": 100,
+   "base": "evolution-fanfare.mp3"
   }
- }
+ },
+ "originalFlowMusic": "Guardian and transformation tracks are original offline synthesized compositions by Maxima."
 }

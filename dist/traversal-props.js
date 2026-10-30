@@ -1,3 +1,5 @@
+import{surfaceMaterial,assignSurfaceRoles,replaceCueMaterials}from'./surface-materials.js';
+import{composedHalfWidth,scenicSurface}from'./expedition-composition.js';
 import{bevelBox,carvedCylinder,stoneColumn,liquidMaterial,rockLump}from'./prop-art.js';
 import{approachHeight}from'./traversal-layout.js';
 import{movingPose,coinPose}from'./path-trials-layout.js';
@@ -17,8 +19,9 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
  if(!section||!['coins','rocks','plants','steps'].includes(section.kind))throw new Error('Unknown traversal section');
  const group=new T.Group();group.name='traversal-'+section.kind;
  const palette=PALETTES[section.area]||PALETTES[0],geometries=new Map();
- const material=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.86,...extra});
+ const material=(color,extra={})=>surfaceMaterial('stone',color,extra);
  const m={rock:material(palette.rock),top:material(palette.top),rim:material(palette.rim),pool:material(palette.water,{roughness:section.area===2?.65:.28,emissive:section.area===0?'#142b29':palette.water,emissiveIntensity:section.area===0?.08:.55}),glow:material(palette.glow,{emissive:palette.glow,emissiveIntensity:.45}),gold:material('#f1c65d',{metalness:.35,roughness:.3,emissive:'#b78024',emissiveIntensity:.30}),rune:material('#fff1a7',{emissive:'#ffe49c',emissiveIntensity:.75}),leaf:material('#5e8054'),stem:material('#6a7450'),bud:material('#a6bf80'),spore:material('#b98ad5',{emissive:'#9768bb',emissiveIntensity:.45}),cloud:material('#9e70bb',{transparent:true,opacity:.15,depthWrite:false,roughness:1}),cloudRim:material('#b290ca',{transparent:true,opacity:.70,depthWrite:false,emissive:'#5a3d71',emissiveIntensity:.3})};
+ assignSurfaceRoles(m,{"stone": ["rock", "top", "rim"], "foliage": ["leaf", "stem", "bud"], "metal": ["gold"], "effect": ["glow", "rune", "spore", "cloud"], "cue": ["cloudRim"], "water": ["pool"]});replaceCueMaterials(m,["cloudRim"]);m.top.color.offsetHSL(0,-.025,.045);
  const geo=(key,make)=>{if(!geometries.has(key))geometries.set(key,make());return geometries.get(key);};
  const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
  const cylinder=(r1,r2,h,n=16)=>geo(`c${r1},${r2},${h},${n}`,()=>carvedCylinder(r1,r2,h,n));
@@ -28,7 +31,16 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
  const at=(s,l=0)=>localPoint(section,s,l);
  const placeBox=(w,h,d,mat,s,l,y)=>{const p=at(s,l),o=mesh(box(w,h,d),mat,p.x,y,p.z,fixed);o.rotation.y=yaw;return o;};
 
- if(section.index%3===0){const vertices=[];for(let i=0;i<12;i++){const a=.4+3.4*i/12,b=.4+3.4*(i+1)/12,ha=approachHeight(section,a)+.033,hb=approachHeight(section,b)+.033,pts=[at(a,-3.2),at(a,3.2),at(b,3.2),at(b,-3.2)],v=pts.map((p,k)=>[p.x,k<2?ha:hb,p.z]);for(const k of[0,1,2,0,2,3])vertices.push(...v[k]);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const rise=mesh(geo,ground||m.top,0,0,0,fixed);rise.name='approach-rise';}
+ if(section.scenicRise||section.index%3===0){
+  const vertices=[],slices=section.scenicRise?.segments||12,from=section.scenicRise?.from??.4,to=section.scenicRise?.to??3.8;
+  const point=(d,f)=>{const width=section.scenicRise?composedHalfWidth(at(d).z)+.12:3.2,p=at(d,width*f);return[p.x,(section.scenicRise?scenicSurface(section,d,width*f):approachHeight(section,d))+.033,p.z];};
+  for(let i=0;i<slices;i++){const a=from+(to-from)*i/slices,b=from+(to-from)*(i+1)/slices;
+   for(let j=0;j<6;j++){const v=[point(a,-1+j/3),point(a,-1+(j+1)/3),point(b,-1+(j+1)/3),point(b,-1+j/3)];for(const k of[0,1,2,0,2,3])vertices.push(...v[k]);}
+   if(section.scenicRise)for(const edge of[-1,1]){const v=point(a,edge),w=point(b,edge),lowV=[v[0],.025,v[2]],lowW=[w[0],.025,w[2]];vertices.push(...v,...w,...lowW,...v,...lowW,...lowV);}
+  }
+  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const rise=mesh(geo,ground||m.top,0,0,0,fixed);rise.name=section.scenicRise?'composed-approach-rise':'approach-rise';
+ }
+
  if(section.kind==='rocks'||section.trial?.kind==='bonus'){
  if(section.kind==='rocks'){
   const pool=section.pool,length=pool.to-pool.from,center=(pool.from+pool.to)/2;
@@ -46,6 +58,8 @@ export function makeTraversalScenery(section,{mode='relaxed',ground=null}={}){
    const tread=mesh(box(platform.hx*2,.012,platform.hz*2),m.top,p.x,platform.y-.006,p.z,fixed);tread.rotation.y=yaw;tread.name='platform-top-'+platform.id;
   }
  }
+ // A shallow discovery medallion marks a quiet, optional three-coin detour.
+ const discovery=section.coins.find(c=>c.discovery);if(discovery){const y=approachHeight(section,discovery.s),base=mesh(cylinder(.20,.24,.035,10),m.rim,discovery.x,y+.045,discovery.z,fixed);base.name='discovery-medallion';for(const side of[-1,1]){const notch=mesh(box(.035,.012,.20),m.gold,discovery.x+side*.07,y+.070,discovery.z,fixed);notch.rotation.y=side*.4;}}
  // Low verge markers are scenery, leaving the full central course accessible.
  for(const s of[1,section.length-1])for(const lateral of[-2.8,2.8]){const p=at(s,lateral);mesh(cylinder(.12,.17,.24,7),m.rim,p.x,.12,p.z,fixed);mesh(cylinder(.085,.10,.035,7),m.glow,p.x,.255,p.z,fixed);}
  for(const data of fragileData)fixed.remove(data.parent);merge(fixed);for(const data of fragileData)fixed.add(data.parent);
@@ -83,7 +97,7 @@ export function updateTraversalScenery(group,{time=0,collected=new Set(),complet
  for(const batch of coinParts)batch.instanceMatrix.needsUpdate=true;
  const phases=[];for(const data of plantData){const{plant,budMat,cloud,fog,fogMat,boundary,ringMat,spores,sporeMat}=data,phase=plantPhase(plant,time),warning=phase==='warning',active=phase==='active',color=active?'#a27ac7':warning?'#efb85c':'#a6bf80';
   phases.push({id:plant.id,phase,cloudRadius:plant.cloudRadius});budMat.color.set(color);budMat.emissive.set(active?'#58346d':warning?'#735019':'#000000');budMat.emissiveIntensity=.35;
-  cloud.visible=warning||active;fog.visible=active;spores.visible=active;ringMat.color.set(color);ringMat.emissive.set(color);fogMat.color.set('#9e70bb');sporeMat.color.set(color);
+  cloud.visible=warning||active;fog.visible=active;spores.visible=active;ringMat.color.set(color);ringMat.emissive?.set(color);fogMat.color.set('#9e70bb');sporeMat.color.set(color);
   boundary.scale.setScalar((plant.cloudRadius+playerRadius*.3)/plant.cloudRadius);boundary.position.y=.045;ringMat.opacity=warning?.42+.25*Math.sin(time*8)**2:.72;
   for(let i=0;i<spores.count;i++){const a=i*Math.PI*2/spores.count+time*.25,r=(plant.cloudRadius-.08)*(.42+.50*((i*7)%10)/9);object.position.set(Math.cos(a)*r,.18+((i*.17+time*.25)% .77),Math.sin(a)*r);object.rotation.set(time*.4+i,i*.8,time*.2);object.scale.setScalar(1);object.updateMatrix();spores.setMatrixAt(i,object.matrix);}spores.instanceMatrix.needsUpdate=true;
  }

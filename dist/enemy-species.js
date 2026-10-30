@@ -1,3 +1,6 @@
+import{enemyExpression}from'./combat-expression.js';
+import{yieldPose}from'./enemy-yield.js';
+import{surfaceMaterial,assignSurfaceRoles,replaceCueMaterials,cueMaterial}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 
 const STATES=new WeakMap(),TAU=Math.PI*2;
@@ -11,8 +14,9 @@ function sectorGeometry(angle,outline=false){const p=[],n=40;const tri=(a,b,c)=>
 export function makeEnemySpecies(section){
  const enemy=section?.enemy;if(!enemy||!['seed','spore'].includes(enemy.kind))throw new Error('Unknown path enemy species');
  const group=new T.Group();group.name='enemy-species-'+enemy.kind;const palette=PALETTES[section.area]||PALETTES[0],cache=new Map();
- const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.85,...extra});
+ const mat=(color,extra={})=>surfaceMaterial('organic',color,extra);
  const m={bark:mat(palette[0]),leaf:mat(palette[1]),leafLight:mat(palette[2]),dark:mat('#304c43'),amber:mat('#ecc267',{emissive:'#bc823b',emissiveIntensity:.6,roughness:.42}),cream:mat('#f1e7bb'),teal:mat('#9bc7b7'),violet:mat('#8e72b0'),rim:mat('#b8a2cd'),gills:mat('#b2e5d9',{emissive:'#77cbb8',emissiveIntensity:.8}),warning:mat('#f5b94e',{transparent:true,opacity:.20,depthWrite:false,emissive:'#ec9a36',emissiveIntensity:.6,side:T.DoubleSide}),outline:mat('#ffdc7b',{transparent:true,opacity:.95,depthWrite:false,emissive:'#f7b849',emissiveIntensity:.8,side:T.DoubleSide}),spores:mat('#f1c76b',{transparent:true,opacity:.9,emissive:'#c18d40',emissiveIntensity:.6})};
+ assignSurfaceRoles(m,{"wood": ["bark"], "foliage": ["leaf", "leafLight"], "organic": ["dark", "cream", "teal", "violet", "rim"], "effect": ["amber", "gills", "spores"], "cue": ["warning", "outline"]});replaceCueMaterials(m,["warning", "outline"]);
  const geo=(key,fn)=>{if(!cache.has(key))cache.set(key,fn());return cache.get(key);};
  const box=(x,y,z)=>geo(`b${x},${y},${z}`,()=>new T.BoxGeometry(x,y,z));
  const ball=r=>geo('s'+r,()=>new T.SphereGeometry(r,10,6));
@@ -47,7 +51,7 @@ export function makeEnemySpecies(section){
   for(let i=0;i<5;i++){const a=i*2.4,r=.14+(i%2)*.13,spot=mesh(ball(.049),m.rim,Math.sin(a)*r,.31-r*.50,Math.cos(a)*r,cap);spot.scale.set(1,.15,.8);}
   merge(cap);state.cap=cap;
   const warning=mesh(new T.TorusGeometry(.75,.035,5,48),m.outline);warning.name='initial-pulse-annulus';warning.rotation.x=Math.PI/2;warning.castShadow=false;state.annulus=warning;
-  state.rings=[];for(let i=0;i<2;i++){const material=mat('#ba8ddd',{emissive:'#9965bf',emissiveIntensity:.8,transparent:true,opacity:.88,roughness:.6}),geometry=new T.TorusGeometry(1,.075,6,64);geometry.rotateX(Math.PI/2);const ring=mesh(geometry,material);ring.name='expanding-spore-ring-'+i;ring.castShadow=false;ring.frustumCulled=false;state.rings.push(ring);}
+  state.rings=[];for(let i=0;i<2;i++){const material=cueMaterial('#ba8ddd',{transparent:true,opacity:.88}),geometry=new T.TorusGeometry(1,.075,6,64);geometry.rotateX(Math.PI/2);const ring=mesh(geometry,material);ring.name='expanding-spore-ring-'+i;ring.castShadow=false;ring.frustumCulled=false;state.rings.push(ring);}
  }
  const spores=new T.InstancedMesh(new T.OctahedronGeometry(.027,0),m.spores,8);spores.name='gathering-and-dispersing-spores';spores.frustumCulled=false;group.add(spores);state.spores=spores;
  state.flashMaterials=[m.bark,m.leaf,m.leafLight,m.dark,m.teal,m.violet,m.rim];state.baseColors=state.flashMaterials.map(material=>material.color.clone());state.flashColor=new T.Color('#fff4d4');
@@ -59,11 +63,13 @@ export function makeEnemySpecies(section){
 export function updateEnemySpecies(group,runtime,{time=0,playerRadius=0}={}){
  const state=STATES.get(group);if(!state||!runtime)return group;time=finite(time);const{enemy,section,kind,actor,body,legs,m,object,spores}=state;
  const phase=runtime.phase||'watch',timer=Math.max(0,finite(runtime.timer)),progress=clamp(timer/Math.max(.001,finite(runtime.duration,1))),defeat=phase==='defeated'?clamp(timer/1.1):0,heading=finite(runtime.heading),x=finite(runtime.x,enemy.x),z=finite(runtime.z,enemy.z),recover=phase==='recover',wind=phase===(kind==='seed'?'seedwindup':'sporewindup'),strike=phase==='seedstrike',pulse=phase==='pulse',hurt=phase==='hurt';
+ const expression=enemyExpression(runtime,time);const yielding=yieldPose(kind,timer);
  const bounce=Math.sin(time*2.7)*.004,lunge=strike?Math.sin(progress*Math.PI)*.045:0;
- actor.position.set(x+Math.sin(heading)*lunge+(section.right.x*.43-section.forward.x*.10)*defeat,.028+bounce,z+Math.cos(heading)*lunge+(section.right.z*.43-section.forward.z*.10)*defeat);actor.rotation.set(0,heading+defeat*.6,0);actor.scale.setScalar(phase==='defeated'?Math.max(.001,1-defeat):1);actor.visible=phase!=='defeated'||defeat<1;
- body.rotation.set(defeat?defeat*.4:strike?.10*Math.sin(progress*Math.PI):hurt?.025*Math.sin(timer*42):wind?-.045*progress:recover?.025*Math.sin(progress*Math.PI):0,0,hurt?Math.sin(timer*38)*.035:0);body.position.y=wind?-.018*Math.sin(progress*Math.PI/2):0;
+ actor.position.set(x+Math.sin(heading)*lunge+(section.right.x*.43-section.forward.x*.10)*defeat,.028+bounce,z+Math.cos(heading)*lunge+(section.right.z*.43-section.forward.z*.10)*defeat);if(phase==='defeated'){actor.position.x=x+section.right.x*yielding.side-section.forward.x*yielding.back;actor.position.z=z+section.right.z*yielding.side-section.forward.z*yielding.back;}actor.rotation.set(0,heading+(phase==='defeated'?yielding.yaw:0),0);actor.scale.setScalar(1);actor.visible=phase!=='defeated'||defeat<1;
+ body.rotation.set(phase==='defeated'?yielding.pitch:strike?.10*Math.sin(progress*Math.PI):hurt?.025*Math.sin(timer*42):wind?-.045*progress:recover?.025*Math.sin(progress*Math.PI):0,0,hurt?Math.sin(timer*38)*.035:0);body.position.y=wind?-.018*Math.sin(progress*Math.PI/2):0;body.position.x=0;body.position.z=0;
+ if(phase!=='defeated'){body.rotation.x+=expression.pitch;body.rotation.z+=expression.roll;body.position.x+=expression.recoilX;body.position.z+=expression.recoilZ;}
  for(let i=0;i<4;i++){const side=i%2?1:-1,front=i<2?1:-1;object.position.set(side*(kind==='seed'?.20:.14),.086,front*(kind==='seed'?.18:.12));object.rotation.set(runtime.returning?Math.sin(time*11+(i%2===Math.floor(i/2)?0:Math.PI))*.18:0,side*.25,side*.10);object.scale.set(1,.84,1.18);object.updateMatrix();legs.setMatrixAt(i,object.matrix);}legs.instanceMatrix.needsUpdate=true;
- const flash=clamp(runtime.flash);state.flashMaterials.forEach((material,i)=>material.color.copy(state.baseColors[i]).lerp(state.flashColor,flash*.8));
+ const flash=clamp(runtime.flash);state.flashMaterials.forEach((material,i)=>material.color.copy(state.baseColors[i]).lerp(state.flashColor,flash*.45));
  if(kind==='seed'){
   const opening=defeat?1-defeat:hurt?.92:recover?.14+.78*Math.min(1,timer/.22):wind?.03:.14;
   for(let i=0;i<6;i++){
@@ -72,11 +78,11 @@ export function updateEnemySpecies(group,runtime,{time=0,playerRadius=0}={}){
    else{object.position.set(i===2?0:side*(.155+opening*.15)+side*.035*row,.24+row*.13,(i===2?.35:.285)+(strike?.018*Math.sin(progress*Math.PI):0));object.rotation.set(-.15+opening*.15,i===2?0:side*opening*.7,i===2?0:side*(.10+opening*.30));object.scale.set(i===2?1.1:1,1.05,1);}
    object.updateMatrix();state.armour.setMatrixAt(i,object.matrix);const matrix=object.matrix.clone().multiply(new T.Matrix4().makeTranslation(0,.22,.081));state.veins.setMatrixAt(i,matrix);
   }state.armour.instanceMatrix.needsUpdate=true;state.veins.instanceMatrix.needsUpdate=true;m.amber.emissiveIntensity=(recover||hurt)?1.35:wind?.85+progress*.4:.60;
-  const sector=state.sector,angle=Math.max(.05,Math.min(Math.PI*.8,finite(runtime.slamHalfAngle,.78))),range=Math.max(.1,finite(runtime.slamRange,2.9));
+  const sector=state.sector,angle=Math.max(.05,Math.min(Math.PI*.8,finite(runtime.slamHalfAngle,1.08))),range=Math.max(.1,finite(runtime.slamRange,4.4));
   if(Math.abs(angle-sector.angle)>1e-6){sector.fill.geometry.dispose();sector.outline.geometry.dispose();sector.fill.geometry=sectorGeometry(angle);sector.outline.geometry=sectorGeometry(angle,true);sector.angle=angle;}
   sector.group.position.set(x,.065,z);sector.group.rotation.y=heading;sector.group.scale.set(range+playerRadius*.30,1,range+playerRadius*.30);sector.group.visible=runtime.active!==false&&(wind||strike);m.warning.opacity=strike?.28*(1-progress):.14+.16*progress;m.outline.opacity=strike?1-progress*.65:.65+.30*progress;group.userData.slamRange=range;group.userData.slamHalfAngle=angle;
  }else{
-  const cap=state.cap;cap.position.y=.70-(recover?.035:0);cap.rotation.set(defeat?defeat*.8:recover?-.16:pulse?.035*Math.sin(progress*Math.PI):0,0,hurt?.035*Math.sin(timer*30):0);cap.scale.set(wind?1+.10*progress:pulse?1.08:1,wind?1-.06*progress:pulse?.94:1,wind?1+.10*progress:pulse?1.08:1);
+  const cap=state.cap;cap.position.y=.70-(recover?.035:0)+expression.capLift;cap.rotation.set(defeat?defeat*.8:recover?-.16:pulse?.035*Math.sin(progress*Math.PI):0,0,hurt?.035*Math.sin(timer*30):0);cap.scale.set(wind?1+.10*progress:pulse?1.08:1,wind?1-.06*progress:pulse?.94:1,wind?1+.10*progress:pulse?1.08:1);
   state.annulus.position.set(x,.074,z);state.annulus.visible=runtime.active!==false&&wind;m.outline.opacity=.55+.4*Math.sin(time*7)**2;
   const visibleRings=[];for(let i=0;i<2;i++){const ring=state.rings[i],data=runtime.rings?.[i],r=Math.max(0,finite(data?.radius)),width=Math.max(.01,finite(data?.width,.15)),maxRadius=Math.max(.1,finite(data?.maxRadius,9));ring.visible=!!data&&r>0&&r<=maxRadius+width;
    if(!ring.visible)continue;ring.position.set(x,.11,z);const a=ring.geometry.attributes.position,tube=width/2+playerRadius*.30;for(let j=0;j<=6;j++)for(let k=0;k<=64;k++){const u=k*TAU/64,v=j*TAU/6,d=r+Math.cos(v)*tube;a.setXYZ(j*65+k,Math.cos(u)*d,-Math.sin(v)*tube,Math.sin(u)*d);}a.needsUpdate=true;ring.geometry.boundingSphere=new T.Sphere(new T.Vector3(),r+tube);ring.geometry.boundingBox=new T.Box3(new T.Vector3(-r-tube,-tube,-r-tube),new T.Vector3(r+tube,tube,r+tube));ring.material.opacity=.88*(1-.65*clamp((r/maxRadius-.85)/.15));visibleRings.push({radius:r,width,y:.11});

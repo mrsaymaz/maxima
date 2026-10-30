@@ -1,3 +1,5 @@
+import{composedHalfWidth}from'./expedition-composition.js';
+import{SURFACES,assignSurface}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 import{chapterPath,TRAIL_WIDTH,CHAPTER_LENGTH,END}from'./trail-layout.js';
 // Stylised world look: soft two-tone lighting, silhouette rims, height-graded fog, textured ground with organic trail edges.
@@ -9,20 +11,10 @@ export function installStyleChunks(){
  const lit='float dotNL = saturate( dot( geometryNormal, directLight.direction ) );';
  if(C.lights_physical_pars_fragment.includes(lit))C.lights_physical_pars_fragment=C.lights_physical_pars_fragment.replace(lit,`${lit}
 	#ifndef MAXIMA_TOON
-		#define MAXIMA_TOON 0.55
+		#define MAXIMA_TOON 0.28
 	#endif
 	dotNL = mix( dotNL, smoothstep( 0.0, 0.2, dotNL ) * 0.82 + dotNL * 0.18, MAXIMA_TOON );`);
- // A rim on upright surfaces separates creatures, rocks and props from the ground; flat ground receives none.
- C.lights_fragment_end+=`
-#if defined( STANDARD ) && !defined( MAXIMA_NO_RIM )
-	{
-		vec3 maximaUp = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
-		float maximaFacing = saturate( dot( geometryNormal, geometryViewDir ) );
-		float maximaRim = pow( 1.0 - maximaFacing, 3.0 ) * ( 1.0 - abs( dot( geometryNormal, maximaUp ) ) );
-		reflectedLight.indirectDiffuse += material.diffuseColor * maximaRim * 0.55;
-	}
-#endif
-`;
+ // Selective creature rim is applied below; scenery has no universal self-lighting.
  C.fog_pars_vertex='#ifdef USE_FOG\n\tvarying float vFogDepth;\n\tvarying float vFogHeight;\n#endif';
  C.fog_vertex='#ifdef USE_FOG\n\tvFogDepth = - mvPosition.z;\n\tvFogHeight = ( transpose( mat3( viewMatrix ) ) * ( mvPosition.xyz - viewMatrix[ 3 ].xyz ) ).y;\n#endif';
  C.fog_pars_fragment=C.fog_pars_fragment.replace('varying float vFogDepth;','varying float vFogDepth;\n\tvarying float vFogHeight;');
@@ -68,9 +60,9 @@ export function dirtDetail(size=128){
 
 export const MASK_RECT={x:-48,z:END.z-24,width:96,depth:-(END.z-24)+18};
 // Distance-based trail mask in world XZ, rasterised segment by segment.
-export function trailMask(resolution=2.5){
- const w=Math.round(MASK_RECT.width*resolution),h=Math.round(MASK_RECT.depth*resolution),data=new Uint8Array(w*h),inner=TRAIL_WIDTH-1.25,outer=TRAIL_WIDTH+.7;
- const stamp=(minX,maxX,minZ,maxZ,distance)=>{const i0=Math.max(0,Math.floor((minX-outer-MASK_RECT.x)*resolution)),i1=Math.min(w-1,Math.ceil((maxX+outer-MASK_RECT.x)*resolution)),j0=Math.max(0,Math.floor((minZ-outer-MASK_RECT.z)*resolution)),j1=Math.min(h-1,Math.ceil((maxZ+outer-MASK_RECT.z)*resolution));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=MASK_RECT.x+(i+.5)/resolution,z=MASK_RECT.z+(j+.5)/resolution,d=distance(x,z);if(d>=outer)continue;const t=Math.min(1,Math.max(0,(outer-d)/(outer-inner))),v=Math.round(255*t*t*(3-2*t)),k=j*w+i;if(v>data[k])data[k]=v;}};
+export function trailMask(resolution=2.5,{composed=false}={}){
+ const w=Math.round(MASK_RECT.width*resolution),h=Math.round(MASK_RECT.depth*resolution),data=new Uint8Array(w*h),inner=TRAIL_WIDTH-1.25,outer=composed?6.7:TRAIL_WIDTH+.7;
+ const stamp=(minX,maxX,minZ,maxZ,distance)=>{const i0=Math.max(0,Math.floor((minX-outer-MASK_RECT.x)*resolution)),i1=Math.min(w-1,Math.ceil((maxX+outer-MASK_RECT.x)*resolution)),j0=Math.max(0,Math.floor((minZ-outer-MASK_RECT.z)*resolution)),j1=Math.min(h-1,Math.ceil((maxZ+outer-MASK_RECT.z)*resolution));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=MASK_RECT.x+(i+.5)/resolution,z=MASK_RECT.z+(j+.5)/resolution,d=distance(x,z),localOuter=composed?composedHalfWidth(z)+.7:outer,localInner=composed?composedHalfWidth(z)-1.25:inner;if(d>=localOuter)continue;const t=Math.min(1,Math.max(0,(localOuter-d)/(localOuter-localInner))),v=Math.round(255*t*t*(3-2*t)),k=j*w+i;if(v>data[k])data[k]=v;}};
  const segment=(a,b)=>stamp(Math.min(a.x,b.x),Math.max(a.x,b.x),Math.min(a.z,b.z),Math.max(a.z,b.z),(x,z)=>{const dx=b.x-a.x,dz=b.z-a.z,t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(x-a.x-dx*t,z-a.z-dz*t);});
  for(let c=0;c<5;c++)for(const side of['left','right']){const points=chapterPath(c,side);for(let i=1;i<points.length;i++)segment(points[i-1],points[i]);}
  segment({x:0,z:10},{x:0,z:-2});segment({x:0,z:END.z+12},{x:0,z:END.z-2});
@@ -79,49 +71,55 @@ export function trailMask(resolution=2.5){
 
 // Ground material: world-space grass/dirt detail blended through the trail mask with a noisy, worn edge.
 export function groundMaterial(grassColor,pathColor){
- const material=new T.MeshStandardMaterial({color:grassColor,roughness:.94}),uniforms={uGrassTex:{value:grassDetail()},uDirtTex:{value:dirtDetail()},uMask:{value:trailMask()},uMaskRect:{value:new T.Vector4(MASK_RECT.x,MASK_RECT.z,MASK_RECT.width,MASK_RECT.depth)},uPathColor:{value:new T.Color(pathColor)}};
- material.userData.ground=uniforms;material.userData.shared=true;
+ const material=new T.MeshStandardMaterial({color:grassColor,roughness:.94}),uniforms={uGrassTex:{value:grassDetail()},uDirtTex:{value:dirtDetail()},uMask:{value:trailMask()},uComposedMask:{value:trailMask(2.5,{composed:true})},uComposition:{value:0},uCanopyShade:{value:.10},uMaskRect:{value:new T.Vector4(MASK_RECT.x,MASK_RECT.z,MASK_RECT.width,MASK_RECT.depth)},uPathColor:{value:new T.Color(pathColor)}};
+ assignSurface(material,'soil');material.userData.ground=uniforms;material.userData.shared=true;
  material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,uniforms);
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vGroundWorld;').replace('#include <fog_vertex>','#include <fog_vertex>\nvGroundWorld = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vGroundWorld;\nuniform sampler2D uGrassTex;\nuniform sampler2D uDirtTex;\nuniform sampler2D uMask;\nuniform vec4 uMaskRect;\nuniform vec3 uPathColor;').replace('#include <map_fragment>',`
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vGroundWorld;\nuniform sampler2D uGrassTex;\nuniform sampler2D uDirtTex;\nuniform sampler2D uMask;\nuniform sampler2D uComposedMask;\nuniform float uComposition;\nuniform float uCanopyShade;\nuniform vec4 uMaskRect;\nuniform vec3 uPathColor;').replace('#include <map_fragment>',`
 	vec2 groundUv = vGroundWorld.xz;
 	vec4 grassSample = texture2D( uGrassTex, groundUv * 0.31 );
 	float patchiness = texture2D( uGrassTex, groundUv * 0.018 + 0.37 ).a;
 	vec3 grass = diffuseColor.rgb * grassSample.rgb * 1.25 * mix( 0.8, 1.14, patchiness );
 	vec2 maskUv = ( groundUv - uMaskRect.xy ) / uMaskRect.zw;
 	float trail = 0.0;
-	if ( maskUv.x > 0.0 && maskUv.x < 1.0 && maskUv.y > 0.0 && maskUv.y < 1.0 ) trail = texture2D( uMask, maskUv ).r;
+	if ( maskUv.x > 0.0 && maskUv.x < 1.0 && maskUv.y > 0.0 && maskUv.y < 1.0 ) trail = mix( texture2D( uMask, maskUv ).r, texture2D( uComposedMask, maskUv ).r, uComposition );
 	float ragged = texture2D( uDirtTex, groundUv * 0.23 ).a + texture2D( uDirtTex, groundUv * 0.9 ).a * 0.5 - 0.75;
-	float onTrail = smoothstep( 0.42, 0.62, trail + ragged * 0.42 );
-	vec3 dirt = uPathColor * texture2D( uDirtTex, groundUv * 0.37 ).rgb * 1.27;
+	float onTrail = smoothstep( 0.16, 0.84, trail + ragged * 0.26 );
+	vec3 dirt = mix(grass, uPathColor * texture2D( uDirtTex, groundUv * 0.37 ).rgb * 1.27, .82);
 	dirt *= mix( 0.82, 1.04, smoothstep( 0.5, 0.95, trail ) );
 	grass *= mix( 1.0, 0.86, smoothstep( 0.2, 0.5, trail ) * ( 1.0 - onTrail ) );
-	diffuseColor.rgb = mix( grass, dirt, onTrail );`);
+	float wear = texture2D( uDirtTex, groundUv * .075 + vec2(.21, .38) ).a;
+ float dampEdge = (1.0 - smoothstep(.44, .72, trail)) * smoothstep(.20, .48, trail) * smoothstep(.43, .72, wear);
+ dirt = mix(dirt, dirt * vec3(.76, .84, .82), dampEdge * .55);
+ float canopy = smoothstep(.35, .72, texture2D(uGrassTex, groundUv * .065 + .18).a);
+ diffuseColor.rgb = mix( grass, dirt, onTrail ) * (1.0 - canopy * uCanopyShade);`);
  };
- material.customProgramCacheKey=()=>'maxima-ground-v1';
+ material.customProgramCacheKey=()=>'maxima-ground-v4';
  return material;
 }
 
 // Swaying grass clumps along both trail edges. Instances are interleaved so a lower graphics preset can draw a subset.
-export function edgeGrass(color='#5f8d55'){
+export function edgeGrass(color='#5f8d55',{widthAt=()=>TRAIL_WIDTH,heightAt=()=>0,clusterAt=null}={}){
  const blades=5,positions=[],colors=[],heights=[];for(let b=0;b<blades;b++){const a=b/blades*Math.PI+.3,w=.045,h=.34+(b%3)*.09,ox=Math.cos(a*2.3)*.07,oz=Math.sin(a*1.7)*.07,cx=Math.cos(a)*w,cz=Math.sin(a)*w,lean=(b%2?.06:-.05);
   positions.push(ox-cx,0,oz-cz, ox+cx,0,oz+cz, ox+lean,h,oz+lean*.6);colors.push(.55,.55,.55, .62,.62,.62, 1.12,1.12,1.0);heights.push(0,0,1);}
  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setAttribute('sway',new T.Float32BufferAttribute(heights,1));geometry.computeVertexNormals();
- const spots=[],rnd=random(43),add=(x,z,s)=>spots.push({x,z,s,r:rnd()*Math.PI*2});
- for(let c=0;c<5;c++)for(const side of['left','right']){const points=chapterPath(c,side);for(let k=1;k<points.length;k++){const a=points[k-1],b=points[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);for(let d=.3;d<len;d+=.55)for(const edge of[-1,1]){const off=TRAIL_WIDTH-.15+rnd()*.85,x=a.x+dx*d/len-dz/len*edge*off,z=a.z+dz*d/len+dx/len*edge*off;if(Math.abs(x)<2.2&&Math.abs(z-(-c*CHAPTER_LENGTH+2))<6)continue;add(x,z,.7+rnd()*.7);if(rnd()<.45)add(x-dz/len*edge*(.5+rnd()),z+dx/len*edge*(.5+rnd()),.6+rnd()*.6);}}}
+ const spots=[],rnd=random(43),add=(x,z,s)=>spots.push({x,y:heightAt(x,z),z,s,r:rnd()*Math.PI*2});
+ for(let c=0;c<5;c++)for(const side of['left','right']){const points=chapterPath(c,side);for(let k=1;k<points.length;k++){const a=points[k-1],b=points[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);for(let d=.3;d<len;d+=.55)for(const edge of[-1,1]){const center={x:a.x+dx*d/len,z:a.z+dz*d/len},off=widthAt(center.x,center.z)-(clusterAt?.30:.15)+rnd()*(clusterAt?.50:.85),x=center.x-dz/len*edge*off,z=center.z+dx/len*edge*off;if(Math.abs(x)<2.2&&Math.abs(z-(-c*CHAPTER_LENGTH+2))<6)continue;if(clusterAt&&rnd()>clusterAt(x,z))continue;add(x,z,.7+rnd()*.7);if(rnd()<.45){if(clusterAt){const shift=-(.15+rnd()*.25);add(x-dz/len*edge*shift,z+dx/len*edge*shift,.6+rnd()*.6);}else add(x-dz/len*edge*(.5+rnd()),z+dx/len*edge*(.5+rnd()),.6+rnd()*.6);}}}}
  for(let i=spots.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[spots[i],spots[j]]=[spots[j],spots[i]];}
- const material=new T.MeshStandardMaterial({color,vertexColors:true,roughness:.9,side:T.DoubleSide}),uniforms={uTime:{value:0}};material.userData.sway=uniforms;
- material.onBeforeCompile=shader=>{shader.uniforms.uTime=uniforms.uTime;shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float sway;\nuniform float uTime;').replace('#include <begin_vertex>',`#include <begin_vertex>
+ const material=new T.MeshStandardMaterial({color,vertexColors:true,roughness:.9,side:T.DoubleSide}),uniforms={uTime:{value:0},uQuietCenter:{value:new T.Vector2()},uQuietRadius:{value:11},uQuietness:{value:0}};assignSurface(material,'foliage');material.userData.sway=uniforms;
+ material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,uniforms);shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float sway;\nuniform float uTime;\nuniform vec2 uQuietCenter;\nuniform float uQuietRadius;\nuniform float uQuietness;\nvarying float vGrassCalm;').replace('#include <begin_vertex>',`#include <begin_vertex>
 	#ifdef USE_INSTANCING
 		vec2 root = instanceMatrix[ 3 ].xz;
 	#else
 		vec2 root = vec2( 0.0 );
 	#endif
 	float gust = sin( uTime * 1.6 + root.x * 0.45 + root.y * 0.31 ) * 0.6 + sin( uTime * 2.7 + root.y * 0.9 ) * 0.4;
-	transformed.x += gust * 0.07 * sway;
-	transformed.z += gust * 0.04 * sway;`);};
- material.customProgramCacheKey=()=>'maxima-grass-v1';
- const mesh=new T.InstancedMesh(geometry,material,spots.length),o=new T.Object3D();spots.forEach((s,i)=>{o.position.set(s.x,-.01,s.z);o.rotation.set(0,s.r,0);o.scale.set(s.s,s.s*(.8+((i*7)%5)*.1),s.s);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);});
+	vGrassCalm = ( 1.0 - smoothstep( uQuietRadius * 0.65, uQuietRadius, distance( root, uQuietCenter ) ) ) * uQuietness;
+	transformed.y *= 1.0 - vGrassCalm * 0.12;
+	transformed.x += gust * 0.07 * sway * ( 1.0 - vGrassCalm * 0.88 );
+	transformed.z += gust * 0.04 * sway * ( 1.0 - vGrassCalm * 0.88 );`);shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGrassCalm;').replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb = mix( diffuseColor.rgb, vec3( dot( diffuseColor.rgb, vec3( 0.25, 0.6, 0.15 ) ) ), vGrassCalm * 0.25 ) * ( 1.0 - vGrassCalm * 0.08 );');};
+ material.customProgramCacheKey=()=>'maxima-grass-v2';
+ const mesh=new T.InstancedMesh(geometry,material,spots.length),o=new T.Object3D();spots.forEach((s,i)=>{o.position.set(s.x,s.y-.01,s.z);o.rotation.set(0,s.r,0);o.scale.set(s.s,s.s*(.8+((i*7)%5)*.1),s.s);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);});
  mesh.castShadow=false;mesh.receiveShadow=true;mesh.userData.total=spots.length;mesh.frustumCulled=false;return mesh;
 }
 
@@ -137,7 +135,7 @@ export function skyDome(){
 
 // Element-coloured rim on the partner so it reads clearly against any arena, plus an optional coat tint.
 export function creatureRim(model,color='#d6f4df'){
- const rim={value:new T.Color(color)},tint={value:new T.Vector4(1,1,1,0)};model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m?.isMeshStandardMaterial||m.userData.rim)continue;m.userData.rim=rim;m.onBeforeCompile=shader=>{shader.uniforms.uRim=rim;shader.uniforms.uTint=tint;shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uRim;\nuniform vec4 uTint;').replace('#include <map_fragment>','#include <map_fragment>\n\t{ float coatLuma = dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ); diffuseColor.rgb = mix( diffuseColor.rgb, min( uTint.rgb * coatLuma * 1.9, vec3( 1.0 ) ), uTint.a ); }').replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n\t{ float creatureFacing = saturate( dot( geometryNormal, geometryViewDir ) ); reflectedLight.indirectDiffuse += uRim * pow( 1.0 - creatureFacing, 2.4 ) * 0.5; }');};m.customProgramCacheKey=()=>'maxima-creature-rim-v2';m.needsUpdate=true;}});
+ const rim={value:new T.Color(color)},tint={value:new T.Vector4(1,1,1,0)};model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){if(!m?.isMeshStandardMaterial||m.userData.rim)continue;m.userData.rim=rim;m.onBeforeCompile=shader=>{shader.uniforms.uRim=rim;shader.uniforms.uTint=tint;shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uRim;\nuniform vec4 uTint;').replace('#include <map_fragment>','#include <map_fragment>\n\t{ float coatLuma = dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ); diffuseColor.rgb = mix( diffuseColor.rgb, min( uTint.rgb * coatLuma * 1.9, vec3( 1.0 ) ), uTint.a ); }').replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n\t{ float creatureFacing = saturate( dot( geometryNormal, geometryViewDir ) ); reflectedLight.indirectDiffuse += uRim * pow( 1.0 - creatureFacing, 2.4 ) * 0.14; }');};m.customProgramCacheKey=()=>'maxima-creature-rim-v2';m.needsUpdate=true;}});
  return{rim,tint};
 }
 
@@ -155,15 +153,21 @@ function detailTexture(kind,size=128){
 }
 let DETAIL=null;
 export function propKind(material){
- if(material?.userData?.detail&&!material.userData.stylized)return material.userData.detail;
- if(!material?.isMeshStandardMaterial||material.map||material.vertexColors||material.transparent||material.userData.ground||material.userData.rim||material.userData.stylized)return null;
- if(material.metalness>.3||material.emissiveIntensity>.2&&material.emissive?.getHex())return null;
- const hsl={};material.color.getHSL(hsl);if(material.roughness<.4&&hsl.h>.4&&hsl.h<.6)return null;
- if(hsl.s>.18&&hsl.h>.17&&hsl.h<.45)return'leaf';if(hsl.s>.2&&hsl.h>.03&&hsl.h<.13)return'wood';return'stone';
+ if(!material?.isMeshStandardMaterial||material.map||material.userData.ground||material.userData.sway||material.userData.rim||material.userData.liquid||material.userData.stylized)return null;
+ const kind=SURFACES[material.userData.surface]?.detail||material.userData.detail;
+ return ['stone','wood','leaf'].includes(kind)?kind:null;
 }
+// Broad, repeatable clusters; shade multipliers stay deliberately close to the arena palette.
+export function sceneryTint(kind,x,z){
+ const patch=Math.sin(x*.19+Math.sin(z*.041)*1.4)+Math.cos(z*.13-x*.047),band=patch<-.55?0:patch>.55?2:1;
+ const tones=kind==='wood'?[[.86,.87,.89],[.95,.93,.90],[1,.97,.93]]:kind==='leaf'?[[.85,.91,.88],[.93,.98,.92],[1,1,.94]]:[[.88,.91,.94],[.95,.95,.94],[1,.97,.92]];
+ return new T.Color().setRGB(...tones[band]);
+}
+export function varySceneryInstances(mesh,spots,kind){spots.forEach((p,i)=>mesh.setColorAt(i,sceneryTint(kind,p.x,p.z)));if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
 export function stylizeProps(root){
  if(!root)return 0;DETAIL??={stone:detailTexture('stone'),wood:detailTexture('wood'),leaf:detailTexture('leaf')};let count=0;
- root.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){const kind=propKind(m);if(!kind)continue;m.userData.stylized=kind;count++;const tex=DETAIL[kind],scale=m.userData.detailScale||(kind==='wood'?1.6:kind==='leaf'?1.1:.75);
+ const materials=new Set(root._mechanismMaterials||[]);root.traverse(o=>{if(o.isMesh)for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m);});
+ for(const m of materials){const kind=propKind(m);if(!kind)continue;m.userData.stylized=kind;count++;const tex=DETAIL[kind],scale=m.userData.detailScale||(kind==='wood'?SURFACES.wood.scale:kind==='leaf'?SURFACES.foliage.scale:SURFACES.stone.scale);
   m.onBeforeCompile=shader=>{shader.uniforms.uDetail={value:tex};shader.uniforms.uDetailScale={value:scale};
    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDetailPos;\nvarying vec3 vDetailNormal;').replace('#include <fog_vertex>','#include <fog_vertex>\n\t#ifdef USE_INSTANCING\n\t\tvec4 detailWorld = modelMatrix * instanceMatrix * vec4( transformed, 1.0 );\n\t\tvDetailNormal = normalize( mat3( modelMatrix ) * mat3( instanceMatrix ) * objectNormal );\n\t#else\n\t\tvec4 detailWorld = modelMatrix * vec4( transformed, 1.0 );\n\t\tvDetailNormal = normalize( mat3( modelMatrix ) * objectNormal );\n\t#endif\n\tvDetailPos = detailWorld.xyz;');
    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vDetailPos;\nvarying vec3 vDetailNormal;\nuniform sampler2D uDetail;\nuniform float uDetailScale;').replace('#include <map_fragment>',`#include <map_fragment>
@@ -171,9 +175,11 @@ export function stylizeProps(root){
 		vec3 bw = pow( abs( normalize( vDetailNormal ) ), vec3( 4.0 ) ); bw /= bw.x + bw.y + bw.z;
 		vec3 p = vDetailPos * uDetailScale;
 		float detail = texture2D( uDetail, p.yz ).r * bw.x + texture2D( uDetail, p.xz ).r * bw.y + texture2D( uDetail, p.xy ).r * bw.z;
+		float broadTone = texture2D( uDetail, p.xz * 0.09 + vec2( 0.37, 0.13 ) ).r;
+		detail *= mix( 0.94, 1.06, smoothstep( 0.52, 0.9, broadTone ) );
 		float contact = mix( 0.62, 1.0, smoothstep( 0.0, 0.55, vDetailPos.y ) );
 		diffuseColor.rgb *= detail * 1.22 * contact;
 	}`);};
-  m.customProgramCacheKey=()=>'maxima-prop-'+kind;m.needsUpdate=true;}});
+  m.customProgramCacheKey=()=>'maxima-prop-'+kind;m.needsUpdate=true;}
  return count;
 }

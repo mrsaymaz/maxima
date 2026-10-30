@@ -1,3 +1,4 @@
+import{assignSurface}from'./surface-materials.js';
 import * as T from './vendor/three.module.min.js';
 // Stylised cliff walls for the corridor enclosure: faceted, noise-displaced rock with strata bands,
 // darker bases, moss on ledges, a ragged skyline and plants along the rim. Visual only: the enclosure's
@@ -8,7 +9,7 @@ function hash(x,y,z){let h=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Mat
 export function noise3(x,y,z){const ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z),fx=x-ix,fy=y-iy,fz=z-iz,s=t=>t*t*(3-2*t),u=s(fx),v=s(fy),w=s(fz);const l=(a,b,t)=>a+(b-a)*t;return l(l(l(hash(ix,iy,iz),hash(ix+1,iy,iz),u),l(hash(ix,iy+1,iz),hash(ix+1,iy+1,iz),u),v),l(l(hash(ix,iy,iz+1),hash(ix+1,iy,iz+1),u),l(hash(ix,iy+1,iz+1),hash(ix+1,iy+1,iz+1),u),v),w);}
 export const fbm3=(x,y,z)=>noise3(x,y,z)*.55+noise3(x*2.1+7.3,y*2.1,z*2.1-3.1)*.3+noise3(x*4.3,y*4.3+1.7,z*4.3)*.15;
 
-export const CLIFF_TINTS=[{rock:'#a49c86',moss:'#6f9152',grass:'#7fa35f',dark:'#5c5a4e'},{rock:'#cdbf9f',moss:'#8fa57a',grass:'#9fb68a',dark:'#7c735f'},{rock:'#8d90a8',moss:'#6c7f8c',grass:'#7d8fa2',dark:'#4a4c61'}];
+export const CLIFF_TINTS=[{rock:'#959782',moss:'#6f8b59',grass:'#7f9b66',dark:'#515e51'},{rock:'#c6bea2',moss:'#8fa57a',grass:'#9fb68a',dark:'#737967'},{rock:'#8d90a8',moss:'#6c7f8c',grass:'#7d8fa2',dark:'#4a4c61'}];
 const LEVELS=[0,.13,.29,.46,.63,.8,.93,1];
 export const CHUNK=66;
 export const chunkOf=z=>Math.floor((12-z)/CHUNK);
@@ -41,6 +42,7 @@ export function buildCliffs(strips){
  for(let i=0;i<cap.length;i+=3){const x=cap[i],y=cap[i+1],z=cap[i+2],g=.82+fbm3(x*.8,0,z*.8)*.3,low=y<.5?.7:1;capColor.push(g*low,g*low,g*.9*low);}
  const geometry=(positions,colors)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));geo.computeVertexNormals();return geo;};
  const rock=new T.MeshStandardMaterial({color:CLIFF_TINTS[0].rock,vertexColors:true,roughness:.95,flatShading:true,side:T.DoubleSide});const grass=new T.MeshStandardMaterial({color:CLIFF_TINTS[0].grass,vertexColors:true,roughness:1,side:T.DoubleSide});
+ assignSurface(rock,'stone');assignSurface(grass,'foliage');
  // Vertex colours carry strata and moss; stylizeProps adds world-space rock detail on top.
  rock.userData.detail='stone';rock.userData.detailScale=.2;
  // Split into chunks along the route so only the nearby walls are drawn.

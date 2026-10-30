@@ -1,0 +1,13 @@
+# Maxima v0.31.0 · Meadow ground cover
+
+All three arenas now have instanced grass across the open valley ground. Six tapered blades per clump vary in height, spread and orientation. Grass is shorter near the corridor and taller farther away; the route, forks and hazard footprint stay free of tall cover. Grass has no collision or gameplay effects. Instance roots sample the actual indexed terrain triangles, rather than the analytic height field or thousands of raycasts.
+
+Coverage is spatially batched into 12 chunks per arena and shuffled within each chunk. Low retains 28% of the instances; Balanced uses 65%; High uses 100%. Shuffling prevents reduced presets from drawing a straight rectangular strip. Shadow casting is disabled on grass. Wind freezes when the environmental clock pauses or reduced motion is selected, and quiets near demanding encounters. Grass is excluded from task-occlusion raycasts.
+
+The razor-like colour patches had multiple possible contributors. Raised approach surfaces used a brighter grass and lighter dirt palette than the surrounding terrain. Their palettes now agree. The world-space trail blend changes over a broader range, dirt is less contrasting, and broad terrain colour variation is gentler. Quantised scenic shelf formulas were replaced by continuous, rounded relief. These changes affect scenery only; navigation supports, collision, jumping, hazards, creature geometry and language/save data are unchanged.
+
+CPU coverage observations (not GPU/device performance): Whisperwood has 41,212 clumps, Skyreach 41,192 and Stormglass 40,145. At sampled positions along the whole route, the largest visible counts before camera-frustum rejection correspond to 17,706 extra grass triangles on Low, 54,234 on Balanced and 83,418 on High. These figures exclude the rest of the scene and do not establish a frame rate.
+
+Validation covers rendered-triangle root agreement, every branch clearance, finite geometry, retained Low coverage, interleaving, shader hook structure, gentle terrain continuity and existing navigation/material/environment tests. The release test and build logs accompany the implementation workflow; final counts are recorded in README.
+
+No WebGL rendering or real-phone visual/FPS acceptance is claimed. This environment’s preview browser has WebGL disabled. After deploying, use environment-preview.html at the same scene on Low, Balanced and High; inspect the grass/path junction and raised approach edges, turn the camera through the meadows, then check a full expedition on a phone. Existing saves and all 1,180 media and language-data files are preserved byte-for-byte.

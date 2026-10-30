@@ -1,0 +1,801 @@
+{
+  "release": "0.27.0",
+  "runtimeSkeletal": 44,
+  "unrigged": 0,
+  "originalNative": 25,
+  "newSkins": 19,
+  "forms": [
+    {
+      "partner": "hufflepuff",
+      "level": 0,
+      "asset": "assets/creatures/hufflepuff-0.glb",
+      "joints": 28,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 1,
+      "asset": "assets/creatures/hufflepuff-1.glb",
+      "joints": 17,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 2,
+      "asset": "assets/creatures/hufflepuff-2.glb",
+      "joints": 33,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 3,
+      "asset": "assets/creatures/hufflepuff-3.glb",
+      "joints": 26,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 4,
+      "asset": "assets/creatures/hufflepuff-4.glb",
+      "joints": 24,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 5,
+      "asset": "assets/creatures/hufflepuff-5.glb",
+      "joints": 19,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 6,
+      "asset": "assets/creatures/hufflepuff-6.glb",
+      "joints": 31,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 7,
+      "asset": "assets/creatures/hufflepuff-7.glb",
+      "joints": 35,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 8,
+      "asset": "assets/creatures/hufflepuff-8.glb",
+      "joints": 31,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 9,
+      "asset": "assets/creatures/hufflepuff-9.glb",
+      "joints": 34,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "hufflepuff",
+      "level": 10,
+      "asset": "assets/creatures/hufflepuff-10.glb",
+      "joints": 34,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 0,
+      "asset": "assets/creatures/gryffindor-0.glb",
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 1,
+      "asset": "assets/creatures/gryffindor-1.glb",
+      "joints": 31,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 2,
+      "asset": "assets/creatures/gryffindor-2.glb",
+      "joints": 38,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 3,
+      "asset": "assets/creatures/gryffindor-3.glb",
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 4,
+      "asset": "assets/creatures/gryffindor-4.glb",
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 5,
+      "asset": "assets/creatures/gryffindor-5.glb",
+      "joints": 34,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 6,
+      "asset": "assets/creatures/gryffindor-6.glb",
+      "joints": 78,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 7,
+      "asset": "assets/creatures/gryffindor-7.glb",
+      "joints": 78,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 8,
+      "asset": "assets/creatures/gryffindor-8.glb",
+      "joints": 40,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 9,
+      "asset": "assets/creatures/gryffindor-9.glb",
+      "joints": 79,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "gryffindor",
+      "level": 10,
+      "asset": "assets/creatures/gryffindor-10.glb",
+      "joints": 29,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 0,
+      "asset": "assets/rigs/ravenclaw-0.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 1,
+      "asset": "assets/rigs/ravenclaw-1.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 2,
+      "asset": "assets/rigs/ravenclaw-2.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 3,
+      "asset": "assets/rigs/ravenclaw-3.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 4,
+      "asset": "assets/rigs/ravenclaw-4.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 5,
+      "asset": "assets/rigs/ravenclaw-5.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 6,
+      "asset": "assets/rigs/ravenclaw-6.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 7,
+      "asset": "assets/rigs/ravenclaw-7.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 8,
+      "asset": "assets/rigs/ravenclaw-8.gltf",
+      "joints": 16,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 9,
+      "asset": "assets/creatures/ravenclaw-9.glb",
+      "joints": 78,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "ravenclaw",
+      "level": 10,
+      "asset": "assets/creatures/ravenclaw-10.glb",
+      "joints": 79,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    },
+    {
+      "partner": "slytherin",
+      "level": 0,
+      "asset": "assets/rigs/slytherin-0.gltf",
+      "joints": 15,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 1,
+      "asset": "assets/rigs/slytherin-1.gltf",
+      "joints": 15,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 2,
+      "asset": "assets/rigs/slytherin-2.gltf",
+      "joints": 15,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 3,
+      "asset": "assets/rigs/slytherin-3.gltf",
+      "joints": 13,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 4,
+      "asset": "assets/rigs/slytherin-4.gltf",
+      "joints": 13,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 5,
+      "asset": "assets/rigs/slytherin-5.gltf",
+      "joints": 13,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 6,
+      "asset": "assets/rigs/slytherin-6.gltf",
+      "joints": 13,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 7,
+      "asset": "assets/rigs/slytherin-7.gltf",
+      "joints": 13,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 1
+    },
+    {
+      "partner": "slytherin",
+      "level": 8,
+      "asset": "assets/rigs/slytherin-8.gltf",
+      "joints": 17,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 3
+    },
+    {
+      "partner": "slytherin",
+      "level": 9,
+      "asset": "assets/rigs/slytherin-9.gltf",
+      "joints": 17,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": true,
+      "headCount": 3
+    },
+    {
+      "partner": "slytherin",
+      "level": 10,
+      "asset": "assets/creatures/slytherin-10.glb",
+      "joints": 22,
+      "clips": [
+        "Idle",
+        "Walk",
+        "Jump",
+        "Strike",
+        "AirStrike",
+        "TurnStrike",
+        "Hit",
+        "Cast"
+      ],
+      "newRig": false,
+      "headCount": null
+    }
+  ]
+}

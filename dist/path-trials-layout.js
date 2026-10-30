@@ -2,11 +2,18 @@ const TAU=Math.PI*2;
 const at=(s,d,l=0)=>({x:s.start.x+s.forward.x*d+s.right.x*l,z:s.start.z+s.forward.z*d+s.right.z*l});
 export const RUN_TRIALS=['boulders','moving','thorns','wind','crystals','bonus'];
 export const TRIAL_HOST={boulders:'plants',thorns:'plants',moving:'rocks',wind:'steps',crystals:'coins',bonus:'coins'};
-// Each run (chapter) in a current expedition: an easy coin stretch, one rival group, one advanced trial, then a lighter hazard.
-export function runPlan(e,chapter){const trial=RUN_TRIALS[(chapter+(e.serial||0)*5+(e.area||0))%6],base=['rocks','plants','steps'],host=TRIAL_HOST[trial];let last=base[(chapter+(e.area||0))%3];if(last===host)last=base[(chapter+(e.area||0)+1)%3];return{kinds:['coins','coins',host,last],trial,trialAt:2,rivalAt:1,rival:['ram','seed','spore'][(chapter+(e.area||0))%3]};}
+// Published routes retain their exact encounter positions. New routes use four
+// authored rhythms; the opening stretch stays quiet on every branch.
+export function runPlan(e,chapter,side=e.choices?.[chapter]){
+ const alternate=e.pacingVersion>=1&&side==='right'?3:0,trial=RUN_TRIALS[(chapter+(e.serial||0)*5+(e.area||0)+alternate)%6],base=['rocks','plants','steps'],host=TRIAL_HOST[trial];let last=base[(chapter+(e.area||0))%3];if(last===host)last=base[(chapter+(e.area||0)+1)%3];
+ const rival=['ram','seed','spore'][(chapter+(e.area||0)+(alternate?1:0))%3];
+ if(e.pacingVersion!==2)return{kinds:['coins','coins',host,last],trial,trialAt:2,rivalAt:1,rival};
+ const rhythms=[['quiet','rival','trial','traverse'],['quiet','traverse','trial','rival'],['quiet','trial','traverse','rival'],['quiet','rival','traverse','trial']],sequence=rhythms[(chapter+(e.area||0)+(side==='right'?2:0))%rhythms.length];
+ return{kinds:sequence.map(k=>k==='trial'?host:k==='traverse'?last:'coins'),trial,trialAt:sequence.indexOf('trial'),rivalAt:sequence.indexOf('rival'),rival,sequence:sequence.slice()};
+}
 export function configureTrial(section,e,mode){
  if(!(e.adventureVersion===1||e.adventureVersion===2)||section.index<=(e.legacyThrough??-1))return section;
- const c=section.chapter,kind=e.adventureVersion===2?(section.index%4===runPlan(e,c).trialAt?runPlan(e,c).trial:null):section.kind==='coins'?c===1?'bonus':c===3?'crystals':null:section.kind==='rocks'&&[1,3].includes(c)?'moving':section.kind==='plants'?[0,3].includes(c)?'boulders':[2,4].includes(c)?'thorns':null:section.kind==='steps'&&[1,4].includes(c)?'wind':null;
+ const c=section.chapter,kind=e.adventureVersion===2?(section.index%4===runPlan(e,c,section.side).trialAt?runPlan(e,c,section.side).trial:null):section.kind==='coins'?c===1?'bonus':c===3?'crystals':null:section.kind==='rocks'&&[1,3].includes(c)?'moving':section.kind==='plants'?[0,3].includes(c)?'boulders':[2,4].includes(c)?'thorns':null:section.kind==='steps'&&[1,4].includes(c)?'wind':null;
  if(!kind)return section;const hard=mode==='challenge',t=section.trial={id:section.id+':'+kind,kind,hard,phase:section.index*.37};
  if(kind==='boulders'){section.plants=[];const count=Math.min(hard||section.area>0?3:2,Math.max(2,Math.floor((section.length-10)/4.8)+1));t.lanes=Array.from({length:count},(_,i)=>({id:t.id+':'+i,s:5+(section.length-10)*i/(count-1),phase:i*(hard?1.1:1.45),period:hard?4.7:6.2,rollDuration:hard?2.0:2.5,r:.72}));t.shelters=t.lanes.flatMap(lane=>[-1,1].map(sign=>({s:lane.s-1.8,lateral:sign*1.9,...at(section,lane.s-1.8,sign*1.9),r:.65})));}
  if(kind==='wind'){section.platforms=[];t.period=hard?5.4:6.8;t.active=hard?2.2:2.1;t.warning=1.0;t.covers=Array.from({length:Math.max(2,Math.floor((section.length-5)/6))},(_,i)=>{const s=5+i*6,lateral=(i%2?1:-1)*1.7;return{id:t.id+':cover:'+i,s,lateral,...at(section,s,lateral),r:.65};});}
@@ -22,4 +29,4 @@ export function boulderPose(section,lane,time=0){const phase=((time+lane.phase)%
 export function gustState(section,time=0){const t=section.trial,phase=((time+t.phase)%t.period+t.period)%t.period,cycle=Math.floor((time+t.phase)/t.period);return{active:phase<t.active,warning:phase>t.period-t.warning,sign:cycle%2?1:-1};}
 export function thornState(row,time=0){const clock=time+row.phase,cycle=Math.floor(clock/row.period),phase=((clock%row.period)+row.period)%row.period,gaps=[-1.2,0,1.2];return{gap:gaps[((cycle%3)+3)%3],nextGap:gaps[((cycle+1)%3+3)%3],warning:phase>row.period-row.warning};}
 export function crystalState(section,time=0){const t=section.trial,phase=((time+t.phase)%t.period+t.period)%t.period;return{open:phase<t.openFor,warning:phase>t.period-.8};}
-export function trialHint(section){return({boulders:'Watch the amber lanes · wait in the side alcoves',wind:'Gust coming? Shelter behind the stone covers',moving:'Ride the turquoise platforms · time your next jump',thorns:'Follow the green gaps · amber marks the next opening',crystals:'Strike the exposed crystals when their shells open',bonus:'Leaf route: safe · gold ledges: extra coins'}[section?.trial?.kind]||'');}
+export function trialHint(section){return({boulders:'Watch the amber lanes · wait in the side alcoves',wind:'Gust coming? Shelter behind the stone covers',moving:'Aim for turquoise platforms · release movement to land',thorns:'Follow the green gaps · amber marks the next opening',crystals:'Strike the exposed crystals when their shells open',bonus:'Leaf route: safe · gold ledges: extra coins'}[section?.trial?.kind]||'');}

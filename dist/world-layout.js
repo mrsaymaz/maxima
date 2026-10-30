@@ -1,6 +1,8 @@
 import{partnerInfo}from'./partners.js';
 // Refresh the three updated models even on devices caching earlier static assets.
-export const creatureAsset=(level,partner='hufflepuff')=>{const id=partnerInfo(partner).id;return `assets/creatures/${id}-${level}.glb${id==='hufflepuff'&&level>=1&&level<=3?'?animation=young-walk-v1':id==='gryffindor'?'?animation=fire-walk-v1':id==='ravenclaw'?'?animation=water-hop-v1':id==='slytherin'?'?animation=nature-sway-v1':''}`;};
+export const sourceCreatureAsset=(level,partner='hufflepuff')=>{const id=partnerInfo(partner).id;return `assets/creatures/${id}-${level}.glb${id==='hufflepuff'&&level>=1&&level<=3?'?animation=young-walk-v1':id==='gryffindor'?(level===5?'?animation=fire-facing-v2':'?animation=fire-walk-v1'):id==='ravenclaw'?'?animation=water-stride-v2':id==='slytherin'?'?animation=nature-sway-v1':''}`;};
+// Derived skins reuse original GLB bytes through local glTF buffer references.
+export const creatureAsset=(level,partner='hufflepuff')=>{const id=partnerInfo(partner).id;return id==='ravenclaw'&&level<9||id==='slytherin'&&level<10?`assets/rigs/${id}-${level}.gltf?rig=${id==='ravenclaw'?'anatomy-v3-water-stride':id==='slytherin'&&level===7?'anatomy-v2-facing':'anatomy-v1'}`:sourceCreatureAsset(level,id);};
 // Creature-controlled exploration: stable world dimensions, growing bodies and camera framing.
 export const FORM_HEIGHTS=[.65,.75,.85,.96,1.08,1.22,1.38,1.55,1.74,1.95,2.18];
 export const CREATURE_RADII=[.24,.27,.30,.34,.38,.43,.49,.55,.62,.70,.78];

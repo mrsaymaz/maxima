@@ -1,0 +1,14 @@
+/* Feedback lives in the existing measured task dock, never over the reading plates. */
+.mechanism-tools>.language-feedback{display:grid;gap:2px;min-width:0;width:100%;box-sizing:border-box;justify-items:start;align-items:start;padding:3px 0;text-align:left;color:#f1ead3;pointer-events:none}
+.language-feedback strong{font-size:clamp(13px,3.4vw,16px);font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+.language-feedback span{font-size:12px;line-height:1.25;color:#d2dfd4}
+.language-feedback[data-feedback="retry"] strong{color:#ffd6a1}
+.language-feedback[data-feedback="correct"] strong{color:#bdecc8}
+.language-feedback[data-feedback="answer"] strong{color:#ffe19c}
+.world-piece[data-feedback="retry"]{outline:2px dashed #e6a36d;outline-offset:1px}
+.world-piece[data-feedback="answer"]{outline:3px solid #e8c56e;outline-offset:1px}
+@media(max-height:480px){.language-feedback{gap:0;padding:1px 0}.language-feedback strong{font-size:13px}.language-feedback span{font-size:11px}}
+@media(prefers-reduced-motion:no-preference){.world-piece[data-feedback="answer"]{animation:guided-piece .9s ease-out 2}@keyframes guided-piece{50%{outline-color:#fff0b5}}}
+
+@media(max-height:539px) and (orientation:landscape){body.playing.in-task .mechanism-tools>.language-feedback{flex:none;width:100%;max-width:none;gap:3px;justify-items:start}body.playing.in-task .mechanism-tools>.language-feedback strong{font-size:13px}body.playing.in-task .mechanism-tools>.language-feedback span{display:block;font-size:11px}}
+.language-feedback[data-feedback="correct"] span{display:none}

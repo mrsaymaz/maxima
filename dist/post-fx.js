@@ -18,13 +18,13 @@ float l=dot(c,vec3(0.2126,0.7152,0.0722));c=mix(vec3(l),c,uSaturation);c=(c-0.5)
 c+=uShadows*(1.0-smoothstep(0.0,0.55,l))+uHighlights*smoothstep(0.45,1.0,l);
 vec2 p=(vUv-0.5)*uAspect;c*=1.0-uVignette*smoothstep(0.35,0.95,length(p));gl_FragColor=vec4(clamp(c,0.0,1.0),1.0);}`;
 export const GRADES=[
- {saturation:1.12,contrast:1.05,shadows:[-.012,.004,.014],highlights:[.03,.018,-.012],bloom:.5,vignette:.24},
- {saturation:1.08,contrast:1.04,shadows:[-.01,0,.02],highlights:[.024,.02,.006],bloom:.45,vignette:.2},
- {saturation:1.1,contrast:1.07,shadows:[.008,-.006,.03],highlights:[.012,.014,.03],bloom:.62,vignette:.3}
+ {saturation:1.12,contrast:1.05,shadows:[-.012,.004,.014],highlights:[.03,.018,-.012],bloom:.20,vignette:.13},
+ {saturation:1.08,contrast:1.04,shadows:[-.01,0,.02],highlights:[.024,.02,.006],bloom:.18,vignette:.12},
+ {saturation:1.1,contrast:1.07,shadows:[.008,-.006,.03],highlights:[.012,.014,.03],bloom:.25,vignette:.16}
 ];
 export class PostFX{
  constructor(renderer){
-  this.renderer=renderer;this.enabled=false;this.info={calls:0,triangles:0};this.size=new T.Vector2();this.threshold=.86;
+  this.renderer=renderer;this.enabled=false;this.info={calls:0,triangles:0};this.size=new T.Vector2();this.threshold=1.08;
   this.scene=new T.Scene();this.camera=new T.OrthographicCamera(-1,1,1,-1,0,1);const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3));geometry.setAttribute('uv',new T.Float32BufferAttribute([0,0,2,0,0,2],2));this.quad=new T.Mesh(geometry);this.quad.frustumCulled=false;this.scene.add(this.quad);
   const make=(fragmentShader,uniforms)=>new T.ShaderMaterial({vertexShader:VERTEX,fragmentShader,uniforms,depthTest:false,depthWrite:false});
   this.bright=make(BRIGHT,{tInput:{value:null},uTexel:{value:new T.Vector2()},uThreshold:{value:this.threshold}});this.down=make(DOWN,{tInput:{value:null},uTexel:{value:new T.Vector2()}});this.up=make(UP,{tInput:{value:null},tHigh:{value:null},uTexel:{value:new T.Vector2()},uMix:{value:1}});
@@ -42,7 +42,8 @@ export class PostFX{
   const b=this.bright.uniforms;b.tInput.value=this.main.texture;b.uTexel.value.set(1/this.main.width,1/this.main.height);b.uThreshold.value=this.threshold;this.pass(this.bright,this.downs[0]);
   for(let i=1;i<this.downs.length;i++){const s=this.downs[i-1];this.down.uniforms.tInput.value=s.texture;this.down.uniforms.uTexel.value.set(1/s.width,1/s.height);this.pass(this.down,this.downs[i]);}
   let low=this.downs[this.downs.length-1];for(let i=this.ups.length-1;i>=0;i--){const u=this.up.uniforms;u.tInput.value=low.texture;u.tHigh.value=this.downs[i].texture;u.uTexel.value.set(1/low.width,1/low.height);u.uMix.value=.8;this.pass(this.up,this.ups[i]);low=this.ups[i];}
-  const c=this.composite.uniforms;c.tScene.value=this.main.texture;c.tBloom.value=low.texture;c.uExposure.value=r.toneMappingExposure;this.pass(this.composite,previous);
+  const c=this.composite.uniforms;c.tScene.value=this.main.texture;c.tBloom.value=low.texture;c.uExposure.value=r.toneMappingExposure;this.pass(this.composite,previous);this.info={calls:r.info.render.calls,triangles:r.info.render.triangles};
  }
+ destroy(){this.dispose();for(const m of[this.bright,this.down,this.up,this.composite])m?.dispose();this.quad?.geometry?.dispose();}
  dispose(){this.main?.dispose();for(const t of[...(this.downs||[]),...(this.ups||[])])t.dispose();this.main=null;this.downs=[];this.ups=[];}
 }

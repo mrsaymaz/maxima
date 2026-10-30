@@ -1,0 +1,357 @@
+{
+  "textures": [
+    {
+      "asset": "gryffindor-0.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 618641,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-1.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 582849,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-10.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1110337,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-2.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1016404,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-3.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 594693,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-4.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 905628,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-5.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 659191,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-6.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1062090,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-7.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1066769,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-8.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 842538,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "gryffindor-9.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1130264,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-0.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 635895,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-1.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 489274,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-10.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 916002,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-2.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 727912,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-3.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 493656,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-4.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 735780,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-5.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 785352,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-6.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 892499,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-7.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 865773,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-8.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 871733,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "hufflepuff-9.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 881407,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-0.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1065930,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-1.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 836028,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-10.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1413733,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-2.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1139875,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-3.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1154092,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-4.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1243807,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-5.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1318693,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-6.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1226507,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-7.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1298359,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-8.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1263855,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "ravenclaw-9.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1228010,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-0.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 457690,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-1.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 543069,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-10.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1015605,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-2.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 739777,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-3.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 851750,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-4.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 749448,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-5.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 881845,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-6.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 922377,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-7.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 1003185,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-8.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 885360,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    },
+    {
+      "asset": "slytherin-9.glb",
+      "width": 2048,
+      "height": 2048,
+      "encodedBytes": 997385,
+      "estimatedRGBAWithMipBytes": 22369621,
+      "compressionCandidate": true
+    }
+  ],
+  "limits": "Source image dimensions and RGBA+mip estimate, not measured GPU memory. Original textures are preserved. KTX2/Basis conversion needs an offline encoder, a compatible bundled transcoder and rendered device validation; none is assumed available."
+}

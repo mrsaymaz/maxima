@@ -1,0 +1,45 @@
+/* Text is ink on the physical face; these are not independent quiz cards. */
+.world-pieces[data-theme] .world-piece[data-surface]{overflow:visible;box-sizing:border-box;line-height:1.24;gap:3px;padding:4px 6px;letter-spacing:0;text-shadow:none;border:0;background:none;box-shadow:none;border-radius:1px;justify-content:center;white-space:pre-line;overflow-wrap:anywhere}
+.world-pieces[data-theme] .world-piece[data-surface]>.label-ink{display:block;box-sizing:border-box;max-width:100%;padding:0;background:none;border:0;border-radius:0;box-shadow:none;color:#172d2a;font-weight:650}
+.world-pieces[data-theme] .world-piece[data-surface] small{display:block;max-width:100%;font:inherit;line-height:1.24;font-weight:500;color:inherit;opacity:.93}
+.world-pieces[data-theme] .world-piece[data-surface=stone]>.label-ink{color:#172e2b;text-shadow:0 1px #f4ecd44d}
+.world-pieces[data-theme] .world-piece[data-surface=inlay]>.label-ink{color:#fff1cb;font-weight:600}
+.world-pieces[data-theme] .world-piece[data-surface=timber]>.label-ink{color:#182d24;background:#e4c493d9;padding:2px 5px;border-radius:1px;box-shadow:inset 0 1px #f3dcb67a,inset 0 -1px #58442b55}
+.world-pieces[data-theme] .world-piece[data-surface=crate]>.label-ink{color:#21352c;background:#e7ca94d9;padding:3px 6px;border:1px solid #624d3566;border-radius:1px;box-shadow:none}
+.world-pieces[data-theme] .world-piece[data-surface=leaf]>.label-ink{color:#173529;background:#dce7b9c7;border-radius:10px 1px;padding:2px 5px;box-shadow:inset 0 -1px #50734a44}
+.world-pieces[data-theme] .world-piece[data-surface=petal]>.label-ink{color:#393044;padding:2px 5px;background:#f1e6ed99;border-radius:12px 3px}
+.world-pieces[data-theme] .world-piece[data-surface=scroll]>.label-ink,.world-pieces[data-theme] .world-piece[data-surface=paper]>.label-ink{color:#29352b;padding:1px 4px;background:none}
+.world-pieces[data-theme] .world-piece[data-surface=bronze]>.label-ink{color:#182c29;font-weight:750;text-shadow:0 1px #f2d69c66;padding:1px 4px}
+.world-pieces[data-theme] .world-piece[data-surface=crystal]>.label-ink{color:#163841;background:#d7eceb80;border-radius:2px;padding:2px 5px;box-shadow:inset 0 -1px #3a777b55}
+.world-pieces[data-theme] .world-piece[data-surface=weave]>.label-ink{color:#1c3528;background:#e2d4abb3;border-radius:1px;padding:2px 5px;border-bottom:2px solid #775c3c66}
+/* Selection has an outline as well as colour. Accepted connections retain a check and their physical state. */
+.world-pieces[data-theme] .world-piece[data-surface].selected>.label-ink{outline:2px solid #eed28f;outline-offset:3px;font-weight:750;box-shadow:none}
+.world-pieces[data-theme] .world-piece[data-surface].joined>.label-ink,.world-pieces[data-theme] .world-piece[data-surface]:disabled>.label-ink{color:#173b30;box-shadow:none}
+.world-pieces[data-theme] .world-piece[data-surface]:focus-visible{outline:3px solid #fff1bd;outline-offset:2px}
+.world-pieces[data-theme] .world-piece[data-surface][data-do]:hover{background:#ffffff0a}
+.world-pieces[data-theme] .world-piece[data-surface][data-do]:active{outline:2px solid #e9d293;outline-offset:-1px;background:#f4e8b314}
+.world-pieces[data-theme] .world-piece[data-surface] img{background:none;border:0;border-radius:1px;padding:0;box-shadow:none;filter:none}
+.world-pieces[data-theme] .world-piece[data-surface] i{right:2px;bottom:2px;font-size:13px;color:#244f36;background:#e5efcded;border-radius:2px;padding:0 2px}
+.world-pieces[data-theme] .world-piece[data-surface] .piece-order{background:#294b3c;color:#fff0cb;border-radius:2px;font-size:12px;padding:2px 4px}
+
+.world-pieces[data-theme] .world-piece[data-surface]>.label-ink{padding:0 1px}
+
+.world-pieces[data-theme] .world-piece[data-surface]>.label-ink{transform:rotate(var(--ink-angle,0rad));transform-origin:center}
+
+/* Ink is contained by the actual face. Padding and borders count inside its size. */
+.world-pieces[data-theme] .world-piece[data-surface]{padding:4px 6px;min-width:0;min-height:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.24}
+.world-pieces[data-theme] .world-piece[data-surface]>.label-ink{flex:0 1 auto;min-height:0;max-height:100%;width:100%;max-width:100%;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;touch-action:pan-y;overflow-wrap:anywhere;transform:none;line-height:1.24}
+.world-pieces[data-theme] .world-piece[data-surface][data-overflow=scroll]{box-shadow:inset 0 -2px #43685299}
+.world-pieces[data-theme] .world-piece[data-surface] img{max-height:calc(100% - 2px);flex:0 1 auto;min-height:0}
+
+.world-pieces[data-theme] .world-piece[data-surface]{padding:2px 6px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+/* Context is evidence; the question is the action. Preserve plate metrics. */
+.label-ink .question-context{display:block;color:#405657;font-weight:500;white-space:pre-line}
+.label-ink .question-line{display:block;color:#142e35;font-weight:800;white-space:pre-line}
+.question-cue{color:#112e3a;background:#f5cf68;border-radius:3px;padding:0;font:inherit;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
+
+/* Repair targets remain obvious through shape and text decoration as well as colour. */
+.world-piece.faulty{outline:3px solid #efae52;outline-offset:-3px;border-radius:7px;background:#ffcd6c28!important}.world-piece.faulty .label-ink{text-decoration:underline wavy #87492b;text-underline-offset:4px;font-weight:850}.world-piece.target-sentence .label-ink{font-weight:900;color:#142d37}.world-piece.questions .label-ink{color:#183947}.world-piece.answers .label-ink{color:#274c36}.world-piece.group-label{color:#23434b;font-weight:900;letter-spacing:.12em}.world-piece.group-label .label-ink{font-weight:900}
+/* Font rounding must not create scroll arrows on an otherwise fitted one-line answer. */
+.world-pieces[data-theme] .world-piece[data-surface][data-overflow=none]>.label-ink{overflow:visible;touch-action:manipulation}

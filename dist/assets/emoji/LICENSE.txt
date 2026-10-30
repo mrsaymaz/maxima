@@ -23,3 +23,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+MAXIMA v0.35.1 ADDITIONS
+The original 218 WebP files above remain unchanged. Fourteen additional official
+Microsoft Fluent Emoji 3D PNGs were resized to at most 256 px and encoded as
+transparent WebP. Their pinned commit, source URLs, source/output SHA-256 values
+and conversion details are in content/curriculum-v1/fluent-assets.json (source
+package) and picture-assets.json (reusable language package). They are covered by
+the Microsoft MIT licence reproduced above. No Microsoft endorsement is implied.

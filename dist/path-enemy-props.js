@@ -1,3 +1,6 @@
+import{enemyExpression}from'./combat-expression.js';
+import{yieldPose}from'./enemy-yield.js';
+import{surfaceMaterial,assignSurfaceRoles,replaceCueMaterials}from'./surface-materials.js';
 import{bevelBox,carvedCylinder}from'./prop-art.js';
 import{makeEnemySpecies,updateEnemySpecies}from'./enemy-species.js';
 import * as T from './vendor/three.module.min.js';
@@ -15,8 +18,9 @@ function merge(root){
 export function makePathEnemy(section){
  if(!section?.enemy)throw new Error('Path enemy section requires enemy data');
  const group=new T.Group();group.name='path-enemy-rumblebud';const enemy=section.enemy,palette=PALETTES[section.area]||PALETTES[0],cache=new Map();
- const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.87,...extra});
+ const mat=(color,extra={})=>surfaceMaterial('stone',color,extra);
  const m={stone:mat(palette[0]),layer:mat(palette[1]),deep:mat(palette[2]),moss:mat(palette[3]),amber:mat('#edb85d',{emissive:'#bc792c',emissiveIntensity:.48,roughness:.35}),glint:mat('#fff0bb',{emissive:'#f9dda1',emissiveIntensity:.32}),gate:mat(palette[0]),gatePale:mat(palette[1]),gateDark:mat(palette[2]),gateGlow:mat('#a6bd8c',{emissive:'#658d5e',emissiveIntensity:.35}),lane:mat('#efb655',{transparent:true,opacity:.18,depthWrite:false,emissive:'#e5a23d',emissiveIntensity:.5}),laneMark:mat('#ffbd57',{transparent:true,opacity:.86,depthWrite:false,emissive:'#df9e3a',emissiveIntensity:.6}),pips:mat('#fff0bd',{emissive:'#af8b39',emissiveIntensity:.35}),stars:mat('#e9cc7d',{emissive:'#c09e42',emissiveIntensity:.3})};
+ assignSurfaceRoles(m,{"stone": ["stone", "layer", "deep", "gate", "gatePale", "gateDark"], "foliage": ["moss"], "effect": ["amber", "glint", "gateGlow", "pips", "stars"], "cue": ["lane", "laneMark"]});replaceCueMaterials(m,["lane", "laneMark"]);
  const geo=(key,fn)=>{if(!cache.has(key))cache.set(key,fn());return cache.get(key);};
  const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
  const pebble=r=>geo('p'+r,()=>new T.DodecahedronGeometry(r,0));
@@ -78,12 +82,14 @@ export function updatePathEnemy(group,runtime,{time=0,playerRadius=0}={}){
  const state=STATES.get(group);if(!state||!runtime)return group;time=finite(time,0);
  const{section,enemy,species,actor,body,brows,legs,pips,stars,bars,lane,caps,arrows,laneEdges,m,object,opening,bodyMaterials,baseColors}=state,phase=runtime.phase||'watch',timer=Math.max(0,finite(runtime.timer,0)),duration=Math.max(.001,finite(runtime.duration,1)),progress=clamp(timer/duration),defeat=phase==='defeated'?clamp(timer/1.1):0;
  const x=finite(runtime.x,enemy.x),z=finite(runtime.z,enemy.z),heading=finite(runtime.heading,0),wind=phase==='windup',charging=phase==='charge',recover=phase==='recover',hurt=phase==='hurt';
+ const expression=enemyExpression(runtime,time);const yielding=yieldPose('ram',timer);
  const crouch=wind?Math.sin(progress*Math.PI/2):0,bounce=charging?Math.abs(Math.sin(time*26))*.027:recover?Math.sin(time*8)*.008:Math.sin(time*2.7)*.007;
- actor.position.set(x+(section.right.x*.43-section.forward.x*.10)*defeat,.028+bounce,z+(section.right.z*.43-section.forward.z*.10)*defeat);actor.rotation.set(0,heading+defeat*.65,defeat*.8);actor.scale.setScalar(phase==='defeated'?Math.max(.001,1-defeat):1);actor.visible=phase!=='defeated'||defeat<1;
- body.position.set(0,.19-.09*crouch,0);body.scale.set(1+.06*crouch,1-.12*crouch,1+.04*crouch);body.rotation.set(charging?.13:wind?-.06:recover?Math.sin(time*8)*.018:0,0,hurt?Math.sin(timer*40)*.055:0);
+ actor.position.set(x+(section.right.x*.43-section.forward.x*.10)*defeat,.028+bounce,z+(section.right.z*.43-section.forward.z*.10)*defeat);if(phase==='defeated'){actor.position.x=x+section.right.x*yielding.side-section.forward.x*yielding.back;actor.position.z=z+section.right.z*yielding.side-section.forward.z*yielding.back;}actor.rotation.set(0,heading+(phase==='defeated'?yielding.yaw:0),0);actor.scale.setScalar(1);actor.visible=phase!=='defeated'||defeat<1;
+ body.position.set(0,.19-.09*crouch,0);body.scale.set(1+.06*crouch,1-.12*crouch,1+.04*crouch);body.rotation.set(phase==='defeated'?yielding.pitch:charging?.13:wind?-.06:recover?Math.sin(time*8)*.018:0,0,hurt?Math.sin(timer*40)*.055:0);
+ if(phase!=='defeated'){body.rotation.x+=expression.pitch;body.rotation.z+=expression.roll;body.position.x+=expression.recoilX;body.position.z+=expression.recoilZ;}
  for(let i=0;i<4;i++){const side=i%2?1:-1,front=i<2?1:-1,cycle=time*(charging?22:runtime.returning?10:4)+(i%2===Math.floor(i/2)?0:Math.PI);object.position.set(side*.265,.105+(charging||runtime.returning?Math.max(0,Math.sin(cycle))*.035:0)-crouch*.022,front*.225);object.rotation.set(charging||runtime.returning?Math.sin(cycle)*.33:0,side*.14,side*.08);object.scale.set(.87,1.02-crouch*.22,.91);object.updateMatrix();legs.setMatrixAt(i,object.matrix);}legs.instanceMatrix.needsUpdate=true;
- for(let i=0;i<2;i++){const side=i?1:-1;object.position.set(side*.133,.459,.430);object.rotation.set(0,0,side*(wind?-.20:recover?.15:.045));object.scale.set(1,1,1);object.updateMatrix();brows.setMatrixAt(i,object.matrix);}brows.instanceMatrix.needsUpdate=true;
- const flash=clamp(finite(runtime.flash,0));for(let i=0;i<bodyMaterials.length;i++){bodyMaterials[i].color.copy(baseColors[i]).lerp(new T.Color('#fff5db'),flash*.82);bodyMaterials[i].emissive.set(flash>0?'#d1a46a':'#000000');bodyMaterials[i].emissiveIntensity=flash*.45;}m.amber.emissiveIntensity=wind?.72+progress*.55:charging?.95:.48;
+ for(let i=0;i<2;i++){const side=i?1:-1;object.position.set(side*.133,.459,.430);object.rotation.set(0,0,side*(hurt?-.10:expression.blink?.38:wind?-.24:recover?.18:.045));object.scale.set(1,1,1);object.updateMatrix();brows.setMatrixAt(i,object.matrix);}brows.instanceMatrix.needsUpdate=true;
+ const flash=clamp(finite(runtime.flash,0));for(let i=0;i<bodyMaterials.length;i++){bodyMaterials[i].color.copy(baseColors[i]).lerp(new T.Color('#fff5db'),flash*.45);bodyMaterials[i].emissive.set(flash>0?'#d1a46a':'#000000');bodyMaterials[i].emissiveIntensity=flash*.45;}m.amber.emissiveIntensity=wind?.72+progress*.55:charging?.95:.48;
  const hp=clamp(finite(runtime.hp,finite(runtime.maxHp,enemy.maxHp))/Math.max(1,finite(runtime.maxHp,enemy.maxHp)));pips.visible=phase!=='defeated';for(let i=0;i<pips.count;i++){object.position.set(x+(i-(pips.count-1)/2)*.087,.970,z);object.rotation.set(0,0,0);object.scale.setScalar(1);object.updateMatrix();pips.setMatrixAt(i,object.matrix);pips.setColorAt(i,new T.Color(i<hp*pips.count?'#edc16a':'#536251'));}pips.instanceMatrix.needsUpdate=true;if(pips.instanceColor)pips.instanceColor.needsUpdate=true;
  stars.visible=recover;for(let i=0;i<3;i++){const angle=time*2.2+i*Math.PI*2/3;object.position.set(Math.cos(angle)*.27,.875+Math.sin(angle*2)*.018,Math.sin(angle)*.27);object.rotation.set(.2,time+i,Math.PI/4);object.scale.setScalar(1);object.updateMatrix();stars.setMatrixAt(i,object.matrix);}stars.instanceMatrix.needsUpdate=true;
  const from=runtime.chargeFrom,to=runtime.chargeTo,showLane=runtime.active!==false&&(wind||charging)&&from&&to&&[from.x,from.z,to.x,to.z].every(Number.isFinite);lane.visible=!!showLane;caps.visible=!!showLane;arrows.visible=!!showLane;laneEdges.visible=!!showLane;

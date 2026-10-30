@@ -1,0 +1,130 @@
+@g8u1
+The invitation asks friends to meet at the park on Sunday.|Davet arkadaşlardan pazar günü parkta buluşmalarını ister.|where|At the park.|Parkta.|when|On Sunday.|Pazar günü.
+Mina accepts the picnic invitation because she is free.|Mina müsait olduğu için piknik davetini kabul eder.|response|She accepts.|Kabul eder.|why|Because she is free.|Müsait olduğu için.
+Arda refuses the film invitation because his cousins are visiting.|Arda kuzenleri ziyarete geldiği için film davetini reddeder.|response|He refuses.|Reddeder.|why|Because his cousins are visiting.|Kuzenleri ziyarete geldiği için.
+Ece apologises for being late and explains the traffic problem.|Ece geç kaldığı için özür diler ve trafik sorununu açıklar.|who|Ece.|Ece.|reasonFactor|The traffic problem.|Trafik sorunu.
+Deniz keeps his friend's secret and never shares it.|Deniz arkadaşının sırrını saklar ve hiç paylaşmaz.|quality|Trustworthiness.|Güvenilirlik.|howOften|Never.|Hiçbir zaman.
+The invitation says the get-together starts at half past four.|Davetiyede buluşmanın saat dört buçukta başladığı yazıyor.|event|A get-together.|Bir buluşma.|time|At half past four.|Saat dört buçukta.
+Lara helps her friend prepare because she wants to support her.|Lara arkadaşına destek olmak istediği için hazırlıkta yardım eder.|who|Lara.|Lara.|why|To support her friend.|Arkadaşına destek olmak için.
+The message asks guests to bring a board game to the reunion.|Mesaj misafirlerden buluşmaya bir kutu oyunu getirmelerini ister.|itemNeeded|A board game.|Bir kutu oyunu.|audience|Guests.|Misafirler.
+Selin accepts the invitation and offers to bring fruit.|Selin daveti kabul eder ve meyve getirmeyi teklif eder.|response|She accepts.|Kabul eder.|itemOffered|Fruit.|Meyve.
+Mert cannot come on Saturday because he has a family visit.|Mert aile ziyareti olduğu için cumartesi günü gelemez.|when|On Saturday.|Cumartesi günü.|why|Because he has a family visit.|Aile ziyareti olduğu için.
+The friends meet once a month at the library café.|Arkadaşlar ayda bir kez kütüphane kafesinde buluşur.|howOften|Once a month.|Ayda bir kez.|where|At the library café.|Kütüphane kafesinde.
+The reply says thanks and asks for the meeting address.|Cevapta teşekkür edilir ve buluşma adresi istenir.|itemNeeded|The meeting address.|Buluşma adresi.|politeExpression|Thanks.|Teşekkürler.
+@g8u2
+Mina prefers concerts to shopping because she loves live music.|Mina canlı müziği sevdiği için konserleri alışverişe tercih eder.|preference|Concerts.|Konserler.|why|Because she loves live music.|Canlı müziği sevdiği için.
+Arda reads an online magazine every evening.|Arda her akşam çevrim içi dergi okur.|what|An online magazine.|Çevrim içi bir dergi.|howOften|Every evening.|Her akşam.
+Ece is keen on camping and goes twice each summer.|Ece kamp yapmaya meraklıdır ve her yaz iki kez kampa gider.|activity|Camping.|Kamp yapmak.|howOften|Twice each summer.|Her yaz iki kez.
+Deniz cannot stand the song because he finds it noisy.|Deniz şarkıyı gürültülü bulduğu için ona tahammül edemez.|opinion|Noisy.|Gürültülü.|why|Because he finds it noisy.|Onu gürültülü bulduğu için.
+Lara wears casual clothes when she meets friends at weekends.|Lara hafta sonları arkadaşlarıyla buluşurken rahat kıyafetler giyer.|clothes|Casual clothes.|Rahat kıyafetler.|when|At weekends.|Hafta sonları.
+Selin practises the guitar after homework on Mondays.|Selin pazartesi günleri ödevden sonra gitar çalışır.|instrument|The guitar.|Gitar.|when|After homework on Mondays.|Pazartesi günleri ödevden sonra.
+Mert prefers reading novels to watching television.|Mert roman okumayı televizyon izlemeye tercih eder.|preference|Reading novels.|Roman okumak.|otherChoice|Watching television.|Televizyon izlemek.
+The teenagers hang out in the park on Sunday afternoons.|Gençler pazar öğleden sonraları parkta vakit geçirir.|where|In the park.|Parkta.|when|On Sunday afternoons.|Pazar öğleden sonraları.
+Ece thinks the exhibition is impressive because of its colours.|Ece renkleri nedeniyle serginin etkileyici olduğunu düşünür.|opinion|Impressive.|Etkileyici.|why|Because of its colours.|Renkleri nedeniyle.
+Our cousin listens to classical music before bed.|Kuzenimiz yatmadan önce klasik müzik dinler.|music|Classical music.|Klasik müzik.|when|Before bed.|Yatmadan önce.
+Mina is fond of skateboarding and practises in the park.|Mina kaykay yapmayı sever ve parkta çalışır.|activity|Skateboarding.|Kaykay.|where|In the park.|Parkta.
+Deniz reads the lyrics to understand the song.|Deniz şarkıyı anlamak için sözlerini okur.|what|The lyrics.|Şarkı sözleri.|why|To understand the song.|Şarkıyı anlamak için.
+@g8u3
+First, wash the tomatoes. Then chop them into small pieces.|Önce domatesleri yıka. Sonra küçük parçalara doğra.|firstStep|Wash the tomatoes.|Domatesleri yıka.|nextStep|Chop them into small pieces.|Küçük parçalara doğra.
+The recipe needs two eggs and one glass of milk.|Tarif için iki yumurta ve bir bardak süt gerekir.|howMany|Two.|İki.|quantity|One glass of milk.|Bir bardak süt.
+Mix the flour and water in a large bowl.|Unu ve suyu büyük bir kâsede karıştır.|ingredients|Flour and water.|Un ve su.|container|A large bowl.|Büyük bir kâse.
+After boiling the pasta, drain it in a colander.|Makarnayı haşladıktan sonra süzgeçte süz.|nextStep|Drain the pasta.|Makarnayı süz.|tool|A colander.|Süzgeç.
+The cook uses a grater to prepare the cheese.|Aşçı peyniri hazırlamak için rende kullanır.|tool|A grater.|Rende.|ingredient|Cheese.|Peynir.
+First, peel the carrots. Then slice the cucumber.|Önce havuçları soy. Sonra salatalığı dilimle.|firstStep|Peel the carrots.|Havuçları soy.|nextStep|Slice the cucumber.|Salatalığı dilimle.
+The instructions say to stir the soup slowly.|Yönergeler çorbayı yavaşça karıştırmayı söyler.|action|Stir the soup.|Çorbayı karıştır.|how|Slowly.|Yavaşça.
+The recipe uses a teaspoon to measure the salt.|Tarifte tuzu ölçmek için çay kaşığı kullanılır.|tool|A teaspoon.|Çay kaşığı.|ingredient|Salt.|Tuz.
+Mina prefers baking bread because she likes its smell.|Mina kokusunu sevdiği için ekmek pişirmeyi tercih eder.|preference|Baking bread.|Ekmek pişirmek.|why|Because she likes its smell.|Kokusunu sevdiği için.
+Finally, pour the mixture into the pan.|Son olarak karışımı tavaya dök.|finalStep|Pour the mixture into the pan.|Karışımı tavaya dök.|container|The pan.|Tava.
+The sauce contains lemon juice, so it tastes sour.|Sos limon suyu içerir, bu yüzden tadı ekşidir.|ingredient|Lemon juice.|Limon suyu.|taste|Sour.|Ekşi.
+The cook serves the salad after mixing the ingredients.|Aşçı malzemeleri karıştırdıktan sonra salatayı servis eder.|dish|The salad.|Salata.|when|After mixing the ingredients.|Malzemeleri karıştırdıktan sonra.
+@g8u4
+The caller wants to speak to Ms Kaya in the school office.|Arayan kişi okul bürosundaki Kaya Hanım'la konuşmak ister.|requestedPerson|Ms Kaya.|Kaya Hanım.|where|In the school office.|Okul bürosunda.
+The receptionist asks the caller to hold on for a minute.|Resepsiyon görevlisi arayan kişiden bir dakika beklemesini ister.|action|Hold on.|Beklemek.|duration|A minute.|Bir dakika.
+The message asks Deniz to call back after lunch.|Mesaj Deniz'den öğle yemeğinden sonra geri aramasını ister.|requestedPerson|Deniz.|Deniz.|when|After lunch.|Öğle yemeğinden sonra.
+The caller leaves a message because the manager is unavailable.|Müdür müsait olmadığı için arayan kişi mesaj bırakır.|action|Leave a message.|Mesaj bırakmak.|why|Because the manager is unavailable.|Müdür müsait olmadığı için.
+The appointment is on Friday at quarter past ten.|Randevu cuma günü saat onu çeyrek geçedir.|when|On Friday.|Cuma günü.|time|At quarter past ten.|Saat onu çeyrek geçe.
+The caller asks for extension twenty-four.|Arayan kişi yirmi dört numaralı dahiliyi ister.|requestedNumber|Twenty-four.|Yirmi dört.|who|The caller.|Arayan kişi.
+Mina offers to call again when the line is clear.|Mina hat netleştiğinde tekrar aramayı teklif eder.|action|Call again.|Tekrar aramak.|when|When the line is clear.|Hat netleştiğinde.
+The receptionist writes the caller's surname and contact number.|Resepsiyon görevlisi arayan kişinin soyadını ve iletişim numarasını yazar.|who|The receptionist.|Resepsiyon görevlisi.|details|The surname and contact number.|Soyadı ve iletişim numarası.
+The caller asks the receptionist to repeat the last number.|Arayan kişi resepsiyon görevlisinden son sayıyı tekrar etmesini ister.|action|Repeat the last number.|Son sayıyı tekrar etmek.|requestedPerson|The receptionist.|Resepsiyon görevlisi.
+The voicemail says the office opens at nine.|Sesli mesajda büronun saat dokuzda açıldığı söylenir.|time|At nine.|Saat dokuzda.|place|The office.|Büro.
+The caller will confirm the visit tomorrow morning.|Arayan kişi ziyareti yarın sabah teyit edecek.|action|Confirm the visit.|Ziyareti teyit etmek.|when|Tomorrow morning.|Yarın sabah.
+The connection is poor, so the caller cannot hear clearly.|Bağlantı zayıftır, bu yüzden arayan kişi net duyamaz.|problem|A poor connection.|Zayıf bağlantı.|result|The caller cannot hear clearly.|Arayan kişi net duyamaz.
+@g8u5
+Mina checks her e-mail once a day after school.|Mina okuldan sonra günde bir kez e-postasını kontrol eder.|howOften|Once a day.|Günde bir kez.|when|After school.|Okuldan sonra.
+Arda cannot join the chat because his connection is down.|Arda bağlantısı kesik olduğu için sohbete katılamaz.|response|He cannot join.|Katılamaz.|why|Because his connection is down.|Bağlantısı kesik olduğu için.
+Ece uploads the project to the class website.|Ece projeyi sınıfın internet sitesine yükler.|what|The project.|Proje.|where|To the class website.|Sınıfın internet sitesine.
+Deniz downloads the worksheet before the lesson.|Deniz dersten önce çalışma kâğıdını indirir.|what|The worksheet.|Çalışma kâğıdı.|when|Before the lesson.|Dersten önce.
+The message asks pupils to attach a photograph to the e-mail.|Mesaj öğrencilerden e-postaya bir fotoğraf eklemelerini ister.|itemNeeded|A photograph.|Bir fotoğraf.|audience|Pupils.|Öğrenciler.
+Selin turns off notifications while she studies.|Selin ders çalışırken bildirimleri kapatır.|what|Notifications.|Bildirimler.|when|While she studies.|Ders çalışırken.
+Mert refuses the online invitation because he has homework.|Mert ödevi olduğu için çevrim içi daveti reddeder.|response|He refuses.|Reddeder.|why|Because he has homework.|Ödevi olduğu için.
+Our class uses the blog to share book reviews.|Sınıfımız kitap değerlendirmelerini paylaşmak için blog kullanır.|object|The blog.|Blog.|why|To share book reviews.|Kitap değerlendirmelerini paylaşmak için.
+The online course begins on Tuesday evening.|Çevrim içi kurs salı akşamı başlar.|event|An online course.|Çevrim içi bir kurs.|when|On Tuesday evening.|Salı akşamı.
+Lara reads the sources to check whether the information is reliable.|Lara bilginin güvenilir olup olmadığını kontrol etmek için kaynakları okur.|what|The sources.|Kaynaklar.|why|To check the information.|Bilgiyi kontrol etmek için.
+The account is private and only classmates can view it.|Hesap gizlidir ve onu yalnızca sınıf arkadaşları görebilir.|privacy|Private.|Gizli.|audience|Classmates.|Sınıf arkadaşları.
+The reply accepts the chat invitation and suggests six o'clock.|Cevap sohbet davetini kabul eder ve saat altıyı önerir.|response|It accepts.|Kabul eder.|time|Six o'clock.|Saat altı.
+@g8u6
+Mina prefers rafting to skiing because she enjoys rivers.|Mina nehirleri sevdiği için raftingi kayağa tercih eder.|preference|Rafting.|Rafting.|why|Because she enjoys rivers.|Nehirleri sevdiği için.
+Arda would rather go trekking than try bungee jumping.|Arda bungee jumping denemektense uzun doğa yürüyüşüne çıkmayı tercih eder.|preference|Trekking.|Uzun doğa yürüyüşü.|otherChoice|Bungee jumping.|Bungee jumping.
+The instructor checks the harness before the climbing session.|Eğitmen tırmanış çalışmasından önce emniyet kemerini kontrol eder.|who|The instructor.|Eğitmen.|when|Before the climbing session.|Tırmanış çalışmasından önce.
+Ece finds canoeing relaxing because she likes quiet water.|Ece sakin suyu sevdiği için kanoyu rahatlatıcı bulur.|opinion|Relaxing.|Rahatlatıcı.|why|Because she likes quiet water.|Sakin suyu sevdiği için.
+Deniz prefers watching paragliding because he dislikes heights.|Deniz yüksekten hoşlanmadığı için yamaç paraşütünü izlemeyi tercih eder.|preference|Watching paragliding.|Yamaç paraşütünü izlemek.|why|Because he dislikes heights.|Yüksekten hoşlanmadığı için.
+The guided trekking route lasts three hours.|Rehberli doğa yürüyüşü rotası üç saat sürer.|activity|Trekking.|Doğa yürüyüşü.|duration|Three hours.|Üç saat.
+Selin would rather explore a valley with a guide.|Selin bir rehberle vadi keşfetmeyi tercih eder.|place|A valley.|Bir vadi.|withWho|A guide.|Bir rehber.
+The activity centre provides helmets for rock climbing.|Etkinlik merkezi kaya tırmanışı için kask sağlar.|itemProvided|Helmets.|Kasklar.|activity|Rock climbing.|Kaya tırmanışı.
+Mert thinks the long mountain route is exhausting.|Mert uzun dağ rotasının yorucu olduğunu düşünür.|opinion|Exhausting.|Yorucu.|place|The long mountain route.|Uzun dağ rotası.
+Lara prefers scuba diving because she enjoys seeing marine life.|Lara deniz yaşamını görmeyi sevdiği için tüplü dalışı tercih eder.|preference|Scuba diving.|Tüplü dalış.|why|Because she enjoys seeing marine life.|Deniz yaşamını görmeyi sevdiği için.
+The group chooses canoeing instead of surfing.|Grup sörf yerine kanoyu seçer.|preference|Canoeing.|Kano.|otherChoice|Surfing.|Sörf.
+The adventure programme starts at ten on Saturday.|Macera programı cumartesi günü saat onda başlar.|time|At ten.|Saat onda.|when|On Saturday.|Cumartesi günü.
+@g8u7
+The family stayed in a guesthouse near the old town.|Aile eski şehrin yakınında bir pansiyonda kaldı.|accommodation|A guesthouse.|Bir pansiyon.|pastWhere|Near the old town.|Eski şehrin yakınında.
+The guided tour started at the museum at nine.|Rehberli tur saat dokuzda müzede başladı.|pastWhere|At the museum.|Müzede.|time|At nine.|Saat dokuzda.
+Mina preferred the seaside because it was peaceful.|Mina huzurlu olduğu için deniz kıyısını tercih etti.|preference|The seaside.|Deniz kıyısı.|why|Because it was peaceful.|Huzurlu olduğu için.
+The visitors explored the ruins on Friday morning.|Ziyaretçiler cuma sabahı kalıntıları gezdi.|what|The ruins.|Kalıntılar.|pastWhen|On Friday morning.|Cuma sabahı.
+Arda bought a souvenir at the traditional market.|Arda geleneksel pazardan bir hediyelik eşya aldı.|what|A souvenir.|Bir hediyelik eşya.|pastWhere|At the traditional market.|Geleneksel pazarda.
+The hotel was noisier than the guesthouse.|Otel pansiyondan daha gürültülüydü.|noisier|The hotel.|Otel.|quieter|The guesthouse.|Pansiyon.
+The guide recommended the old bridge because of its architecture.|Rehber mimarisi nedeniyle eski köprüyü tavsiye etti.|place|The old bridge.|Eski köprü.|why|Because of its architecture.|Mimarisi nedeniyle.
+Our cousins checked in before lunch on Monday.|Kuzenlerimiz pazartesi günü öğle yemeğinden önce otele giriş yaptı.|pastWhen|Before lunch on Monday.|Pazartesi öğle yemeğinden önce.|action|They checked in.|Otele giriş yaptılar.
+The family asked for a city map at reception.|Aile resepsiyondan şehir haritası istedi.|what|A city map.|Bir şehir haritası.|pastWhere|At reception.|Resepsiyonda.
+Ece preferred historic sites to crowded beaches.|Ece tarihî yerleri kalabalık plajlara tercih etti.|preference|Historic sites.|Tarihî yerler.|otherChoice|Crowded beaches.|Kalabalık plajlar.
+The excursion lasted two days and included a museum visit.|Gezi iki gün sürdü ve bir müze ziyareti içerdi.|duration|Two days.|İki gün.|activity|A museum visit.|Bir müze ziyareti.
+The travellers checked out early to catch the morning train.|Yolcular sabah trenine yetişmek için erken çıkış yaptı.|action|They checked out early.|Erken çıkış yaptılar.|why|To catch the morning train.|Sabah trenine yetişmek için.
+@g8u8
+The chore chart asks Mina to water the plants on Tuesday.|Ev işi çizelgesi Mina'dan salı günü bitkileri sulamasını ister.|requestedPerson|Mina.|Mina.|when|On Tuesday.|Salı günü.
+Arda has to empty the dishwasher after breakfast.|Arda kahvaltıdan sonra bulaşık makinesini boşaltmak zorundadır.|action|Empty the dishwasher.|Bulaşık makinesini boşaltmak.|when|After breakfast.|Kahvaltıdan sonra.
+Ece prefers folding clothes to ironing shirts.|Ece çamaşır katlamayı gömlek ütülemeye tercih eder.|preference|Folding clothes.|Çamaşır katlamak.|otherChoice|Ironing shirts.|Gömlek ütülemek.
+Deniz takes out the rubbish every evening.|Deniz her akşam çöpü çıkarır.|action|Take out the rubbish.|Çöpü çıkarmak.|howOften|Every evening.|Her akşam.
+Our family shares the chores because everyone lives in the home.|Ailemiz herkes evde yaşadığı için ev işlerini paylaşır.|action|Share the chores.|Ev işlerini paylaşmak.|why|Because everyone lives in the home.|Herkes evde yaşadığı için.
+Selin has to make her bed before school.|Selin okuldan önce yatağını toplamak zorundadır.|action|Make her bed.|Yatağını toplamak.|when|Before school.|Okuldan önce.
+The chart gives the kitchen task to Mert.|Çizelge mutfak görevini Mert'e verir.|requestedPerson|Mert.|Mert.|place|The kitchen.|Mutfak.
+Lara does not like vacuuming because of the noise.|Lara gürültü nedeniyle süpürgeyle temizlik yapmayı sevmez.|activity|Vacuuming.|Süpürgeyle temizlik yapmak.|why|Because of the noise.|Gürültü nedeniyle.
+The family sorts the laundry before washing it.|Aile çamaşırları yıkamadan önce ayırır.|action|Sort the laundry.|Çamaşırları ayırmak.|when|Before washing it.|Yıkamadan önce.
+The children set the table together before dinner.|Çocuklar akşam yemeğinden önce sofrayı birlikte kurar.|action|Set the table.|Sofrayı kurmak.|when|Before dinner.|Akşam yemeğinden önce.
+The household plan gives each person two tasks.|Ev planı her kişiye iki görev verir.|howMany|Two.|İki.|audience|Each person.|Her kişi.
+Our cousin waters the balcony plants twice a week.|Kuzenimiz balkon bitkilerini haftada iki kez sular.|where|On the balcony.|Balkonda.|howOften|Twice a week.|Haftada iki kez.
+@g8u9
+The pupils are observing a leaf through a microscope.|Öğrenciler bir yaprağı mikroskopla gözlemliyor.|what|A leaf.|Bir yaprak.|tool|A microscope.|Mikroskop.
+The researcher is measuring the temperature every ten minutes.|Araştırmacı her on dakikada bir sıcaklığı ölçüyor.|measurement|The temperature.|Sıcaklık.|howOften|Every ten minutes.|Her on dakikada bir.
+The team tested a model bridge last week.|Ekip geçen hafta bir köprü modeli test etti.|what|A model bridge.|Bir köprü modeli.|pastWhen|Last week.|Geçen hafta.
+Our class is comparing two plant samples.|Sınıfımız iki bitki örneğini karşılaştırıyor.|howMany|Two.|İki.|what|Plant samples.|Bitki örnekleri.
+The scientist recorded the result in a notebook yesterday.|Bilim insanı dün sonucu bir deftere kaydetti.|what|The result.|Sonuç.|pastWhere|In a notebook.|Bir defterde.
+Ece is using a magnifying glass to examine a stone.|Ece bir taşı incelemek için büyüteç kullanıyor.|tool|A magnifying glass.|Büyüteç.|why|To examine a stone.|Bir taşı incelemek için.
+The pupils designed their prototype after comparing three ideas.|Öğrenciler üç fikri karşılaştırdıktan sonra prototiplerini tasarladı.|howMany|Three.|Üç.|pastWhen|After comparing three ideas.|Üç fikri karşılaştırdıktan sonra.
+The teacher is showing the experiment on the classroom screen.|Öğretmen deneyi sınıf ekranında gösteriyor.|who|The teacher.|Öğretmen.|where|On the classroom screen.|Sınıf ekranında.
+The engineer tested the tool to check whether it worked.|Mühendis çalışıp çalışmadığını görmek için aracı test etti.|what|The tool.|Araç.|why|To check whether it worked.|Çalışıp çalışmadığını kontrol etmek için.
+Our group is writing observations in a table.|Grubumuz gözlemleri bir tabloya yazıyor.|what|Observations.|Gözlemler.|where|In a table.|Bir tabloda.
+The scientist discovered a new pattern during the test.|Bilim insanı test sırasında yeni bir örüntü keşfetti.|what|A new pattern.|Yeni bir örüntü.|pastWhen|During the test.|Test sırasında.
+The presentation is about a useful invention from the past.|Sunum geçmişten kullanışlı bir icat hakkındadır.|topic|A useful invention.|Kullanışlı bir icat.|period|The past.|Geçmiş.
+@g8u10
+In this practice bulletin, heavy rain may cause flooding near the river.|Bu alıştırma bülteninde şiddetli yağmur nehir yakınında sele yol açabilir.|cause|Heavy rain.|Şiddetli yağmur.|possibleResult|Flooding.|Sel.
+The fictional forecast says the storm will reach the coast tomorrow.|Kurgusal tahminde fırtınanın yarın kıyıya ulaşacağı söylenir.|where|The coast.|Kıyı.|when|Tomorrow.|Yarın.
+The practice report predicts water shortage because of low rainfall.|Alıştırma raporu az yağış nedeniyle su kıtlığı öngörür.|possibleResult|Water shortage.|Su kıtlığı.|why|Because of low rainfall.|Az yağış nedeniyle.
+The class poster asks families to reduce unnecessary water waste.|Sınıf afişi ailelerden gereksiz su israfını azaltmalarını ister.|action|Reduce unnecessary water waste.|Gereksiz su israfını azaltmak.|audience|Families.|Aileler.
+In the scenario, officials will publish an update at six.|Senaryoda görevliler saat altıda bir güncelleme yayımlayacak.|who|Officials.|Görevliler.|time|At six.|Saat altıda.
+The lesson compares a landslide with an avalanche.|Ders bir heyelanı çığla karşılaştırır.|firstHazard|A landslide.|Heyelan.|secondHazard|An avalanche.|Çığ.
+The practice forecast mentions strong winds on Friday.|Alıştırma tahmini cuma günü kuvvetli rüzgârlardan söz eder.|weather|Strong winds.|Kuvvetli rüzgârlar.|when|On Friday.|Cuma günü.
+The scenario says dry weather may increase wildfire risk.|Senaryoda kuru havanın doğa yangını riskini artırabileceği söylenir.|cause|Dry weather.|Kuru hava.|possibleResult|Increased wildfire risk.|Doğa yangını riskinin artması.
+The class will study the fictional warning in groups.|Sınıf kurgusal uyarıyı gruplar hâlinde inceleyecek.|what|The fictional warning.|Kurgusal uyarı.|grouping|In groups.|Gruplar hâlinde.
+The project predicts cleaner rivers if people reduce pollution.|Proje insanlar kirliliği azaltırsa nehirlerin daha temiz olacağını öngörür.|possibleResult|Cleaner rivers.|Daha temiz nehirler.|action|Reduce pollution.|Kirliliği azaltmak.
+The practice news report discusses a volcanic eruption.|Alıştırma haber raporu bir volkanik patlamayı ele alır.|topic|A volcanic eruption.|Volkanik patlama.|genre|A news report.|Bir haber raporu.
+In the scenario, the rescue team will work with local officials.|Senaryoda kurtarma ekibi yerel görevlilerle çalışacak.|who|The rescue team.|Kurtarma ekibi.|withWho|Local officials.|Yerel görevliler.

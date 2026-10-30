@@ -1,0 +1,1396 @@
+{
+  "version": "2026.10.2",
+  "coreUnits": 36,
+  "enrichmentUnits": 8,
+  "reviewStatus": "authored-and-editorially-checked; independent-teacher-review-pending",
+  "units": [
+    {
+      "id": "g5u1",
+      "title": "School Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 23,
+        "descriptions": 11,
+        "sentences": 35,
+        "questions": 20,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 45,
+        "descriptions": 50,
+        "sentences": 84,
+        "questions": 44,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u2",
+      "title": "Classroom Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 20,
+        "descriptions": 11,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 42,
+        "descriptions": 47,
+        "sentences": 83,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u3",
+      "title": "Personal Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 45,
+        "descriptions": 22,
+        "sentences": 63,
+        "questions": 29,
+        "gaps": 8,
+        "repairs": 8,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 66,
+        "descriptions": 76,
+        "sentences": 112,
+        "questions": 53,
+        "gaps": 32,
+        "repairs": 32,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u4",
+      "title": "Family Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 25,
+        "descriptions": 14,
+        "sentences": 34,
+        "questions": 20,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 49,
+        "descriptions": 51,
+        "sentences": 81,
+        "questions": 44,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u5",
+      "title": "Life in the Neighbourhood & City",
+      "kind": "core",
+      "before": {
+        "vocabulary": 24,
+        "descriptions": 13,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 47,
+        "descriptions": 50,
+        "sentences": 89,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 2
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u6",
+      "title": "Life in the World",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 12,
+        "sentences": 34,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 43,
+        "descriptions": 46,
+        "sentences": 85,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u7",
+      "title": "Life in Nature",
+      "kind": "core",
+      "before": {
+        "vocabulary": 21,
+        "descriptions": 10,
+        "sentences": 33,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 44,
+        "sentences": 82,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 3
+      },
+      "newFamilies": 37,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u8",
+      "title": "Life in the Universe & Future",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 12,
+        "sentences": 31,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 44,
+        "sentences": 82,
+        "questions": 45,
+        "gaps": 31,
+        "repairs": 31,
+        "categories": 2
+      },
+      "newFamilies": 37,
+      "contexts": 12,
+      "cefr": "A2.1"
+    },
+    {
+      "id": "g5u9",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 18,
+        "descriptions": 7,
+        "sentences": 25,
+        "questions": 21,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 18,
+        "descriptions": 7,
+        "sentences": 25,
+        "questions": 21,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 2
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g5u10",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 15,
+        "descriptions": 9,
+        "sentences": 16,
+        "questions": 12,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 15,
+        "descriptions": 9,
+        "sentences": 16,
+        "questions": 12,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g6u1",
+      "title": "School Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 25,
+        "descriptions": 11,
+        "sentences": 34,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 46,
+        "descriptions": 52,
+        "sentences": 79,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u2",
+      "title": "Classroom Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 14,
+        "sentences": 33,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 45,
+        "descriptions": 49,
+        "sentences": 84,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u3",
+      "title": "Personal Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 24,
+        "descriptions": 14,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 43,
+        "descriptions": 51,
+        "sentences": 87,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 2
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u4",
+      "title": "Family Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 27,
+        "descriptions": 14,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 48,
+        "descriptions": 56,
+        "sentences": 77,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u5",
+      "title": "Life in the Neighbourhood & City",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 10,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 4,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 42,
+        "descriptions": 49,
+        "sentences": 82,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 28,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u6",
+      "title": "Life in the World & Culture",
+      "kind": "core",
+      "before": {
+        "vocabulary": 26,
+        "descriptions": 17,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 49,
+        "descriptions": 56,
+        "sentences": 86,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u7",
+      "title": "Life in Nature & Global Problems",
+      "kind": "core",
+      "before": {
+        "vocabulary": 25,
+        "descriptions": 15,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 48,
+        "descriptions": 51,
+        "sentences": 87,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u8",
+      "title": "Life in the Universe & Future",
+      "kind": "core",
+      "before": {
+        "vocabulary": 20,
+        "descriptions": 13,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 45,
+        "sentences": 91,
+        "questions": 45,
+        "gaps": 34,
+        "repairs": 34,
+        "categories": 2
+      },
+      "newFamilies": 40,
+      "contexts": 12,
+      "cefr": "A2.2"
+    },
+    {
+      "id": "g6u9",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 17,
+        "descriptions": 12,
+        "sentences": 16,
+        "questions": 12,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 17,
+        "descriptions": 12,
+        "sentences": 16,
+        "questions": 12,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 4
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g6u10",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 34,
+        "descriptions": 20,
+        "sentences": 54,
+        "questions": 30,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 34,
+        "descriptions": 20,
+        "sentences": 54,
+        "questions": 30,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g7u1",
+      "title": "Appearance and Personality",
+      "kind": "core",
+      "before": {
+        "vocabulary": 19,
+        "descriptions": 13,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 4,
+        "repairs": 4,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 51,
+        "sentences": 92,
+        "questions": 45,
+        "gaps": 33,
+        "repairs": 33,
+        "categories": 2
+      },
+      "newFamilies": 41,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u2",
+      "title": "Sports",
+      "kind": "core",
+      "before": {
+        "vocabulary": 21,
+        "descriptions": 12,
+        "sentences": 35,
+        "questions": 20,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 43,
+        "descriptions": 48,
+        "sentences": 79,
+        "questions": 44,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 2
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u3",
+      "title": "Biographies",
+      "kind": "core",
+      "before": {
+        "vocabulary": 24,
+        "descriptions": 16,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 4,
+        "repairs": 3,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 46,
+        "descriptions": 61,
+        "sentences": 87,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 29,
+        "categories": 2
+      },
+      "newFamilies": 38,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u4",
+      "title": "Wild Animals",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 16,
+        "sentences": 34,
+        "questions": 21,
+        "gaps": 4,
+        "repairs": 4,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 43,
+        "descriptions": 48,
+        "sentences": 87,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 4
+      },
+      "newFamilies": 38,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u5",
+      "title": "Television",
+      "kind": "core",
+      "before": {
+        "vocabulary": 28,
+        "descriptions": 18,
+        "sentences": 45,
+        "questions": 21,
+        "gaps": 7,
+        "repairs": 7,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 47,
+        "descriptions": 58,
+        "sentences": 94,
+        "questions": 45,
+        "gaps": 31,
+        "repairs": 31,
+        "categories": 2
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u6",
+      "title": "Celebrations",
+      "kind": "core",
+      "before": {
+        "vocabulary": 19,
+        "descriptions": 11,
+        "sentences": 34,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 45,
+        "sentences": 88,
+        "questions": 45,
+        "gaps": 33,
+        "repairs": 33,
+        "categories": 3
+      },
+      "newFamilies": 40,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u7",
+      "title": "Dreams",
+      "kind": "core",
+      "before": {
+        "vocabulary": 23,
+        "descriptions": 13,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 42,
+        "descriptions": 54,
+        "sentences": 81,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u8",
+      "title": "Public Buildings",
+      "kind": "core",
+      "before": {
+        "vocabulary": 29,
+        "descriptions": 16,
+        "sentences": 44,
+        "questions": 21,
+        "gaps": 9,
+        "repairs": 9,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 43,
+        "descriptions": 52,
+        "sentences": 84,
+        "questions": 45,
+        "gaps": 33,
+        "repairs": 33,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u9",
+      "title": "Environment",
+      "kind": "core",
+      "before": {
+        "vocabulary": 28,
+        "descriptions": 16,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 5
+      },
+      "after": {
+        "vocabulary": 48,
+        "descriptions": 60,
+        "sentences": 88,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 5
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u10",
+      "title": "Planets",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 10,
+        "sentences": 34,
+        "questions": 20,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 42,
+        "sentences": 89,
+        "questions": 44,
+        "gaps": 31,
+        "repairs": 31,
+        "categories": 3
+      },
+      "newFamilies": 37,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g7u11",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 19,
+        "descriptions": 10,
+        "sentences": 25,
+        "questions": 21,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 19,
+        "descriptions": 10,
+        "sentences": 25,
+        "questions": 21,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 3
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g7u12",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 20,
+        "descriptions": 10,
+        "sentences": 25,
+        "questions": 21,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 20,
+        "descriptions": 10,
+        "sentences": 25,
+        "questions": 21,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 3
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g8u1",
+      "title": "Friendship",
+      "kind": "core",
+      "before": {
+        "vocabulary": 23,
+        "descriptions": 13,
+        "sentences": 34,
+        "questions": 20,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 4
+      },
+      "after": {
+        "vocabulary": 41,
+        "descriptions": 52,
+        "sentences": 84,
+        "questions": 44,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 4
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u2",
+      "title": "Teen Life",
+      "kind": "core",
+      "before": {
+        "vocabulary": 62,
+        "descriptions": 38,
+        "sentences": 93,
+        "questions": 41,
+        "gaps": 12,
+        "repairs": 12,
+        "categories": 5
+      },
+      "after": {
+        "vocabulary": 84,
+        "descriptions": 103,
+        "sentences": 142,
+        "questions": 65,
+        "gaps": 36,
+        "repairs": 36,
+        "categories": 5
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u3",
+      "title": "In the Kitchen",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 13,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 52,
+        "sentences": 89,
+        "questions": 45,
+        "gaps": 32,
+        "repairs": 32,
+        "categories": 3
+      },
+      "newFamilies": 38,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u4",
+      "title": "On the Phone",
+      "kind": "core",
+      "before": {
+        "vocabulary": 22,
+        "descriptions": 11,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 42,
+        "descriptions": 50,
+        "sentences": 84,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 30,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u5",
+      "title": "The Internet",
+      "kind": "core",
+      "before": {
+        "vocabulary": 16,
+        "descriptions": 15,
+        "sentences": 34,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 50,
+        "sentences": 89,
+        "questions": 45,
+        "gaps": 33,
+        "repairs": 33,
+        "categories": 2
+      },
+      "newFamilies": 40,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u6",
+      "title": "Adventures",
+      "kind": "core",
+      "before": {
+        "vocabulary": 21,
+        "descriptions": 12,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 5,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 47,
+        "sentences": 83,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 29,
+        "categories": 2
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u7",
+      "title": "Tourism",
+      "kind": "core",
+      "before": {
+        "vocabulary": 23,
+        "descriptions": 14,
+        "sentences": 34,
+        "questions": 21,
+        "gaps": 5,
+        "repairs": 4,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 43,
+        "descriptions": 49,
+        "sentences": 86,
+        "questions": 45,
+        "gaps": 29,
+        "repairs": 28,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u8",
+      "title": "Chores",
+      "kind": "core",
+      "before": {
+        "vocabulary": 20,
+        "descriptions": 13,
+        "sentences": 34,
+        "questions": 20,
+        "gaps": 5,
+        "repairs": 4,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 49,
+        "sentences": 86,
+        "questions": 44,
+        "gaps": 33,
+        "repairs": 32,
+        "categories": 2
+      },
+      "newFamilies": 40,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u9",
+      "title": "Science",
+      "kind": "core",
+      "before": {
+        "vocabulary": 21,
+        "descriptions": 12,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 6,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 40,
+        "descriptions": 45,
+        "sentences": 90,
+        "questions": 45,
+        "gaps": 31,
+        "repairs": 31,
+        "categories": 2
+      },
+      "newFamilies": 37,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u10",
+      "title": "Natural Forces",
+      "kind": "core",
+      "before": {
+        "vocabulary": 24,
+        "descriptions": 8,
+        "sentences": 35,
+        "questions": 21,
+        "gaps": 6,
+        "repairs": 5,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 42,
+        "descriptions": 49,
+        "sentences": 88,
+        "questions": 45,
+        "gaps": 30,
+        "repairs": 29,
+        "categories": 3
+      },
+      "newFamilies": 36,
+      "contexts": 12,
+      "cefr": "A2"
+    },
+    {
+      "id": "g8u11",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 24,
+        "descriptions": 21,
+        "sentences": 6,
+        "questions": 16,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 3
+      },
+      "after": {
+        "vocabulary": 24,
+        "descriptions": 21,
+        "sentences": 6,
+        "questions": 16,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 3
+      },
+      "newFamilies": 0
+    },
+    {
+      "id": "g8u12",
+      "kind": "enrichment",
+      "before": {
+        "vocabulary": 24,
+        "descriptions": 21,
+        "sentences": 6,
+        "questions": 16,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 2
+      },
+      "after": {
+        "vocabulary": 24,
+        "descriptions": 21,
+        "sentences": 6,
+        "questions": 16,
+        "gaps": 3,
+        "repairs": 3,
+        "categories": 2
+      },
+      "newFamilies": 0
+    }
+  ],
+  "newAuthoredFamilies": 1327,
+  "newQuestionRecords": 864,
+  "sourceDocuments": [
+    {
+      "id": "meb-regular-2025",
+      "title": "MEB English regular programme 2025, Years 2–8",
+      "url": "https://mufredat.meb.gov.tr/Dosyalar/202591011405337-26-08-ekli-english-regular.pdf",
+      "sha256": "38cc26d455c178e4366fdc0abf522c7ad6eb7883ebc8a8971fea390def2c2034",
+      "accessed": "2026-10-29"
+    },
+    {
+      "id": "meb-regular-2018",
+      "title": "MEB English programme 2018, Years 2–8",
+      "url": "https://mufredat.meb.gov.tr/Dosyalar/201812411191321-%C4%B0NG%C4%B0L%C4%B0ZCE%20%C3%96%C4%9ERET%C4%B0M%20PROGRAMI%20Klas%C3%B6r%C3%BC.pdf",
+      "sha256": "e976ae163c83bb1b3bcf79d7d77ce8cb8308dbdc97a630b941951b9b57653279",
+      "accessed": "2026-10-29"
+    }
+  ],
+  "pictureReview": {
+    "reviewedNewVocabulary": 735,
+    "approvedNewVocabulary": 33,
+    "textOnlyNewVocabulary": 702,
+    "newAssetFiles": 14,
+    "newAssetBytes": 87538,
+    "byUnit": {
+      "g5u1": {
+        "before": 3,
+        "after": 3
+      },
+      "g5u2": {
+        "before": 6,
+        "after": 9
+      },
+      "g5u3": {
+        "before": 20,
+        "after": 21
+      },
+      "g5u4": {
+        "before": 12,
+        "after": 13
+      },
+      "g5u5": {
+        "before": 8,
+        "after": 10
+      },
+      "g5u6": {
+        "before": 15,
+        "after": 19
+      },
+      "g5u7": {
+        "before": 14,
+        "after": 16
+      },
+      "g5u8": {
+        "before": 13,
+        "after": 16
+      },
+      "g5u9": {
+        "before": 10,
+        "after": 10
+      },
+      "g5u10": {
+        "before": 5,
+        "after": 5
+      },
+      "g6u1": {
+        "before": 5,
+        "after": 5
+      },
+      "g6u2": {
+        "before": 5,
+        "after": 5
+      },
+      "g6u3": {
+        "before": 4,
+        "after": 7
+      },
+      "g6u4": {
+        "before": 6,
+        "after": 6
+      },
+      "g6u5": {
+        "before": 13,
+        "after": 13
+      },
+      "g6u6": {
+        "before": 6,
+        "after": 6
+      },
+      "g6u7": {
+        "before": 4,
+        "after": 4
+      },
+      "g6u8": {
+        "before": 13,
+        "after": 15
+      },
+      "g6u9": {
+        "before": 14,
+        "after": 14
+      },
+      "g6u10": {
+        "before": 16,
+        "after": 16
+      },
+      "g7u1": {
+        "before": 3,
+        "after": 3
+      },
+      "g7u2": {
+        "before": 8,
+        "after": 8
+      },
+      "g7u3": {
+        "before": 9,
+        "after": 12
+      },
+      "g7u4": {
+        "before": 10,
+        "after": 11
+      },
+      "g7u5": {
+        "before": 10,
+        "after": 10
+      },
+      "g7u6": {
+        "before": 8,
+        "after": 8
+      },
+      "g7u7": {
+        "before": 9,
+        "after": 9
+      },
+      "g7u8": {
+        "before": 8,
+        "after": 8
+      },
+      "g7u9": {
+        "before": 4,
+        "after": 4
+      },
+      "g7u10": {
+        "before": 9,
+        "after": 11
+      },
+      "g7u11": {
+        "before": 5,
+        "after": 5
+      },
+      "g7u12": {
+        "before": 11,
+        "after": 11
+      },
+      "g8u1": {
+        "before": 5,
+        "after": 5
+      },
+      "g8u2": {
+        "before": 19,
+        "after": 20
+      },
+      "g8u3": {
+        "before": 6,
+        "after": 6
+      },
+      "g8u4": {
+        "before": 5,
+        "after": 6
+      },
+      "g8u5": {
+        "before": 3,
+        "after": 3
+      },
+      "g8u6": {
+        "before": 11,
+        "after": 13
+      },
+      "g8u7": {
+        "before": 8,
+        "after": 8
+      },
+      "g8u8": {
+        "before": 4,
+        "after": 4
+      },
+      "g8u9": {
+        "before": 8,
+        "after": 9
+      },
+      "g8u10": {
+        "before": 11,
+        "after": 12
+      },
+      "g8u11": {
+        "before": 7,
+        "after": 7
+      },
+      "g8u12": {
+        "before": 3,
+        "after": 3
+      }
+    }
+  },
+  "totals": {
+    "vocabulary": 1788,
+    "descriptions": 1992,
+    "sentences": 3334,
+    "questions": 1791,
+    "gaps": 1132,
+    "repairs": 1127,
+    "categories": 135
+  },
+  "newRecords": {
+    "vocabulary": 895,
+    "descriptions": 1379,
+    "sentences": 1814,
+    "questions": 864,
+    "gaps": 895,
+    "repairs": 895,
+    "contexts": 432
+  },
+  "legacyQuestionTranslationsMissing": 927,
+  "runtimeAdditions": {
+    "vocabulary": 735,
+    "descriptions": 1379,
+    "sentences": 1814,
+    "questions": 864,
+    "gaps": 895,
+    "repairs": 895,
+    "categories": 0
+  },
+  "coreRanges": {
+    "vocabulary": {
+      "min": 40,
+      "max": 84
+    },
+    "descriptions": {
+      "min": 42,
+      "max": 103
+    },
+    "sentences": {
+      "min": 77,
+      "max": 142
+    },
+    "questions": {
+      "min": 44,
+      "max": 65
+    },
+    "gaps": {
+      "min": 29,
+      "max": 36
+    },
+    "repairs": {
+      "min": 28,
+      "max": 36
+    },
+    "categories": {
+      "min": 2,
+      "max": 5
+    }
+  },
+  "recordedAudioForNewVocabulary": {
+    "coveredRecords": 82,
+    "newRecords": 735,
+    "newRecordingsCreated": 0
+  },
+  "runtimeBytes": 3010235,
+  "runtimeGzipBytes": 469135
+}

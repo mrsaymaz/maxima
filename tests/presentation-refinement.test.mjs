@@ -1,0 +1,43 @@
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
+import{feedbackStyle,Juice,burst,floatText,setFeedbackLevel,flyCoins}from'../dist/game-feel.js';
+import{controlLayout,updateTrailHint}from'../dist/control-layout.js';import{contactState,makeContactShade,updateContactShade}from'../dist/contact-shade.js';
+import{QuietMoments}from'../dist/quiet-moments.js';import{sceneryTint,varySceneryInstances,stylizeProps,propKind}from'../dist/world-style.js';import{gateKit}from'../dist/task-gates.js';
+import{icon}from'../dist/ui-icons.js';import{applyGraphics}from'../dist/render-quality.js';import{makeArenaArt}from'../dist/arena-art.js';
+test('answer feedback is shorter and smaller than major rewards at every quality; reduced motion suppresses travelling particles',()=>{
+ for(const effects of['low','medium','full']){const step=feedbackStyle('step',effects,false),reward=feedbackStyle('reward',effects,false);assert.ok(step.count<reward.count);assert.ok(step.duration<reward.duration);assert.ok(step.spread<reward.spread);assert.equal(step.ring,false);assert.equal(feedbackStyle('step',effects,true).count,0);assert.equal(feedbackStyle('reward',effects,true).shake,0);}
+ const q=new Juice();q.setLevel('low');q.hitstop(500);assert.ok(q.freeze<=.025);q.land(8);q.shake(20);for(let i=0;i<120;i++){q.step(1/60);assert.ok(Math.abs(q.squash)<=.025);assert.ok(Math.abs(q.offset.x)<.08);}assert.ok(Math.abs(q.squash)<.001);
+});
+test('both thumb groups and the context action are disjoint and stay inside supported phone/tablet safe rectangles',()=>{
+ for(const[w,h]of[[320,568],[350,700],[390,844],[430,932],[644,360],[768,1024],[1024,768]]){const p=controlLayout(w,h),rects=['stick','jump','attack','context'].map(k=>({...p[k],name:k}));for(const r of rects){assert.ok(r.x>=p.edge&&r.x+r.size<=w-p.edge,`${w}: ${r.name} bounds`);assert.ok(r.size>=44);assert.ok(r.bottom>=10);}
+  for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){const a=rects[i],b=rects[j],x=Math.min(a.x+a.size,b.x+b.size)-Math.max(a.x,b.x),y=Math.min(a.bottom+a.size,b.bottom+b.size)-Math.max(a.bottom,b.bottom);assert.ok(x<=-12||y<=-12,`${w}: ${a.name}/${b.name} separation`);}}
+});
+test('quiet hints rest after reading time; active hazard guidance never times out or loses its text',()=>{
+ const classes=new Set(),el={dataset:{},classList:{toggle(k,v){v?classes.add(k):classes.delete(k);}}};updateTrailHint(el,'Follow the coins',{now:0});updateTrailHint(el,'Follow the coins',{now:7000});assert.ok(classes.has('hint-resting'));updateTrailHint(el,'Jump the ring',{now:8000,urgent:true});updateTrailHint(el,'Jump the ring',{now:30000,urgent:true});assert.equal(el.textContent,'Jump the ring');assert.ok(!classes.has('hint-resting'));updateTrailHint(el,'The chest is ahead',{now:31000});assert.ok(!classes.has('hint-resting'));
+});
+test('contact shade follows raised supports, fades during jumps and disappears over missing ground, even on Low',()=>{
+ const args={position:{x:2,z:3},footY:1,support:1,radius:.24,height:.65,shadows:false},s=contactState(args),jump=contactState({...args,footY:1.8});assert.equal(s.y,1.035);assert.ok(s.opacity>contactState({...args,shadows:true}).opacity);assert.ok(jump.opacity<s.opacity);assert.ok(jump.width>s.width);assert.equal(contactState({...args,support:null}).visible,false);
+ const mesh=makeContactShade(),g=mesh.geometry,m=mesh.material;for(let i=0;i<300;i++)updateContactShade(mesh,{...args,position:{x:i,z:3}});assert.equal(mesh.geometry,g);assert.equal(mesh.material,m);assert.equal(mesh.position.x,299);assert.equal(mesh.castShadow,false);assert.equal(mesh.geometry.attributes.position.count,4);
+});
+test('quiet head motions are additive and reversible, leave feet/root transforms intact and yield to movement and attacks',()=>{
+ const model=new T.Group(),head=new T.Bone(),foot=new T.Bone();model.add(head,foot);model.rotation.y=.4;head.rotation.set(.2,.1,.3);const base=head.quaternion.clone(),root=model.quaternion.clone(),footQ=foot.quaternion.clone(),q=new QuietMoments(model,[{bone:head,role:'head'}]);
+ let max=0;for(let n=0;n<20;n++){q.observe('mechanism-'+n,-1);for(let f=0;f<130;f++){q.update(1/60);max=Math.max(max,head.quaternion.angleTo(base));assert.ok(head.quaternion.angleTo(base)<.09);assert.deepEqual(model.quaternion.toArray(),root.toArray());assert.deepEqual(foot.quaternion.toArray(),footQ.toArray());}q.reset();assert.ok(head.quaternion.angleTo(base)<1e-7);}
+ assert.ok(max>.02);q.acknowledge();q.update(.3);assert.ok(head.quaternion.angleTo(base)>.001);q.update(.1,{moving:true});assert.ok(head.quaternion.angleTo(base)<1e-7);q.settle();q.update(.4,{attack:true});assert.ok(head.quaternion.angleTo(base)<1e-7);q.update(.2,{reduced:true});assert.ok(head.quaternion.angleTo(base)<1e-7);
+});
+test('unrigged quiet fallback never translates/scales the model and restores its exact orientation',()=>{
+ const model=new T.Group();model.rotation.set(.1,.6,.03);model.scale.setScalar(.3);const before={q:model.quaternion.clone(),p:model.position.clone(),s:model.scale.clone()},q=new QuietMoments(model);q.observe('gate');for(let i=0;i<100;i++){q.update(1/60);assert.ok(model.quaternion.angleTo(before.q)<.03);assert.deepEqual(model.position,before.p);assert.deepEqual(model.scale,before.s);}q.reset();assert.ok(model.quaternion.angleTo(before.q)<1e-7);
+});
+test('material variants stay within the arena colour family and use existing instance batches',()=>{
+ for(const kind of['stone','wood','leaf'])for(let z=-100;z<10;z+=2){const c=sceneryTint(kind,12,z);assert.deepEqual(c,sceneryTint(kind,12,z));assert.ok([c.r,c.g,c.b].every(v=>v>=.85&&v<=1));}
+ const mesh=new T.InstancedMesh(new T.BoxGeometry(1,1,1),new T.MeshStandardMaterial(),3),before=mesh.geometry.attributes.position.array.slice();varySceneryInstances(mesh,[{x:0,z:0},{x:5,z:4},{x:8,z:12}],'stone');assert.equal(mesh.count,3);assert.deepEqual(mesh.geometry.attributes.position.array,before);assert.ok(mesh.instanceColor);
+ for(const area of[0,1,2]){const k=gateKit(area);assert.equal(propKind(k.m.stone),'stone');assert.equal(propKind(k.m.wood),'wood');assert.equal(propKind(k.m.leaf),'leaf');}
+ const group=new T.Group(),mat=new T.MeshStandardMaterial();mat.userData.detail='stone';group.add(new T.Mesh(new T.BoxGeometry(),mat));stylizeProps(group);const shader={uniforms:{},vertexShader:'#include <common>\n#include <fog_vertex>',fragmentShader:'#include <common>\n#include <map_fragment>'};mat.onBeforeCompile(shader);assert.ok(shader.fragmentShader.includes('broadTone'));assert.equal(group.children.length,1);
+});
+test('Low removes small dressing but keeps contact shade and arena landmark geometry',()=>{
+ const arena=makeArenaArt(0),shade=makeContactShade(),world={renderer:{setPixelRatio(){},shadowMap:{}},resize(){},contactShade:shade,arenaArtGroups:[arena],dressing:{visible:true},edgeGrassMesh:{visible:true,userData:{total:100}},juice:new Juice()};const count=arena.children.length;applyGraphics(world,{preset:'low'},3);assert.equal(world.renderer.shadowMap.enabled,false);assert.equal(world.dressing.visible,false);assert.equal(world.edgeGrassMesh.visible,false);assert.equal(shade.visible,true);assert.equal(arena.visible,true);assert.equal(arena.children.length,count);assert.ok(arena.userData.landmarks.length>0);
+});
+test('effect DOM is bounded and cancelling a flying coin cannot credit its arrival twice',()=>{
+ const original=globalThis.document,oldTimer=globalThis.setTimeout;const nodes=[],animations=[];const root={get childElementCount(){return nodes.length;},append(e){nodes.push(e);},querySelectorAll(sel){return nodes.filter(n=>sel==='.fx-float'&&n.className.startsWith('fx-float'));}};
+ globalThis.setTimeout=()=>0;globalThis.document={documentElement:{setAttribute(){}},querySelector:()=>root,createElement(){return{style:{setProperty(){}},remove(){const i=nodes.indexOf(this);if(i>=0)nodes.splice(i,1);},animate(){const a={};animations.push(a);return a;}};}};
+ try{setFeedbackLevel('medium');for(let i=0;i<30;i++){burst(10,20);floatText(10,20,'20');}assert.ok(nodes.length<=48);assert.ok(root.querySelectorAll('.fx-float').length<=3);let received=0;flyCoins({x:10,y:20},{getBoundingClientRect:()=>({left:0,top:0,width:20,height:20})},2,()=>received++);for(const a of animations){a.onfinish();a.oncancel();}assert.equal(received,2);}finally{globalThis.document=original;globalThis.setTimeout=oldTimer;}
+});
+test('shared icon markup is decorative and has no externally fetched assets',()=>{for(const name of['attack','jump','follow','use','sound','mute','book','coin','check','chest']){const s=icon(name);assert.ok(s.includes('aria-hidden="true"'));assert.ok(s.includes('stroke-width="1.8"'));assert.ok(!s.includes('http'));}});

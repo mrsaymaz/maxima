@@ -1,0 +1,25 @@
+/* Full-bleed arena: no task crop and no extra modal for the final English seals. */
+.in-guardian #world{inset:0!important;width:100%!important;height:100dvh!important}
+.in-guardian .topbar,.in-guardian #threat-layer,.in-guardian #world-labels{display:none!important}
+.in-guardian #ui,.in-guardian #task-layer{position:fixed;inset:0;pointer-events:none}
+.guardian-hud{position:absolute;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(540px,calc(100% - 28px));color:#fff9de;text-shadow:0 2px 3px #122b30;font-size:13px;pointer-events:none}
+.guardian-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:900;font-size:clamp(16px,4vw,22px)}
+.guardian-heading button{pointer-events:auto;min-width:44px;min-height:44px;display:grid;place-items:center;background:#193c40c9;border:1px solid #c5d0b9;border-radius:50%;color:#fff8dc}
+.boss-health{height:12px;border:2px solid #ead5a5;border-radius:12px;background:#213239;overflow:hidden;box-shadow:0 2px 6px #13252b}
+.boss-health i{display:block;height:100%;background:linear-gradient(90deg,#db674c,#f9ba66);transition:width .24s ease}
+.guardian-health-note{display:flex;justify-content:space-between;margin-top:5px;font-weight:800}
+#guardian-callout{margin:9px auto 0;text-align:center;font-weight:800;max-width:38ch;line-height:1.25;font-size:clamp(13px,3.5vw,17px);filter:drop-shadow(0 1px 3px #142d35)}
+.guardian-dock{pointer-events:none}.guardian-dock button,.guardian-dock .joystick{pointer-events:auto;touch-action:none}
+.guardian-keyboard{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#fff5dd;font-size:13px;white-space:nowrap;text-shadow:0 1px 3px #112f34}
+.guardian-finisher{position:absolute;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(660px,calc(100% - 28px));display:grid;gap:10px;pointer-events:none}
+.seal-count{display:flex;justify-content:center;gap:12px}.seal-count span{display:grid;place-items:center;width:30px;height:30px;border:2px solid #f3d590;transform:rotate(-7deg);border-radius:8px;background:#243b40;color:#fff6ce;font-weight:900}.seal-count .broken{background:#355b46;border-color:#b1dfac}
+.finisher-question{font-size:clamp(17px,4.5vw,23px);line-height:1.3;font-weight:900;text-align:center;color:#fff8e4;text-shadow:0 2px 3px #102b33,0 0 10px #132b35;white-space:pre-line;overflow-wrap:anywhere}
+.finisher-question .question-context{display:block;font-size:.82em;font-weight:600;margin-bottom:6px;color:#edf1e7}.finisher-question .question-line{display:block}.finisher-instruction{display:block;font-size:13px;font-weight:700;letter-spacing:.03em;margin-bottom:4px;color:#f2d8a6}
+.finisher-answers{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.finisher-answers button{pointer-events:auto;min-height:60px;padding:12px 10px;display:flex;justify-content:center;align-items:center;gap:8px;background:linear-gradient(#f4e8bf,#d6c28d);border:2px solid #fff2c2;border-bottom:5px solid #8b7952;border-radius:12px;color:#172f35;font:800 clamp(15px,3.7vw,19px)/1.25 Nunito,system-ui,sans-serif;overflow-wrap:anywhere;touch-action:manipulation;box-shadow:0 3px 9px #0c202953}
+.finisher-answers button:active{transform:translateY(2px);border-bottom-width:3px}.finisher-answers button:focus-visible{outline:3px solid #a2eeed;outline-offset:3px}
+.finisher-feedback{text-align:center;color:#fff7dc;font-size:13px;line-height:1.25;margin:0;text-shadow:0 2px 3px #122b30;font-weight:700;min-height:17px}
+.in-guardian-finisher .guardian-dock{display:none}
+@media(max-width:759px){.guardian-keyboard{display:none}.finisher-answers{grid-template-columns:1fr}.finisher-answers button{min-height:48px;padding:9px 12px}.guardian-finisher{gap:7px}.seal-symbol{font-size:23px}.in-guardian .joystick{bottom:max(28px,env(safe-area-inset-bottom))}.in-guardian .attack-button{bottom:max(30px,env(safe-area-inset-bottom));right:24px}.in-guardian .jump-button{bottom:112px;right:24px}}
+@media(max-height:500px) and (orientation:landscape){.guardian-hud{left:14px;transform:none;width:38%;top:max(8px,env(safe-area-inset-top));font-size:11px}.guardian-heading{font-size:15px}#guardian-callout{font-size:12px;margin-top:4px}.guardian-heading button{min-height:38px;min-width:38px}.guardian-finisher{left:auto;right:max(16px,env(safe-area-inset-right));transform:none;bottom:12px;width:55%;gap:6px}.finisher-question{font-size:17px}.finisher-question .question-context{font-size:14px}.finisher-answers button{font-size:14px;min-height:48px;padding:7px}.finisher-answers{gap:6px;grid-template-columns:repeat(3,minmax(0,1fr))}.seal-count span{width:24px;height:24px}.finisher-feedback{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.boss-health i{transition:none}}

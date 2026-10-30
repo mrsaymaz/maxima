@@ -1,3 +1,6 @@
+import{buildValleyBanks}from'./valley-banks.js';
+import{surfaceMaterial,assignSurface,assignSurfaceRoles}from'./surface-materials.js';
+import{composedHalfWidth,scenicWallHeight}from'./expedition-composition.js';
 import{bevelBox,carvedCylinder}from'./prop-art.js';
 import{THEMED_GATES,makeTaskGate}from'./task-gates.js';
 import{buildCliffs,foliageGeometry,boulderGeometry,fbm3,chunkedInstances}from'./cliff-art.js';
@@ -6,14 +9,15 @@ import {chapterPath,pathDistance,approachPoint,CHAPTER_LENGTH,END} from './trail
 
 // These are geometry assets. The expedition owns permission to cross a gate.
 const STATES=new WeakMap();
-let ENCLOSURE_CACHE=null;
+const ENCLOSURE_CACHE=new Map();
 const TYPES=['translation','definition','picture','qa-pairs','halves','ending','sentence','gap','correct','repair','answer','sort','intruder','spelling','clue','listen-word','listen-tr','listen-multi','numbers','instructions'];
 const PALETTES=[['#6e6b5d','#aaa38c','#5b8055','#b8e2c5'],['#7f7663','#cbbf9f','#7d9a6e','#b7e7e9'],['#56586c','#9799ae','#6e7f94','#d5ccfb']];
 const clamp=n=>Math.max(0,Math.min(1,Number.isFinite(n)?n:0));
 function kit(name,area=0){
  const g=new T.Group();g.name=name;const p=PALETTES[area]||PALETTES[0],cache=new Map();
- const mat=(color,extra={})=>new T.MeshStandardMaterial({color,roughness:.88,...extra});
+ const mat=(color,extra={})=>surfaceMaterial('stone',color,extra);
  const m={dark:mat(p[0]),stone:mat(p[1]),moss:mat(p[2]),air:mat(p[3],{emissive:p[3],emissiveIntensity:.55,roughness:.45}),wood:mat('#846b50'),light:mat('#b79b70'),gold:mat('#cbb078',{metalness:.18,roughness:.56}),root:mat('#665b49'),corrupt:mat('#766680'),fruit:mat('#dfaa62'),water:mat('#6fbbb7',{roughness:.3}),cream:mat('#e1d9b9'),eye:mat('#253c36')};
+ assignSurfaceRoles(m,{stone:['dark','stone'],foliage:['moss'],effect:['air'],wood:['wood','light','root'],metal:['gold'],organic:['corrupt','fruit','cream','eye'],water:['water']});
  const geo=(key,fn)=>{if(!cache.has(key))cache.set(key,fn());return cache.get(key);};
  const box=(w,h,d)=>geo(`b${w},${h},${d}`,()=>bevelBox(w,h,d));
  const cyl=(a,b,h,n=7)=>geo(`c${a},${b},${h},${n}`,()=>carvedCylinder(a,b,h,n));
@@ -40,7 +44,7 @@ function batchStatic(root){
 // Completed pieces either sink into the verges or become a flush crossing deck.
 export function makeRouteBarrier(type,{area=0,completed=false}={}){
  if(!TYPES.includes(type))throw new Error('Unknown corridor barrier type: '+type);
- if(THEMED_GATES.includes(type)){const{group:g,update}=makeTaskGate(type,{area});g.name='route-barrier-'+type;g.userData={type,area,progress:0,completed:false,blocking:true,family:'themed-'+type,themed:true,width:6.4,stages:3,solids:[],time:0};STATES.set(g,{callbacks:[{fn:f=>update(f,g.userData.time),index:0}],segments:[],crossing:false,themed:update});setRouteBarrierProgress(g,completed?1:0);return g;}
+ if(THEMED_GATES.includes(type)){const gate=makeTaskGate(type,{area}),{group:g,update}=gate;g.name='route-barrier-'+type;g.userData={...g.userData,type,area,progress:0,completed:false,blocking:true,family:'themed-'+type,themed:true,width:6.4,stages:3,solids:[],time:0};STATES.set(g,{gate,callbacks:[{fn:f=>update(f,g.userData.time),index:0}],segments:[],crossing:false,themed:update});setRouteBarrierProgress(g,completed?1:0);return g;}
  const k=kit('route-barrier-'+type,area),{g,m,mesh,box,cyl,crystal,ball,ring,part,link}=k;
  const updates=[],segments=[],crossing=['halves','sentence','gap'].includes(type);
  const family=['translation','definition','correct','repair','answer'].includes(type)?'rune':crossing?'crossing':['picture','sort','clue','listen-multi','numbers','instructions'].includes(type)?'supplies':['ending','intruder','spelling'].includes(type)?'roots':['listen-word','listen-tr'].includes(type)?'echo':'wind';
@@ -113,6 +117,7 @@ export function makeRouteBarrier(type,{area=0,completed=false}={}){
 
 // Idle motion for themed gates (swaying bells, echo rings); progress itself only changes through setRouteBarrierProgress.
 export function animateRouteBarrier(group,time){const state=STATES.get(group);if(!state?.themed)return group;group.userData.time=time;state.themed(group.userData.progress,time);return group;}
+export function setRouteBarrierTask(group,task){const state=STATES.get(group);state?.gate?.setTask(task);return group;}
 export function setRouteBarrierProgress(group,fraction){
  const state=STATES.get(group);if(!state)return group;const f=clamp(fraction);
  group.userData.progress=f;group.userData.completed=f===1;group.userData.blocking=f<1;
@@ -141,20 +146,20 @@ function cloneEnclosure(source){
  const group=new T.Group();group.name=source.name;group.userData=JSON.parse(JSON.stringify(source.userData));
  for(const original of source.children){const geometry=original.geometry.clone(),material=original.material.clone(),mesh=original.isInstancedMesh?new T.InstancedMesh(geometry,material,original.count):new T.Mesh(geometry,material);mesh.name=original.name;mesh.castShadow=original.castShadow;mesh.receiveShadow=original.receiveShadow;if(original.isInstancedMesh){mesh.instanceMatrix.copy(original.instanceMatrix);mesh.instanceMatrix.needsUpdate=true;}group.add(mesh);}return group;
 }
-export function makeCorridorEnclosure(){
+export function makeCorridorEnclosure({composed=false,reveals=false}={}){
  const paths=[];
  for(let c=0;c<5;c++)for(const s of['left','right'])paths.push(chapterPath(c,s));
  paths.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:2-5*CHAPTER_LENGTH},{x:END.x,z:END.z-3}]);
- const cacheKey=JSON.stringify({paths,CHAPTER_LENGTH,END});
- if(ENCLOSURE_CACHE?.key===cacheKey)return cloneEnclosure(ENCLOSURE_CACHE.group);
+ const cacheKey=JSON.stringify({paths,CHAPTER_LENGTH,END,composed,reveals});
+ if(ENCLOSURE_CACHE.has(cacheKey))return cloneEnclosure(ENCLOSURE_CACHE.get(cacheKey));
  const k=kit('corridor-enclosure'),{g,m}=k;
  const protectedRoutes=paths.slice();
  for(let c=0;c<5;c++)for(const side of['left','right']){const path=chapterPath(c,side);for(const node of path.slice(2,6)){const a=approachPoint(node);protectedRoutes.push([node,a]);}}
  const distance=p=>Math.min(...paths.map(path=>pathDistance(p,path)));
- const radius=3.45,field=(x,z)=>distance({x,z})-radius;
+ const radius=3.45,field=(x,z)=>distance({x,z})-(composed?composedHalfWidth(z)+.25:radius);
  const normal=(x,z)=>{const dx=field(x+.04,z)-field(x-.04,z),dz=field(x,z+.04)-field(x,z-.04),len=Math.hypot(dx,dz)||1;return{x:dx/len,z:dz/len};};
  // Crags and dips vary the skyline so the valley shows over lower stretches of wall.
- const height=(x,z)=>4.3+.42*Math.sin(z*.18)+.28*Math.cos(z*.53+x*.55)+(Math.abs(x)>9?.6:0)+(fbm3(x*.08,0,z*.05)-.5)*2.4;
+ const height=(x,z)=>{const base=4.3+.42*Math.sin(z*.18)+.28*Math.cos(z*.53+x*.55)+(Math.abs(x)>9?.6:0)+(fbm3(x*.08,0,z*.05)-.5)*2.4;return composed||reveals?scenicWallHeight(x,z,base):base;};
  const strips=[],solids=[],segments=[];
  const tri=(out,a,b,c)=>out.push(...a,...b,...c);
  const quad=(out,a,b,c,d)=>{tri(out,a,b,c);tri(out,a,c,d);};
@@ -175,15 +180,17 @@ export function makeCorridorEnclosure(){
   if(hits.length===2)shell(hits[0],hits[1]);else if(hits.length===4){shell(hits[0],hits[1]);shell(hits[2],hits[3]);}
  }
  const cliffs=buildCliffs(strips);for(const mesh of cliffs.meshes)g.add(mesh);
+ const banks=composed?buildValleyBanks(strips):null;if(banks)for(const mesh of banks.meshes)g.add(mesh);
  // Faceted outcrops at the foot of the wall, bushes along the rim and occasional trees on the crest.
  const sites=segments.filter(({a,b},i)=>{if(i%9)return false;const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return field(x+n.x*1.1,z+n.z*1.1)>.80;}).map(({a,b})=>{const x=(a.x+b.x)/2,z=(a.z+b.z)/2,n=normal(x,z);return{x:x+n.x*1.15,z:z+n.z*1.15,size:.55+fbm3(x,1,z)*.6};});
  const rockMaterial=new T.MeshStandardMaterial({color:'#b4ab94',vertexColors:true,roughness:.95,flatShading:true}),leafMaterial=new T.MeshStandardMaterial({color:'#5f8a4c',vertexColors:true,roughness:.9,flatShading:true}),barkMaterial=new T.MeshStandardMaterial({color:'#6e5641',roughness:.95});
- const bushSpots=cliffs.rim.filter((_,i)=>i%5===0),treeSpots=cliffs.rim.filter((r,i)=>i%15===7&&r.depth>1.2),bush=foliageGeometry(2,1),crown=foliageGeometry(5,1),trunk=new T.CylinderGeometry(.09,.15,1,6),rock=boulderGeometry(3);
+ assignSurface(rockMaterial,'stone');assignSurface(leafMaterial,'foliage');assignSurface(barkMaterial,'wood');
+ const bushSpots=cliffs.rim.filter((r,i)=>composed||reveals?i%11===0&&fbm3(r.x*.2,0,r.z*.08)>.52:i%5===0),treeSpots=cliffs.rim.filter((r,i)=>i%(composed||reveals?67:15)===7&&r.depth>1.2&&(!(composed||reveals)||((-r.z%132+132)%132)>33)),bush=foliageGeometry(2,1),crown=foliageGeometry(5,1),trunk=new T.CylinderGeometry(.09,.15,1,6),rock=boulderGeometry(3);
  const add=list=>{for(const mesh of list)g.add(mesh);};
- add(chunkedInstances(rock,rockMaterial,sites,(o,r,i)=>{o.position.set(r.x,r.size*.25,r.z);o.rotation.set(.2*Math.sin(i),i*.67,.15*Math.cos(i));o.scale.set(r.size*1.1,r.size*.85,r.size);},'cliff-outcrops'));
+ add(chunkedInstances(rock,rockMaterial,composed?sites.filter(r=>fbm3(r.x*.2,0,r.z*.08)>.55):sites,(o,r,i)=>{o.position.set(r.x,r.size*.25,r.z);o.rotation.set(.2*Math.sin(i),i*.67,.15*Math.cos(i));o.scale.set(r.size*1.1,r.size*.85,r.size);},'cliff-outcrops'));
  add(chunkedInstances(bush,leafMaterial,bushSpots,(o,r,i)=>{const k=.32+fbm3(r.x*.7,2,r.z*.7)*.45;o.position.set(r.x+r.nx*r.depth*.35,r.y+k*.35,r.z+r.nz*r.depth*.35);o.rotation.set(0,i*1.3,0);o.scale.set(k*1.3,k,k*1.2);},'rim-bushes'));
  const trees=treeSpots.map(r=>({...r,h:1.4+fbm3(r.x*.5,4,r.z*.5)*1.6,x:r.x+r.nx*r.depth*.6,z:r.z+r.nz*r.depth*.6}));
  add(chunkedInstances(trunk,barkMaterial,trees,(o,r,i)=>{o.rotation.set(0,i,0);o.position.set(r.x,r.y+r.h*.4,r.z);o.scale.set(1,r.h*.8,1);},'rim-tree-trunks'));
  add(chunkedInstances(crown,leafMaterial,trees.flatMap(r=>[{...r,k:0},{...r,k:1}]),(o,r)=>{const s=(.75-r.k*.22)*r.h*.55;o.rotation.set(0,r.h*3,0);o.position.set(r.x+(r.k?.18:0),r.y+r.h*(.82+r.k*.32),r.z);o.scale.set(s,s*.9,s);},'rim-tree-crowns'));
- g.userData={solids,collidersInWorldSpace:true,pathUnionRadius:radius,segments:segments.length,wallHeight:[3.8,5.8],adultRadius:.78,protectedRoutes:protectedRoutes.length};ENCLOSURE_CACHE={key:cacheKey,group:cloneEnclosure(g)};return g;
+ g.userData={bankTriangles:banks?.triangles||0,bankBatches:banks?.meshes.length||0,solids,composed,reveals,collidersInWorldSpace:true,pathUnionRadius:radius,segments:segments.length,wallHeight:[3.8,5.8],adultRadius:.78,protectedRoutes:protectedRoutes.length};ENCLOSURE_CACHE.set(cacheKey,cloneEnclosure(g));return g;
 }
