@@ -38,3 +38,18 @@ export function runProgress(fraction){
  if(!bar?.isConnected){bar=d.createElement('div');bar.id='runner-progress';bar.setAttribute('role','progressbar');bar.setAttribute('aria-label','Distance to the next gate');bar.innerHTML='<span class="gate">🏁</span><div class="rail"><div class="fill"></div><span class="me"></span></div>';d.body.append(bar);}
  const f=Math.max(0,Math.min(1,fraction));bar.hidden=false;bar.style.setProperty('--run',f.toFixed(3));bar.setAttribute('aria-valuenow',String(Math.round(f*100)));
 }
+// Active power-ups as small chips under the top bar, with seconds left.
+let chips=null;const CHIP={magnet:'🧲',shield:'🛡️',double:'×2',dash:'⚡'};
+export function powerChips(power){
+ const d=doc();if(!d?.body)return;const active=power?Object.entries(power).filter(([k,v])=>k==='shield'?v:v>0):[];
+ if(!active.length){if(chips)chips.hidden=true;return;}
+ if(!chips?.isConnected){chips=d.createElement('div');chips.id='runner-powers';chips.setAttribute('aria-live','polite');d.body.append(chips);}
+ chips.hidden=false;const html=active.map(([k,v])=>`<span class="chip ${k}">${CHIP[k]}${k==='shield'?'':` ${Math.ceil(v)}s`}</span>`).join('');if(chips.innerHTML!==html)chips.innerHTML=html;
+}
+// Speed lines: streaks at the screen edges that grow with speed, boost and dash.
+let lines=null;
+export function speedLines(amount){
+ const d=doc();if(!d?.body)return;const a=Math.max(0,Math.min(1,amount-.35));
+ if(!lines?.isConnected){if(!a)return;lines=d.createElement('div');lines.id='runner-speed';lines.setAttribute('aria-hidden','true');d.body.append(lines);}
+ lines.style.opacity=String(a.toFixed(2));
+}

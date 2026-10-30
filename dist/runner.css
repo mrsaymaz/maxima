@@ -31,3 +31,14 @@ body.playing.runner-running:not(.in-task) #toast{top:auto;bottom:calc(150px + va
 #runner-progress .fill{position:absolute;left:0;right:0;bottom:0;height:calc(var(--run,0)*100%);border-radius:4px;background:linear-gradient(#ffd23f,#7bdc5a)}
 #runner-progress .me{position:absolute;left:50%;bottom:calc(var(--run,0)*100%);width:16px;height:16px;transform:translate(-50%,50%);border-radius:50%;background:#fff7dc;border:3px solid #1b294f}
 @media(prefers-reduced-motion:reduce){#runner-flash.show{animation:none;opacity:1;transform:translate(-50%,-50%)}}
+/* Power-up chips under the top bar. */
+#runner-powers{position:fixed;z-index:45;right:calc(40px + var(--safe-right,0px));top:calc(100px + var(--safe-top,0px));display:flex;flex-direction:column;gap:5px;pointer-events:none}
+#runner-powers[hidden]{display:none}
+#runner-powers .chip{padding:3px 9px;border:2px solid #1b294f;border-radius:999px;background:#fff7dceb;color:#1b294f;font:800 13px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 2px 0 #1b294f}
+#runner-powers .shield{background:#bfe9ff}#runner-powers .double{background:#ffe680}#runner-powers .dash{background:#d9ff9a}#runner-powers .magnet{background:#ffd0cc}
+/* Speed lines: radial streaks at the edges, stronger near top speed, boosts and dashes. */
+#runner-speed{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;transition:opacity .25s;
+ background:repeating-conic-gradient(from 0deg at 50% 46%,#fff0 0deg 4deg,#ffffff66 4deg 4.6deg,#fff0 4.6deg 9deg);
+ -webkit-mask-image:radial-gradient(ellipse at 50% 46%,#0000 42%,#000 88%);mask-image:radial-gradient(ellipse at 50% 46%,#0000 42%,#000 88%);animation:runner-lines .35s linear infinite}
+@keyframes runner-lines{from{transform:scale(1)}to{transform:scale(1.06)}}
+@media(prefers-reduced-motion:reduce){#runner-speed{display:none}}

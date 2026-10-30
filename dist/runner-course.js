@@ -53,7 +53,7 @@ function beat(section,r,mode,run,s,k,lastFree,tutorial){
  const hard=mode==='challenge',roll=r(),type=roll<.26?'barrier':roll<.44?'hole':roll<.58?'swamp':roll<.8?'bar':'coins';
  let lanes=[0,1,2];
  if(type==='hole')lanes=(hard&&!tutorial&&r()<.45)?pick(r,[[0,1],[1,2]]):[Math.floor(r()*3)%3];
- if(type==='swamp')lanes=hard?pick(r,[[0,1],[1,2],[0,2]]):pick(r,[[0],[1],[2],[0,1],[1,2]]);
+ if(type==='swamp')lanes=hard?pick(r,[[0,1],[1,2]]):pick(r,[[0],[1],[2],[0,1],[1,2]]);
  if(type==='barrier')lanes=tutorial?[Math.floor(r()*3)%3]:hard&&r()<.4?[0,1,2]:pick(r,[[0],[1],[2],[0,1],[1,2]]);
  if(type==='bar')lanes=tutorial||!hard?pick(r,[[0,1],[1,2],[0,2],[0,1,2]]):[0,1,2];
  const free=[0,1,2].find(l=>!lanes.includes(l)&&l===lastFree)??[0,1,2].find(l=>!lanes.includes(l))??lastFree,looks=RUNNER_STYLES[type]?.[section.area]||RUNNER_STYLES[type]?.[0];
@@ -61,12 +61,57 @@ function beat(section,r,mode,run,s,k,lastFree,tutorial){
  return{obstacle,free,lanes,type};
 }
 
+// Trial moments: the six old trials, rebuilt for lanes. One or two per run, rotating so that every chapter
+// (seven moments over its four runs) shows all six. Each returns its obstacles, coins and the track it uses.
+export const RUN_MOMENTS=['boulders','wind','stones','crystal','thorns','ledge'];
+const MOMENT_SLOTS=[[0],[1,2],[3],[4,5]];
+function moment(kind,section,r,run,s,hard){
+ const v=speedAt(run,s),id=`${section.id}:moment:${kind}:${Math.round(s)}`,obstacles=[],coins=[],coin=(k,cs,lane,y=.58)=>coins.push({id:`${id}:coin:${k}`,s:cs,lateral:LANES[lane],y});
+ if(kind==='boulders'){
+  // Boulders roll toward the creature down one lane at a time; an amber stripe warns which lane is next.
+  const len=v*6,count=Math.ceil(6/(hard?1.1:1.4)),pattern=Array.from({length:count},(_,i)=>(Math.floor(r()*3)+i)%3);
+  obstacles.push({id,type:'boulders',s:s+len/2,depth:len,start:s,end:s+len,lanes:[0,1,2],pattern,interval:hard?1.1:1.4,roll:hard?6:4.5});
+  for(let i=0;i<6;i++)coin(i,s+len*(.1+i*.14),i%2?0:2);return{obstacles,coins,length:len};
+ }
+ if(kind==='wind'){
+  // Gusts push the creature one lane downwind after a warning; the coins sit in the upwind lane.
+  const len=v*7.5,dir=r()<.5?-1:1,upwind=dir>0?0:2;obstacles.push({id,type:'wind',s:s+len/2,depth:len,start:s,end:s+len,lanes:[0,1,2],dir,period:hard?2.1:2.6});
+  for(let i=0;i<9;i++)coin(i,s+len*(.08+i*.1),upwind);return{obstacles,coins,length:len};
+ }
+ if(kind==='stones'){
+  // A stream with stepping stones in one lane per row: hop between lanes to stay on the stones.
+  const rows=hard?7:5,row=v*1.05,first=Math.floor(r()*3)%3;let open=first;
+  // Water is split into runs of neighbouring lanes (a lane span covers everything between its ends).
+  for(let i=0;i<rows;i++){const cs=s+row*(i+.5),wet=open===1?[[0],[2]]:[[0,1,2].filter(l=>l!==open)];wet.forEach((lanes,k)=>obstacles.push({id:`${id}:water:${i}:${k}`,type:'hole',style:'stream',s:cs,depth:row,lanes,stream:{start:s,first}}));obstacles.push({id:`${id}:stone:${i}`,type:'stone',s:cs,depth:row,lanes:[open]});coin(i,cs,open);
+   open=open===1?(r()<.5?0:2):1;}
+  return{obstacles,coins,length:row*rows};
+ }
+ if(kind==='crystal'){
+  // A crystal gate fills all lanes; Cast shatters it from up to 18 m away. Running into it is a stumble.
+  const gates=hard?2:1;for(let i=0;i<gates;i++)obstacles.push({id:`${id}:${i}`,type:'crystal',s:s+v*(2.2+i*2.6),depth:.8,lanes:[0,1,2]});
+  for(let i=0;i<5;i++)coin(i,s+v*(2.6+i*.3),1);return{obstacles,coins,length:v*(2.6*gates+1)};
+ }
+ if(kind==='thorns'){
+  // Thorn hedges in each lane rise and fall in turn; one lane is always open.
+  const rows=hard?4:3,gap=v*1.9;for(let i=0;i<rows;i++)obstacles.push({id:`${id}:${i}`,type:'thorns',s:s+gap*(i+.5),depth:.9,lanes:[0,1,2],period:hard?2:2.6,phase:i*.21});
+  return{obstacles,coins,length:gap*rows};
+ }
+ // The higher route: a ramp onto a raised ledge in one lane with bonus coins; the other lanes stay clear.
+ const lane=Math.floor(r()*3)%3,ramp=5,top=v*4,h=1.2,len=ramp+top;
+ obstacles.push({id,type:'ledge',s:s+len/2,depth:len,start:s,end:s+len,ramp,h,lanes:[lane]});
+ for(let i=0;i<8;i++)coin(i,s+ramp+top*(.08+i*.12),lane,h+.58);return{obstacles,coins,length:len};
+}
+// Power-ups: a coin magnet, a shield, double coins and a creature dash, two or three per run in open lanes.
+export const POWERUPS=['magnet','shield','double','dash'];
 export function runFor(section,e,mode='relaxed',enabled=RUNNER){
  if(!enabled||!section||section.length<CLEARING+12)return null;
  const r=rngFor(section.id+':'+mode),real=section.length-CLEARING-RUN_FROM,length=Math.round(real*RUN_SCALE),n=section.index%4,hard=mode==='challenge',{start,top}=speedRange(mode,section.chapter);
  const run={from:RUN_FROM,to:section.length-CLEARING,clearFrom:section.length-CLEARING,real,length,start,top,obstacles:[],coins:[],word:null};
  const reaction=hard?1.2:1.6,tutorial=section.chapter===0&&section.index===0,wordAt=n===2?length*.3:Infinity;let s=Math.max(18,start*2.4),k=0,lastFree=1;
+ const offset=(section.chapter+(e?.area||0)+(e?.serial||0))%6,kinds=MOMENT_SLOTS[n].map(i=>RUN_MOMENTS[(i+offset)%6]),momentAt=kinds.map((_,i)=>length*(kinds.length===1?(n===2?.75:.55):[.38,.72][i]));
+ const powers=Array.from({length:length>350?3:2},(_,i)=>({at:length*(.22+i*(length>350?.27:.36)),kind:POWERUPS[(section.index+i+section.chapter)%4]}));run.moments=kinds;run.powerups=[];
  while(s<length-12){
+  if(momentAt.length&&s>=momentAt[0]&&!(run.word&&s<run.word.tokens.at(-1).s)){momentAt.shift();const kind=kinds[kinds.length-momentAt.length-1],m=moment(kind,section,r,run,s+speedAt(run,s)*.6,hard);if(s+speedAt(run,s)*.6+m.length>length-15)continue;run.obstacles.push(...m.obstacles);run.coins.push(...m.coins);s+=speedAt(run,s)*.6+m.length+speedAt(run,s)*reaction*1.2;lastFree=1;continue;}
   if(s>=wordAt&&!run.word){const w=wordRun(section,r,run,s);if(w){run.word=w.word;run.coins.push(...w.coins);s=w.end+speedAt(run,w.end)*reaction;continue;}}
   const b=beat(section,r,mode,run,s,k,lastFree,tutorial&&s<length*.25),spacing=speedAt(run,s)*reaction*(.9+r()*.35);
   if(b.obstacle)run.obstacles.push(b.obstacle);
@@ -74,6 +119,7 @@ export function runFor(section,e,mode='relaxed',enabled=RUNNER){
   const lead=b.type==='coins'?Math.floor(r()*3)%3:b.free;
   for(let i=0;i<5;i++){const cs=s-spacing*.85+i*spacing*.13;if(cs>4)run.coins.push({id:`${section.id}:run-coin:${k}:${i}`,s:cs,lateral:LANES[lead],y:.58});}
   if(b.type==='barrier')for(let i=0;i<3;i++)run.coins.push({id:`${section.id}:run-arc:${k}:${i}`,s:b.obstacle.s-1.2+i*1.2,lateral:LANES[b.lanes[0]],y:.95+[0,.4,0][i],arc:true});
+  if(powers.length&&s>=powers[0].at&&b.type!=='barrier'){const p=powers.shift();run.powerups.push({id:`${section.id}:power:${p.kind}:${k}`,kind:p.kind,s:s-spacing*.4,lane:b.free});}
   lastFree=b.free;s+=spacing;k++;
  }
  return run;
@@ -81,7 +127,12 @@ export function runFor(section,e,mode='relaxed',enabled=RUNNER){
 // Lane span covered by an obstacle, in lateral metres.
 export function laneSpan(lanes){return{min:LANES[Math.min(...lanes)]-LANE_HALF,max:LANES[Math.max(...lanes)]+LANE_HALF};}
 // Ground under the track at track distance s: flat, with holes. Swamps are ground too (they slow instead).
-export function runSurface(run,s,lateral){
- for(const o of run.obstacles)if(o.type==='hole'&&Math.abs(s-o.s)<o.depth/2){const span=laneSpan(o.lanes);if(lateral>span.min+.12&&lateral<span.max-.12)return null;}
- return 0;
+// Ledges raise their lane (a ramp, then a flat top). Holes in `bridged` (shield or dash) carry the creature.
+export function runSurface(run,s,lateral,bridged=null){
+ let ground=0;
+ for(const o of run.obstacles){
+  if(o.type==='ledge'&&s>=o.start&&s<=o.end){const span=laneSpan(o.lanes);if(lateral>span.min+.1&&lateral<span.max-.1)ground=Math.max(ground,o.h*Math.min(1,(s-o.start)/o.ramp));continue;}
+  if(o.type==='hole'&&Math.abs(s-o.s)<o.depth/2&&!bridged?.has(o.id)){const span=laneSpan(o.lanes);if(lateral>span.min+.12&&lateral<span.max-.12)return null;}
+ }
+ return ground;
 }

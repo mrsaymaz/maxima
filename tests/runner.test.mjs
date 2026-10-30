@@ -27,7 +27,9 @@ test('runs are ten times their stretch, speed up toward the gate, stay inside th
   assert.ok(Math.abs(run.to-(s.length-CLEARING))<1e-9,'the last metres before the gate stay free');assert.equal(run.length,Math.round(run.real*RUN_SCALE));
   assert.ok(speedAt(run,run.length*.9)>speedAt(run,run.length*.2)+3,'faster and faster toward the gate');
   for(const o of run.obstacles){assert.ok(o.s>0&&o.s<run.length);if(o.type==='hole')assert.ok(o.lanes.length<3,'holes never close every lane');}
-  for(let i=1;i<run.obstacles.length;i++){const a=run.obstacles[i-1],b=run.obstacles[i];assert.ok((b.s-a.s)/speedAt(run,b.s)>=(mode==='challenge'?1:1.35),'enough reaction time between obstacles');}
+  // Reaction time between beats (a trial moment counts as one beat: its own pieces are deliberately close).
+  const beats=[];for(const o of run.obstacles){const key=o.id.includes(':moment:')?o.id.split(':moment:')[1].split(':').slice(0,2).join(':'):o.id;const at=o.start??o.stream?.start??o.s;if(beats.at(-1)?.key===key)beats.at(-1).end=Math.max(beats.at(-1).end,o.end??o.s+o.depth/2);else beats.push({key,at,end:o.end??o.s+o.depth/2});}
+  for(let i=1;i<beats.length;i++)assert.ok((beats[i].at-beats[i-1].end)/speedAt(run,beats[i].at)>=(mode==='challenge'?.6:.8),'enough reaction time between beats');
   for(const c of run.coins)assert.ok(c.s<=run.length&&LANES.includes(c.lateral));
   if(index%4===2){const word=run.word;assert.ok(word,'every third run of a chapter is a word run');
    const slots=[...word.answer].map((c,i)=>word.tokens.filter(t=>t.slot===i));
@@ -78,7 +80,7 @@ test('after falling into a hole the creature returns before it, in a lane the ho
 test('every obstacle wears a look from its own arena, and swamps slow the creature instead of dropping it',async()=>{
  const{RUNNER_STYLES}=await import('../dist/runner-course.js');
  for(const area of[0,1,2])for(let index=0;index<20;index++){const base=withRun(index,index%2?'challenge':'relaxed'),run=runFor({...base,area},expedition,index%2?'challenge':'relaxed',true);
-  for(const o of run.obstacles){assert.ok(RUNNER_STYLES[o.type][area].includes(o.style),`${o.style} belongs to arena ${area}`);if(o.type==='swamp'){assert.ok(o.lanes.length<3);assert.equal(runSurface(run,o.s,LANES[o.lanes[0]]),0,'swamps are ground, not holes');}}}
+  for(const o of run.obstacles.filter(o=>RUNNER_STYLES[o.type]&&o.style!=='stream')){assert.ok(RUNNER_STYLES[o.type][area].includes(o.style),`${o.style} belongs to arena ${area}`);if(o.type==='swamp'){assert.ok(o.lanes.length<3);assert.equal(runSurface(run,o.s,LANES[o.lanes[0]]),0,'swamps are ground, not holes');}}}
  const section=withRun(1),nav=navFor(section),r=new RunnerControl(),events=[];r.events={swamp:o=>events.push(o.id)};r.engage(nav);
  section.run.obstacles=[{id:'sw',type:'swamp',style:'swamp',s:120,depth:4,lanes:[1]}];r.s=120;r.speed=speedAt(section.run,120);
  r.collide(nav);r.collide(nav);assert.deepEqual(events,['sw'],'one splash per swamp');const fast=r.speed;for(let i=0;i<30;i++){r.s=120;r.collide(nav);r.advance(nav,1/30);}assert.ok(r.speed<fast*.6,'wading is slow');
@@ -121,4 +123,64 @@ test('the valley eases away while the track slides and grows back for the final 
  step(20);assert.equal(meadow.visible,false);assert.equal(cluster.visible,false);assert.equal(crowns.visible,false);assert.ok(w.scene.fog.far<=82.5);
  runner.s=run.length-run.real+2;step(2);assert.ok(meadow.visible&&meadow.scale.y>0&&meadow.scale.y<1,'growing back');
  step(20);assert.equal(meadow.scale.y,1);assert.equal(crowns.visible,true);assert.equal(cluster.scale.y,1);assert.deepEqual([w.scene.fog.near,w.scene.fog.far],[40,125]);assert.equal(w.trackVeil,null);
+});
+
+test('each chapter brings all six trials back as runner moments, and power-ups ride the open lanes',async()=>{
+ const{RUN_MOMENTS}=await import('../dist/runner-course.js');
+ for(const mode of['relaxed','challenge'])for(let chapter=0;chapter<5;chapter++){const seen=new Set();for(let n=0;n<4;n++){const run=withRun(chapter*4+n,mode).run;run.moments.forEach(k=>seen.add(k));assert.ok(run.powerups.length>=1);for(const p of run.powerups)assert.ok(!run.obstacles.some(o=>Math.abs(o.s-p.s)<1&&o.lanes.includes(p.lane)&&o.type!=='wind'),'power-ups are not inside an obstacle');}
+  assert.deepEqual([...seen].sort(),[...RUN_MOMENTS].sort(),`chapter ${chapter}`);}
+});
+function momentRun(kind,mode='relaxed'){for(let i=0;i<40;i++){const s=withRun(i%20,mode,60+i);const o=s.run.obstacles.find(o=>o.type===kind||(kind==='stones'&&o.style==='stream'));if(o)return{section:s,o};}throw Error('no '+kind);}
+test('boulders roll down one warned lane at a time and a lane change avoids them',()=>{
+ const{section,o}=momentRun('boulders'),nav=navFor(section),r=new RunnerControl(),hits=[];r.events={stumble:x=>hits.push(x.id)};r.engage(nav);r.s=o.start-10;
+ let warned=false;for(let i=0;i<600&&r.s<o.end;i++){r.advance(nav,1/60);const st=r.trials.get(o.id);if(st?.warn!=null)warned=true;const near=st?.rolling.find(b=>b.s-r.s<6&&b.s>r.s);if(near&&near.lane===r.laneNow())r.lane=(near.lane+1)%3;r.collide(nav);}
+ assert.ok(warned,'an amber warning comes first');assert.deepEqual(hits,[],'dodging every boulder');
+ const r2=new RunnerControl(),nav2=navFor(section);r2.events={stumble:x=>hits.push(x.id)};r2.engage(nav2);r2.s=o.start-10;for(let i=0;i<900&&!hits.length;i++){r2.advance(nav2,1/60);const st=r2.trials.get(o.id);if(st?.rolling[0])r2.lane=st.rolling[0].lane;r2.collide(nav2);}
+ assert.ok(hits.length>0,'standing in the boulder lane is a stumble');
+});
+test('wind gusts push one lane downwind after a warning, and a dash rides through',()=>{
+ const{section,o}=momentRun('wind'),nav=navFor(section),r=new RunnerControl(),gusts=[];r.events={gust:()=>gusts.push(r.lane)};r.engage(nav);r.s=o.start+1;r.lane=1;let warned=false;
+ for(let i=0;i<60*o.period*1.2;i++){r.advance(nav,1/60);if(r.trials.get(o.id)?.warning)warned=true;if(r.s>o.end)break;}
+ assert.ok(warned);assert.deepEqual(gusts,[1+o.dir]);
+ const r2=new RunnerControl(),nav2=navFor(section);r2.engage(nav2);r2.s=o.start+1;r2.lane=1;r2.power.dash=99;for(let i=0;i<60*o.period*1.2;i++)r2.advance(nav2,1/60);assert.equal(r2.lane,1);
+});
+test('stepping stones leave one lane per row; a fall returns to the bank lined up with the first stone',()=>{
+ const{section,o}=momentRun('stones'),run=section.run,rows=run.obstacles.filter(x=>x.stream?.start===o.stream.start);
+ for(const w of rows){const stone=run.obstacles.find(x=>x.type==='stone'&&x.s===w.s),wet=rows.filter(x=>x.s===w.s).flatMap(x=>x.lanes);assert.equal(wet.length,2);assert.deepEqual(stone.lanes,[0,1,2].filter(l=>!wet.includes(l)));assert.equal(runSurface(run,w.s,LANES[stone.lanes[0]]),0);assert.equal(runSurface(run,w.s,LANES[w.lanes[0]]),null);}
+ const nav=navFor(section),r=new RunnerControl();r.engage(nav);r.s=rows[2].s;r.lane=rows[2].lanes[0];assert.ok(r.afterRetry(nav));assert.ok(r.s<o.stream.start);assert.equal(r.lane,o.stream.first);
+});
+test('Cast shatters a crystal gate from range; running into an unbroken gate is a stumble',()=>{
+ const{section,o}=momentRun('crystal'),nav=navFor(section),r=new RunnerControl(),broke=[],hits=[];r.events={crystal:g=>broke.push(g.id),stumble:x=>hits.push(x.id)};r.engage(nav);
+ r.s=o.s-25;assert.equal(r.cast(),false,'out of range');r.s=o.s-12;assert.equal(r.cast(),true);assert.deepEqual(broke,[o.id]);r.s=o.s;assert.equal(r.collide(nav),null);
+ const r2=new RunnerControl(),nav2=navFor(section);r2.events={stumble:x=>hits.push(x.id)};r2.engage(nav2);r2.s=o.s;assert.ok(r2.collide(nav2));assert.deepEqual(hits,[o.id]);
+});
+test('thorns rise and fall per lane with at least one lane always open',()=>{
+ const{section,o}=momentRun('thorns'),r=new RunnerControl();r.section=section;
+ for(let t=0;t<o.period*3;t+=.02){const open=[0,1,2].filter(l=>!r.thornUp(o,l,t));assert.ok(open.length>=1,`t ${t}`);}
+ const nav=navFor(section);r.engage(nav);r.s=o.s;for(let t=0;t<o.period;t+=.05){r.clock=t;const lane=[0,1,2].find(l=>!r.thornUp(o,l,t));r.lane=lane;r.lat=LANES[lane];nav.invincible=0;assert.equal(r.collide(nav),null,'the open lane is safe');}
+});
+test('the optional ledge raises its lane, carries bonus coins and leaves the other lanes flat',()=>{
+ const{section,o}=momentRun('ledge'),run=section.run,lane=o.lanes[0],top=o.start+o.ramp+1;
+ assert.equal(runSurface(run,top,LANES[lane]),o.h);assert.equal(runSurface(run,top,LANES[(lane+1)%3]),0);assert.ok(Math.abs(runSurface(run,o.start+o.ramp/2,LANES[lane])-o.h/2)<1e-9);
+ const bonus=run.coins.filter(c=>c.s>o.start+o.ramp&&c.s<o.end&&c.lateral===LANES[lane]);assert.ok(bonus.length>=6&&bonus.every(c=>c.y>o.h));
+ const nav=navFor(section),r=new RunnerControl(),got=[];r.events={coin:c=>got.push(c.id)};r.engage(nav);r.lane=lane;r.lat=LANES[lane];r.s=bonus[0].s;nav.y=0;r.collide(nav);assert.deepEqual(got,[],'not from the ground');nav.y=o.h;r.collide(nav);assert.deepEqual(got,[bonus[0].id],'from the ledge');
+});
+test('power-ups: magnet pulls coins from every lane, double pays twice, shield absorbs one stumble, dash smashes through',()=>{
+ const section=withRun(5),run=section.run,nav=navFor(section),r=new RunnerControl(),coins=[],events=[];r.events={coin:c=>coins.push(c),shield:()=>events.push('shield'),smash:()=>events.push('smash'),stumble:()=>events.push('stumble')};r.engage(nav);
+ run.coins=[{id:'c0',s:50,lateral:LANES[0],y:.58},{id:'c2',s:52,lateral:LANES[2],y:.58}];run.obstacles=[];r.lane=1;r.lat=0;r.s=50;r.power.magnet=5;r.power.double=5;r.collide(nav);
+ assert.deepEqual(coins.map(c=>c.id),['c0','c2']);assert.ok(coins.every(c=>c.double));
+ run.obstacles=[{id:'b1',type:'barrier',s:60,depth:.45,lanes:[0,1,2]},{id:'b2',type:'barrier',s:70,depth:.45,lanes:[0,1,2]},{id:'h1',type:'hole',s:80,depth:2.4,lanes:[0,1,2]}];
+ r.power={shield:true};r.s=60;assert.equal(r.collide(nav),null);assert.equal(r.power.shield,false);nav.invincible=0;r.s=70;assert.ok(r.collide(nav),'only one stumble is absorbed');
+ r.power={dash:2};r.s=80;assert.equal(r.surface(),null);r.advance(nav,1/60);assert.equal(r.surface(),0,'a dash bridges the hole');assert.deepEqual(events,['shield','stumble']);
+});
+test('a dodge just before an obstacle is a Perfect; boost bursts on fuel',()=>{
+ const section=withRun(5),run=section.run,nav=navFor(section),r=new RunnerControl(),perfect=[];r.events={perfect:o=>perfect.push(o.id)};r.engage(nav);
+ run.obstacles=[{id:'p1',type:'barrier',s:40,depth:.45,lanes:[1]}];r.s=39.5;r.lane=1;r.lat=0;r.shift(1);for(let i=0;i<20;i++)r.advance(nav,1/60);assert.deepEqual(perfect,['p1']);
+ nav.rush={start(){return true;},reset(){}};assert.equal(r.boost(nav),true);assert.ok(r.burst>0);assert.equal(r.boost(nav),false,'one burst at a time');
+});
+test('never stuck at a stream: after a second fall its stones settle into a bridge',()=>{
+ const{section,o}=momentRun('stones'),run=section.run,nav=navFor(section),r=new RunnerControl(),bridges=[];r.events={bridge:()=>bridges.push(1)};r.engage(nav);
+ const water=run.obstacles.filter(x=>x.stream?.start===o.stream.start);
+ for(let fall=0;fall<2;fall++){r.running=true;r.s=water[1].s;r.lane=water[1].lanes[0];r.lat=LANES[r.lane];assert.equal(r.surface(),null);r.afterRetry(nav);}
+ assert.equal(bridges.length,1);r.s=water[1].s;r.lat=LANES[water[1].lanes[0]];assert.equal(r.surface(),0,'the whole stream now carries the creature');
 });

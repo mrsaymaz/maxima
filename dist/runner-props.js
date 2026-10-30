@@ -102,6 +102,7 @@ const GROUNDS={
  pit(w,d,kit){const g=new T.Group();g.add(mesh(geo(`rim${w}x${d}`,()=>new T.BoxGeometry(w+.24,.05,d+.24)),mat('#ff9a2e',{emissive:'#ff6a00',glow:.6}),0,.008),mesh(geo(`pit${w}x${d}`,()=>new T.BoxGeometry(w,.06,d)),mat('#120b07',{basic:true}),0,.014));return g;},
  water(w,d,kit,anim){const g=new T.Group(),water=mesh(geo(`wat${w}x${d}`,()=>new T.BoxGeometry(w,.06,d)),mat(kit.water||'#39c0d4',{rough:.1,emissive:'#0b6f8f',glow:.35}),0,.012);g.add(mesh(geo(`wrim${w}x${d}`,()=>new T.BoxGeometry(w+.24,.05,d+.24)),mat('#effcff'),0,.008),water);
   for(let i=0;i<3;i++){const ripple=mesh(geo('ripple',()=>new T.RingGeometry(.12,.16,20).rotateX(-Math.PI/2)),mat('#ffffff',{basic:true,opacity:.6}).clone(),((i*.37)%1-.5)*w*.7,.05,((i*.61)%1-.5)*d*.6);g.add(ripple);anim.push(t=>{const k=(t*.7+i/3)%1;ripple.scale.setScalar(.5+k*3);ripple.material.opacity=.6*(1-k);});}return g;},
+ stream(w,d,kit,anim){const g=new T.Group(),water=mat(kit.water||'#39c0d4',{rough:.1,emissive:'#0b6f8f',glow:.4}).clone();g.add(mesh(geo(`stream${w}x${d}`,()=>new T.BoxGeometry(w+.02,.06,d+.02)),water,0,.012));anim.push(t=>{water.emissiveIntensity=.3+.15*Math.sin(t*2.5);});return g;},
  chasm(w,d){const g=new T.Group();g.add(mesh(geo(`crim${w}x${d}`,()=>new T.BoxGeometry(w+.3,.06,d+.3)),mat('#d0794a',{flat:true}),0,.008),mesh(geo(`chasm${w}x${d}`,()=>new T.BoxGeometry(w,.07,d)),mat('#1a0f0a',{basic:true}),0,.014));
   for(let i=0;i<4;i++)g.add(mesh(geo('shard',()=>new T.ConeGeometry(.12,.3,4)),mat('#e9c68f',{flat:true}),(i%2?-1:1)*(w/2+.1),.1,(i<2?-1:1)*d/3));return g;},
  void(w,d,kit,anim){const g=new T.Group();g.add(mesh(geo(`vrim${w}x${d}`,()=>new T.BoxGeometry(w+.24,.05,d+.24)),mat('#c47dff',{basic:true}),0,.008),mesh(geo(`void${w}x${d}`,()=>new T.BoxGeometry(w,.06,d)),mat('#0d0620',{basic:true}),0,.014));
@@ -165,6 +166,73 @@ const WALLS={
    for(let z=1.5;z<TILE;z+=3)g.add(mesh(geo('cspike',()=>new T.ConeGeometry(.28,1.1,5).translate(0,.55,0)),mat(z%2?'#9f7bff':'#62f5ff',{emissive:z%2?'#7a4dff':'#22c8ff',glow:.7,flat:true}),side*3.15,3.2,z));
    if(!low)for(let z=2;z<TILE;z+=4){const h=4+((z*5)%4)*1.3;g.add(mesh(geo('spire'+h,()=>new T.ConeGeometry(.9,h,5).translate(0,h/2,0)),mat(z%8<4?'#5b44c9':'#2fb8d8',{emissive:z%8<4?'#3a1f9a':'#0f7f9f',glow:.5,flat:true}),side*(5.4+((z*3)%2)*1.5),0,z));}}return g;},
 };
+// Trial moments (see runner-course RUN_MOMENTS). `data` gives animations the live run (clock, trial state).
+const MOMENTS={
+ boulders(o,kit,anim,data){
+  const g=new T.Group(),warn=LANES.map(()=>new T.MeshBasicMaterial({color:'#ffb020',transparent:true,opacity:0,depthWrite:false,toneMapped:false}));
+  LANES.forEach((x,i)=>{const strip=mesh(geo('bwarn'+o.depth.toFixed(0),()=>new T.PlaneGeometry(1.2,o.depth).rotateX(-Math.PI/2)),warn[i],-x,.1,0);strip.renderOrder=3;g.add(strip);});
+  const pool=Array.from({length:4},()=>{const b=mesh(geo('boulder',()=>new T.IcosahedronGeometry(.5,1)),mat(kit.rock,{flat:true,rough:.95}));b.visible=false;return b;});
+  data.pools.push({o,pool});
+  anim.push(()=>{const st=data.live&&data.runner.trials.get(o.id);LANES.forEach((x,i)=>{warn[i].opacity=st?.warn===i?.35+.3*Math.sin(data.runner.clock*14):0;});});
+  return g;
+ },
+ wind(o,kit,anim,data){
+  const g=new T.Group(),glow=new T.MeshBasicMaterial({color:'#9ff3ff',transparent:true,opacity:.35,depthWrite:false,toneMapped:false}),side=o.dir;
+  const arrow=geo('windarrow',()=>{const sh=new T.Shape();sh.moveTo(-.5,-.28);sh.lineTo(.1,-.28);sh.lineTo(.1,-.5);sh.lineTo(.55,0);sh.lineTo(.1,.5);sh.lineTo(.1,.28);sh.lineTo(-.5,.28);sh.closePath();return new T.ShapeGeometry(sh).rotateX(-Math.PI/2);});
+  for(let z=-o.depth/2+3;z<o.depth/2;z+=6)for(const x of LANES){const a=mesh(arrow,glow,-x,.1,z);a.rotation.y=side>0?Math.PI:0;a.renderOrder=3;g.add(a);}
+  for(let z=-o.depth/2;z<o.depth/2;z+=9)for(const w of[-1,1]){const pole=mesh(geo('wpole',()=>new T.CylinderGeometry(.05,.06,3.4,6).translate(0,1.7,0)),mat('#e8e2d0'),w*2.75,0,z);const flag=mesh(geo('wflag',()=>new T.PlaneGeometry(.9,.45).translate(.45,0,0)),new T.MeshStandardMaterial({color:'#ff5b5b',side:T.DoubleSide}),0,3.1,0);flag.material.userData.surface='paper';pole.add(flag);g.add(pole);anim.push(t=>{flag.rotation.y=(side>0?Math.PI:0)+Math.sin(t*9+z)*.35;});}
+  const streaks=Array.from({length:10},(_,i)=>{const m=mesh(geo('streak',()=>new T.PlaneGeometry(1.6,.05)),new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide,toneMapped:false}),0,.6+(i%4)*.5,0);g.add(m);return m;});
+  anim.push(t=>{const st=data.live&&data.runner.trials.get(o.id);glow.opacity=st?.warning?.55+.4*Math.sin(t*18):st?.gust?.9:.3;const near=data.live?data.runner.s-o.s:0;
+   streaks.forEach((m,i)=>{const k=(t*2.2+i*.13)%1;m.position.set(side*(-3+6*k)*-1,m.position.y,near+((i*7)%10)-3);m.material.opacity=st?.gust||st?.warning?.7*(1-Math.abs(k-.5)*2):0;});});
+  return g;
+ },
+ stone(o,kit,anim,data){
+  const g=new T.Group(),n=Math.max(2,Math.round(o.depth/1.6)),stones=[];
+  for(let i=0;i<n;i++){const st=mesh(geo('stepstone',()=>new T.CylinderGeometry(.62,.7,.28,9)),mat(kit.rock,{flat:true}),((i*37)%3-1)*.1,.02,-o.depth/2+(i+.5)*o.depth/n);g.add(st);stones.push(st);}
+  // Stones sink once the creature has passed them.
+  anim.push(()=>{const behind=data.live&&data.runner.s>o.s+o.depth/2+1;for(const st of stones)st.position.y+=((behind?-.5:.02)-st.position.y)*.08;});
+  return g;
+ },
+ crystal(o,kit,anim,data){
+  const g=new T.Group(),glass=new T.MeshStandardMaterial({color:'#7ff0ff',emissive:'#36c8ff',emissiveIntensity:.6,transparent:true,opacity:.55,roughness:.1});glass.userData.surface='glass';
+  const pane=mesh(geo('cpane',()=>new T.BoxGeometry(4.6,2.6,.25)),glass,0,1.3,0);g.add(pane);const shards=[];
+  for(let i=0;i<9;i++){const h=1.2+((i*5)%4)*.45,c=mesh(geo('cshard'+h.toFixed(2),()=>new T.ConeGeometry(.32,h,5).translate(0,h/2,0)),mat(i%2?'#b48cff':'#62f5ff',{emissive:i%2?'#7a4dff':'#22c8ff',glow:.9,flat:true}),-2.2+i*.55,0,((i*3)%3-1)*.15);g.add(c);shards.push({c,vx:(i-4)*.6,vy:2.5+(i%3),vz:-1-(i%2)});}
+  let broken=null;
+  anim.push(t=>{if(!data.runner?.knocked?.has(o.id)){glass.emissiveIntensity=.45+.3*Math.sin(t*5);return;}broken??=t;const k=Math.min(1.5,t-broken);pane.visible=k<.05;
+   for(const sh of shards){sh.c.position.x+=sh.vx*.016;sh.c.position.y=Math.max(-2,sh.vy*k-4.9*k*k);sh.c.position.z+=sh.vz*.016;sh.c.rotation.x=k*6;sh.c.visible=k<1.4;}});
+  return g;
+ },
+ thorns(o,kit,anim,data){
+  const g=new T.Group();
+  LANES.forEach((x,lane)=>{const cluster=new T.Group();cluster.position.set(-x,0,0);
+   for(let i=0;i<6;i++){const h=.7+((i*3)%3)*.18,c=mesh(geo('thorn'+h.toFixed(2),()=>new T.ConeGeometry(.12,h,5).translate(0,h/2,0)),mat(i%2?'#3f7a2a':'#6fae3a',{flat:true}),-.5+(i%3)*.5,0,(i<3?-.18:.18));c.rotation.z=((i*7)%5-2)*.12;cluster.add(c);}
+   cluster.add(mesh(geo('thornbase',()=>new T.BoxGeometry(1.3,.12,.6)),mat('#5a3d22'),0,.06,0));
+   const glow=mesh(geo('thornglow',()=>new T.PlaneGeometry(1.3,1.2).rotateX(-Math.PI/2)),new T.MeshBasicMaterial({color:'#7dff9a',transparent:true,opacity:0,depthWrite:false,toneMapped:false}),-x,.11,0);g.add(cluster,glow);
+   anim.push(t=>{const r=data.runner,up=r?.thornUp?r.thornUp(o,lane,data.live?r.clock:t):true;cluster.position.y+=((up?0:-1.05)-cluster.position.y)*.25;glow.material.opacity=up?0:.45;});});
+  return g;
+ },
+ ledge(o,kit){
+  const g=new T.Group(),top=o.depth-o.ramp,stone=mat(kit.masonry||'#d6c49a',{flat:true}),gold=mat('#ffd23f',{emissive:'#c98a00',glow:.5});
+  const ramp=geo('ramp'+o.h,()=>{const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(o.ramp,0);sh.lineTo(o.ramp,o.h);sh.closePath();return new T.ExtrudeGeometry(sh,{depth:1.3,bevelEnabled:false}).rotateY(-Math.PI/2).translate(.65,0,0);});
+  g.add(mesh(ramp,stone,0,0,-o.depth/2));
+  g.add(mesh(geo(`ledge${top.toFixed(1)}`,()=>new T.BoxGeometry(1.3,o.h,top)),stone,0,o.h/2,-o.depth/2+o.ramp+top/2));
+  for(const x of[-.66,.66])g.add(mesh(geo(`ledgetrim${top.toFixed(1)}`,()=>new T.BoxGeometry(.06,.08,top)),gold,x,o.h+.04,-o.depth/2+o.ramp+top/2));
+  return g;
+ },
+};
+const ICON_COLORS={magnet:'#ff5b5b',shield:'#3fb8ff',double:'#ffd23f',dash:'#b0ff4a'};
+const iconTextures=new Map();
+function powerTexture(kind){
+ if(iconTextures.has(kind))return iconTextures.get(kind);const canvas=typeof document!=='undefined'?document.createElement('canvas'):null;let texture;
+ if(canvas){canvas.width=canvas.height=128;const g=canvas.getContext('2d');g.beginPath();g.arc(64,64,58,0,Math.PI*2);g.fillStyle='#1b294f';g.fill();g.lineWidth=8;g.strokeStyle=ICON_COLORS[kind];g.stroke();g.lineCap='round';g.lineJoin='round';
+  if(kind==='magnet'){g.lineWidth=18;g.strokeStyle='#ff5b5b';g.beginPath();g.arc(64,58,24,Math.PI,0,true);g.stroke();g.strokeStyle='#e8eef5';g.beginPath();g.moveTo(40,58);g.lineTo(40,84);g.moveTo(88,58);g.lineTo(88,84);g.stroke();}
+  if(kind==='shield'){g.fillStyle='#3fb8ff';g.beginPath();g.moveTo(64,28);g.lineTo(94,40);g.quadraticCurveTo(92,82,64,100);g.quadraticCurveTo(36,82,34,40);g.closePath();g.fill();g.fillStyle='#bfe9ff';g.fillRect(58,44,12,40);}
+  if(kind==='double'){g.fillStyle='#ffd23f';g.font='900 54px system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('×2',64,68);}
+  if(kind==='dash'){g.fillStyle='#b0ff4a';g.beginPath();g.moveTo(72,24);g.lineTo(42,70);g.lineTo(62,70);g.lineTo(54,104);g.lineTo(88,54);g.lineTo(67,54);g.closePath();g.fill();}
+  texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;}
+ else texture=new T.Texture();
+ iconTextures.set(kind,texture);return texture;
+}
 const wallCache=new Map();
 // Low graphics keeps the patterned walls and lights but drops the backdrop row, half the arches and most bubbles.
 function wallsFor(area,kit,low){const key=area+(low?':low':'');if(!wallCache.has(key))wallCache.set(key,compact((WALLS[area]||WALLS[0])(0,kit,low)));return wallCache.get(key);}
@@ -187,22 +255,27 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
   at(tile,z,0);tiles.push({object:tile,from:z,to:z+TILE});
  }
  anim.push(t=>{for(const{arch,i}of arches)if(arch.parent.visible)arch.material.opacity=.35+.6*Math.max(0,Math.sin(t*5-i*.9));});
- const hurdle=hurdleHeight(creatureHeight)/.5;
+ const hurdle=hurdleHeight(creatureHeight)/.5,data={section,pools:[],runner:null,live:false};
  for(const o of run.obstacles){
   const span=laneSpan(o.lanes),width=+(span.max-span.min-.1).toFixed(2),center=(span.max+span.min)/2,moving=anim.length;let g;
-  if(o.type==='barrier'){g=(JUMPS[o.style]||JUMPS.crates)(width,kit,anim);g.scale.set(1,hurdle,Math.min(1.6,hurdle));}
+  if(MOMENTS[o.type]){g=MOMENTS[o.type](o,kit,anim,data);if(['boulders','wind','thorns','crystal'].includes(o.type)){g.name=o.id;at(g,o.s,o.type==='crystal'||o.type==='thorns'||o.type==='wind'||o.type==='boulders'?0:center);items.push({object:g,from:o.s-o.depth/2-2,to:o.s+o.depth/2+2,id:o.id,moment:true});continue;}}
+  else if(o.type==='barrier'){g=(JUMPS[o.style]||JUMPS.crates)(width,kit,anim);g.scale.set(1,hurdle,Math.min(1.6,hurdle));}
   else if(o.type==='bar')g=(SLIDES[o.style]||SLIDES.trunk)(width,Math.max(.55,creatureHeight*.62),kit,anim);
   else g=(GROUNDS[o.style]||GROUNDS.pit)(width,o.depth,kit,anim);
   // Holes and swamps lie on top of the lanes (y .09), or the track floor would hide them.
-  if(anim.length===moving&&o.type!=='barrier')g=compact(g);g.name=o.id;at(g,o.s,center,o.type==='hole'||o.type==='swamp'?.09:0);items.push({object:g,from:o.s-o.depth,to:o.s+o.depth,id:o.id});
+  if(anim.length===moving&&o.type!=='barrier')g=compact(g);g.name=o.id;at(g,o.s,center,o.type==='hole'||o.type==='swamp'?.09:0);items.push({object:g,from:o.s-o.depth,to:o.s+o.depth,id:o.id,style:o.style});
  }
  // Coins: one instanced mesh for the whole run; collected and out-of-view coins are scaled away.
  const coins=new T.InstancedMesh(geo('runcoin',()=>new T.CylinderGeometry(.22,.22,.05,18).rotateZ(Math.PI/2)),mat('#ffcc3a',{emissive:'#c98a00',glow:.55,rough:.3}),Math.max(1,run.coins.length));
  const rims=new T.InstancedMesh(geo('runcoinrim',()=>new T.TorusGeometry(.22,.035,6,20).rotateY(Math.PI/2)),mat('#b8730f',{rough:.4}),Math.max(1,run.coins.length));
  coins.name='runner-coins';coins.frustumCulled=rims.frustumCulled=false;root.add(coins,rims);
  const tokens=[];
- for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter,run.word.language),transparent:true,depthWrite:false}));sprite.scale.set(.9,.9,1);sprite.name=t.id;at(sprite,t.s,LANES[t.lane],1);tokens.push({object:sprite,from:t.s,to:t.s,id:t.id});}
- Object.assign(root.userData,{section,tiles,items,tokens,coins,rims,runnerAnim:anim});return root;
+ for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter,run.word.language),transparent:true,depthWrite:false}));sprite.scale.set(.9,.9,1);sprite.name=t.id;sprite.raycast=()=>{};/* decoration: never picked */at(sprite,t.s,LANES[t.lane],1);tokens.push({object:sprite,from:t.s,to:t.s,id:t.id});}
+ // Power-ups float above their lane until taken.
+ const powers=[];for(const p of run.powerups||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:powerTexture(p.kind),transparent:true,depthWrite:false}));sprite.scale.set(1.05,1.05,1);sprite.name=p.id;sprite.raycast=()=>{};at(sprite,p.s,LANES[p.lane],1.15);powers.push({object:sprite,from:p.s,to:p.s,id:p.id});}
+ for(const{pool}of data.pools)for(const b of pool)root.add(b);
+ // userData is the very object the animations close over, so they see the live run each frame.
+ Object.assign(data,{tiles,items,tokens,coins,rims,powers,runnerAnim:anim});root.userData=data;return root;
 }
 const dummy=new T.Object3D();
 export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={}){
@@ -214,8 +287,11 @@ export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={})
  // Pieces near the far edge rise out of the ground over their last 16 m, so the track grows into view.
  const rise=from=>-(Math.max(0,1-(ahead-from)/16)**2);
  for(const tile of data.tiles){tile.object.visible=show(tile);if(tile.object.visible)tile.object.position.y=rise(tile.from)*4.5;}
- const knocked=runner?.knocked,taken=runner?.taken;
- for(const item of data.items){item.object.visible=show(item);if(!item.object.visible)continue;item.base??=item.object.position.y;if(knocked?.has(item.id)){item.object.rotation.x=Math.min(1.45,item.object.rotation.x+.12);item.sink=Math.max(-.8,(item.sink||0)-.015);}item.object.position.y=item.base+(item.sink||0)+rise(item.from)*2.5;}
+ const knocked=runner?.knocked,taken=runner?.taken;data.runner=runner;data.live=!!live;
+ for(const{o,pool}of data.pools){const rolling=live?runner.trials.get(o.id)?.rolling||[]:[];pool.forEach((b,i)=>{const r=rolling[i];b.visible=!!r&&r.s<=ahead;if(r){b.position.set(-LANES[r.lane],.5,r.s);b.rotation.x=-r.spin;}});}
+ for(const p of data.powers){p.object.visible=show(p)&&!taken?.has(p.id);if(p.object.visible)p.object.position.y=1.15+Math.sin(time*4+p.from)*.12;}
+ for(const item of data.items){item.object.visible=show(item);if(!item.object.visible)continue;item.base??=item.object.position.y;if(knocked?.has(item.id)&&item.style==='stream'){if(!item.settled){item.settled=true;item.object.traverse(m=>{if(m.material){m.material=m.material.clone();m.material.color?.set('#9a8a66');if(m.material.emissive)m.material.emissiveIntensity=0;}});}}
+  else if(knocked?.has(item.id)&&!item.moment&&item.style!=='stream'){item.object.rotation.x=Math.min(1.45,item.object.rotation.x+.12);item.sink=Math.max(-.8,(item.sink||0)-.015);}item.object.position.y=item.base+(item.sink||0)+rise(item.from)*2.5;}
  for(const token of data.tokens){token.object.visible=show(token)&&!taken?.has(token.id);if(token.object.visible)token.object.position.y=1+Math.sin(time*3+token.from)*.07;}
  run.coins.forEach((c,i)=>{const visible=c.s>=behind&&c.s<=ahead&&!taken?.has(c.id)&&!collected?.has?.(c.id);dummy.position.set(-c.lateral,c.y,c.s);dummy.rotation.set(0,time*3+i*.4,0);dummy.scale.setScalar(visible?1:0);dummy.updateMatrix();data.coins.setMatrixAt(i,dummy.matrix);data.rims.setMatrixAt(i,dummy.matrix);});
  data.coins.instanceMatrix.needsUpdate=data.rims.instanceMatrix.needsUpdate=true;

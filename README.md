@@ -1,18 +1,20 @@
 # Maxima · by Mr. Saymaz
 
-Version 0.47.0 · Runner paths
+Version 0.48.0 · Runner trials, speed and power-ups
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `Maxima-v0.47.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `Maxima-v0.48.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.48.0:** the six trials return as runner moments (rolling boulders, wind, stepping stones, crystal gates you break with Cast, thorn gaps and an optional higher route), with speed lines, a sprint camera, Boost bursts, Perfect dodges and four power-ups (coin magnet, shield, double coins, creature dash). See `docs/RELEASE-v0.48.0.md`.
 
 Maxima now plays as a runner: the creature runs between gates in three lanes, and tasks, fights and forks happen in calm clearings. The first runner launch on a device imports the classic journey (creatures, Forms, coins, lessons), moving saved positions onto the longer trail; the classic save stays as it was. Classic paths remain available from Help ("Play classic paths") or with `?mode=classic`; `?mode=runner` switches back. The choice is remembered on the device, including home-screen apps. `npm test` checks the runner game. Tests of classic-only features (advanced trials, raised quiet stretches, mid-stretch rivals, rush ribbons) are marked `[classic]` and run with `npm run test:classic` on the classic map; `npm run test:classic-all` runs every test there. Release notes: `docs/RELEASE-v0.47.0.md`.
 
