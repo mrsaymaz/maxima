@@ -1,18 +1,20 @@
 # Maxima · by Mr. Saymaz
 
-Version 0.48.0 · Runner trials, speed and power-ups
+Version 0.49.0 · Guardian chase and new arena guardians
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `Maxima-v0.48.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `Maxima-v0.49.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.49.0:** the guardian chases students through the last run of chapters 2–4 and all the way to its arena, and each of the three arena guardians has a new look and its own attacks (roots, seeds and vines; wind walls, orbiting stones and twisters; prism beams, crystal cages and storm chains), with a shared amber/red/blue warning code, critical hits on a staggered guardian and two English wards mid-fight. See `docs/RELEASE-v0.49.0.md`.
 
 **0.48.0:** the six trials return as runner moments (rolling boulders, wind, stepping stones, crystal gates you break with Cast, thorn gaps and an optional higher route), with speed lines, a sprint camera, Boost bursts, Perfect dodges and four power-ups (coin magnet, shield, double coins, creature dash). See `docs/RELEASE-v0.48.0.md`.
 

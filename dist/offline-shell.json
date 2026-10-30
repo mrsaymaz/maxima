@@ -1,5 +1,5 @@
 {
- "hash": "a7e80f5395ea",
+ "hash": "32c4be5dcdf0",
  "files": [
   "./",
   "index.html",
@@ -62,6 +62,7 @@
   "flow-transitions.js",
   "game-audio.js",
   "game-feel.js",
+  "guardian-attacks.js",
   "guardian-combat.js",
   "guardian-figure.js",
   "guardian-stage.js",

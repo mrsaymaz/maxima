@@ -293,7 +293,7 @@ function updateGuardianParts(gp,runner,time){
  if(show){const g=runner.s+st.dist;f.boss.position.set(0,st.rise,g);f.head.rotation.y=Math.sin(time*.8)*.12;f.torso.rotation.z=Math.sin(time*1.6)*.03;
   // Poses: one arm winds up to throw, both rise for a stomp, the core flares for a bolt.
   const pose=st.pose,k=pose?.k||0;f.arms.forEach(({arm,side})=>{const target=pose?.kind==='boulder'&&side===(pose.lane===0?1:-1)?-2.4*k:pose?.kind==='stomp'?-2.6*k:0;arm.rotation.x+=(target-arm.rotation.x)*.25;});
-  f.materials.energy.emissiveIntensity=.7+(pose?.kind==='bolt'?2.5*k:0)+Math.sin(time*4)*.1;}
+  f.animate?.(time);if(pose?.kind==='bolt')f.materials.energy.emissiveIntensity+=2.5*k;}
  const pose=show?st.pose:null;gp.warn.forEach((m,i)=>{const on=!!pose&&pose.kind!=='stomp'&&pose.lane===i;m.visible=on;if(on){m.position.z=runner.s+3;gp.warnMats[i].opacity=.3+.35*Math.abs(Math.sin(time*12));}});
  gp.band.visible=!!pose&&pose.kind==='stomp';if(gp.band.visible){gp.band.position.z=runner.s+st.dist-3;gp.band.material.opacity=.4+.4*Math.abs(Math.sin(time*12));}
  const flying=show||st?st.flying:[];let b=0,v=0;for(const p of flying||[]){const target=p.kind==='boulder'?gp.boulders[b++]:gp.bolts[v++];if(!target)continue;target.visible=true;target.position.set(-LANES[p.lane],p.y,p.s);target.rotation.x=-p.spin;}
