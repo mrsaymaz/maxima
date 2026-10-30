@@ -15,7 +15,8 @@ function mat(color,{emissive=null,glow=0,rough=.78,flat=false,opacity=1,additive
  const key=[color,emissive,glow,rough,flat,opacity,additive,basic].join('|');if(materials.has(key))return materials.get(key);
  const options={color,transparent:opacity<1||additive,opacity,depthWrite:!(opacity<1||additive),blending:additive?T.AdditiveBlending:T.NormalBlending};
  const m=basic?new T.MeshBasicMaterial({...options,toneMapped:false}):new T.MeshStandardMaterial({...options,roughness:rough,flatShading:flat,emissive:emissive||'#000000',emissiveIntensity:glow});
- materials.set(key,m);return m;
+ // Surface role for the shared material reading (stone-like props, glowing effects).
+ m.userData.surface=basic||glow>.5?'effect':'stone';m.name='runner-'+color;materials.set(key,m);return m;
 }
 const mesh=(geometry,material,x=0,y=0,z=0)=>{const m=new T.Mesh(geometry,material);m.position.set(x,y,z);return m;};
 
@@ -91,7 +92,7 @@ const SLIDES={
    l.add(mesh(geo('lantern',()=>new T.SphereGeometry(.13,10,8).scale(1,1.25,1)),mat(['#ff9a3c','#ff4f6d','#ffd54a'][i%3],{emissive:['#ff7a1a','#ff2f55','#ffb800'][i%3],glow:1.1,rough:.4}),0,-.42,0));g.add(l);
    anim.push(t=>{l.rotation.z=Math.sin(t*2.4+i)*.15;});}return g;},
  banner(w,y,kit,anim){const g=new T.Group();posts(g,w,y+.8,mat('#f2e6c9'));g.add(mesh(geo('brope'+w,()=>new T.CylinderGeometry(.02,.02,w+.3,4).rotateZ(Math.PI/2)),mat('#6b4b2b'),0,y+.75));
-  const n=Math.max(3,Math.round(w/.26)),colors=['#ff5b5b','#ffd23f','#3fd0ff','#7bff6b','#ff7ad9'];for(let i=0;i<n;i++){const f=mesh(geo('flag',()=>{const s=new T.Shape();s.moveTo(-.11,0);s.lineTo(.11,0);s.lineTo(0,-.62);s.closePath();return new T.ShapeGeometry(s);}),new T.MeshStandardMaterial({color:colors[i%5],side:T.DoubleSide,roughness:.7}),-w/2+w*(i+.5)/n,y+.75,0);g.add(f);anim.push(t=>{f.rotation.x=Math.sin(t*3+i*.8)*.2;});}return g;},
+  const n=Math.max(3,Math.round(w/.26)),colors=['#ff5b5b','#ffd23f','#3fd0ff','#7bff6b','#ff7ad9'];for(let i=0;i<n;i++){const f=mesh(geo('flag',()=>{const s=new T.Shape();s.moveTo(-.11,0);s.lineTo(.11,0);s.lineTo(0,-.62);s.closePath();return new T.ShapeGeometry(s);}),Object.assign(new T.MeshStandardMaterial({color:colors[i%5],side:T.DoubleSide,roughness:.7}),{userData:{surface:'paper'}}),-w/2+w*(i+.5)/n,y+.75,0);g.add(f);anim.push(t=>{f.rotation.x=Math.sin(t*3+i*.8)*.2;});}return g;},
  laser(w,y,kit,anim){const g=new T.Group();for(const x of[-w/2-.15,w/2+.15]){g.add(mesh(geo('pylon'+y.toFixed(2),()=>new T.CylinderGeometry(.1,.16,y+.35,6).translate(0,(y+.35)/2,0)),mat('#3b2f6b',{flat:true}),x,0));g.add(mesh(geo('pgem',()=>new T.OctahedronGeometry(.13)),mat('#d48bff',{emissive:'#b05cff',glow:1.2}),x,y+.45));}
   const beam=mesh(geo('lbeam'+w,()=>new T.BoxGeometry(w+.3,.07,.07)),mat('#ff4fd8',{basic:true,additive:true,opacity:.95}),0,y+.12),halo=mesh(geo('lhalo'+w,()=>new T.BoxGeometry(w+.3,.22,.22)),mat('#ff4fd8',{basic:true,additive:true,opacity:.25}),0,y+.12);
   g.add(beam,halo);anim.push(t=>{halo.scale.y=halo.scale.z=1+Math.sin(t*9)*.25;});return g;},

@@ -68,3 +68,11 @@ test('runner mode has its own running loop per arena',async()=>{
  const{readFileSync,existsSync}=await import('node:fs');const m=JSON.parse(readFileSync('dist/assets/music/manifest.json','utf8'));
  for(const arena of['whisperwood','skyreach','stormglass']){const t=m.tracks['run-'+arena];assert.ok(t&&t.bpm>=130&&t.loop>40,arena);assert.ok(existsSync('dist/assets/music/'+t.base));}
 });
+test('a classic journey carries over to the runner with its positions moved onto the longer trail',async()=>{
+ const{importClassicSave}=await import('../dist/runner-save.js');const{freshSave,freshJourney,freshExpedition}=await import('../dist/expedition.js');
+ const save=freshSave(),j=freshJourney(),e=freshExpedition(j,'g5u1',0);e.position={x:-10,z:-58};e.checkpoint={position:{x:6,z:-200}};e.travel={collected:[],completed:[0],earned:3,retries:0,safe:{x:-10,z:-58,y:0,heading:1}};
+ j.expeditions={[e.id]:e};save.journeys={g5u1:j};save.wallet={balance:12,total:12,owned:['air'],equipped:'air'};
+ const w=trailWarp(2.5),runner=importClassicSave(save,w.stretchZ),moved=runner.journeys.g5u1.expeditions[e.id];
+ assert.equal(moved.position.z,w.stretchZ(-58));assert.equal(moved.position.x,-10);assert.equal(moved.checkpoint.position.z,w.stretchZ(-200));assert.equal(moved.travel.safe.z,w.stretchZ(-58));
+ assert.equal(runner.wallet.balance,12,'coins come along');assert.equal(e.position.z,-58,'the classic save itself is untouched');assert.equal(importClassicSave(null),null);
+});

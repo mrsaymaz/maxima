@@ -9,7 +9,7 @@ const THEMES=[
  {name:'stormglass',title:'Stormglass basalt spires',lighting:{sky:'#9caac4',fog:'#9caac4',hemisphereSky:'#ccd6ff',hemisphereGround:'#31354d',sun:'#d3dfff',sunIntensity:2.55,hemisphereIntensity:1.35,exposure:1.0},colors:{rock:'#4b3f86',cap:'#4db7a3',glass:'#b59cff',cyan:'#5fe6ff',leaf:'#3aa69e',flow:'#5be0ff'}}
 ];
 const PATHS=Array.from({length:5},(_,c)=>['left','right'].map(s=>chapterPath(c,s))).flat();
-PATHS.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:END.z+8},{...END}]);
+PATHS.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:stretchZ(-658)},{...END}]);
 const CLEARANCE=5,OFF_CORRIDOR=19;
 
 function rectangleDistance(box){

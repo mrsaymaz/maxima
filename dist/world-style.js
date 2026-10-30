@@ -1,3 +1,4 @@
+import{stretchZ}from'./runner-mode.js';
 import{composedHalfWidth}from'./expedition-composition.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
 import{SURFACES,assignSurface}from'./surface-materials.js';
@@ -66,7 +67,7 @@ export function trailMask(resolution=2.5,{composed=false}={}){
  const stamp=(minX,maxX,minZ,maxZ,distance)=>{const i0=Math.max(0,Math.floor((minX-outer-MASK_RECT.x)*resolution)),i1=Math.min(w-1,Math.ceil((maxX+outer-MASK_RECT.x)*resolution)),j0=Math.max(0,Math.floor((minZ-outer-MASK_RECT.z)*resolution)),j1=Math.min(h-1,Math.ceil((maxZ+outer-MASK_RECT.z)*resolution));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=MASK_RECT.x+(i+.5)/resolution,z=MASK_RECT.z+(j+.5)/resolution,d=distance(x,z),localOuter=composed?composedHalfWidth(z)+.7:outer,localInner=composed?composedHalfWidth(z)-1.25:inner;if(d>=localOuter)continue;const t=Math.min(1,Math.max(0,(localOuter-d)/(localOuter-localInner))),v=Math.round(255*t*t*(3-2*t)),k=j*w+i;if(v>data[k])data[k]=v;}};
  const segment=(a,b)=>stamp(Math.min(a.x,b.x),Math.max(a.x,b.x),Math.min(a.z,b.z),Math.max(a.z,b.z),(x,z)=>{const dx=b.x-a.x,dz=b.z-a.z,t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(x-a.x-dx*t,z-a.z-dz*t);});
  for(let c=0;c<5;c++)for(const side of['left','right']){const points=chapterPath(c,side);for(let i=1;i<points.length;i++)segment(points[i-1],points[i]);}
- segment({x:0,z:10},{x:0,z:-2});segment({x:0,z:END.z+12},{x:0,z:END.z-2});
+ segment({x:0,z:10},{x:0,z:-2});segment({x:0,z:stretchZ(-654)},{x:0,z:END.z-2});
  const t=new T.DataTexture(data,w,h,T.RedFormat,T.UnsignedByteType);t.magFilter=T.LinearFilter;t.minFilter=T.LinearFilter;t.generateMipmaps=false;t.needsUpdate=true;return t;
 }
 

@@ -12,9 +12,9 @@ The game is prebuilt: `dist/index.html`, local modules, all creature assets and 
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
-## Runner prototype · `?mode=runner`
+## Runner paths (the game)
 
-Open the game with `?mode=runner` to try auto-running between gates. It keeps its own save, so classic journeys are untouched; without the setting the game plays exactly as before.
+Maxima now plays as a runner: the creature runs between gates in three lanes, and tasks, fights and forks happen in calm clearings. The first runner launch on a device imports the classic journey (creatures, Forms, coins, lessons), moving saved positions onto the longer trail; the classic save stays as it was. Classic paths remain available from Help ("Play classic paths") or with `?mode=classic`; `?mode=runner` switches back. The choice is remembered on the device, including home-screen apps. Tests run the classic layout by default; `MAXIMA_MODE=runner npm test` runs the suite on the runner layout, where tests of classic-only features (advanced trials, raised quiet stretches, mid-stretch rivals, the 12-chunk terrain) are expected to differ.
 
 - **Longer trail.** Every gap between gates is 2.5× longer (`dist/runner-mode.js`). Forks stay compact. The map is a continuous warp of the classic one, so terrain, cliffs, landmarks and scenery follow the longer route.
 - **Runs.** After a fork or a gate the creature runs on its own in three lanes (`runner-course.js`, `runner-control.js`). Change lane with ← → / A D or a sideways swipe, jump with ↑ / W / Space or a swipe up, slide with ↓ / S or a swipe down. The joystick steps aside during runs.

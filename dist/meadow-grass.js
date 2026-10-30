@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import{routeDistance,terrainTint,TERRAIN_BOUNDS}from'./valley-terrain.js';
+import{routeDistance,terrainTint,TERRAIN_BOUNDS,TERRAIN_CHUNKS}from'./valley-terrain.js';
 import{composedHalfWidth}from'./expedition-composition.js';
 import{assignSurface}from'./surface-materials.js';
 const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
@@ -13,7 +13,7 @@ export function terrainSampler(chunks){return(x,z)=>{
  return v>=u?A*(1-v)+D*(v-u)+E*u:A*(1-u)+E*v+B*(u-v);
 };}
 export function makeMeadowGrass(area,chunks){
- const root=new T.Group();root.name='valley-meadow';const sample=terrainSampler(chunks),groups=Array.from({length:12},()=>[]),p=[],c=[],tip=[];
+ const root=new T.Group();root.name='valley-meadow';const sample=terrainSampler(chunks),groups=Array.from({length:TERRAIN_CHUNKS},()=>[]),p=[],c=[],tip=[];
  for(let i=0;i<6;i++){const a=i*2.399,w=.035+(i%2)*.012,h=.55+(i%3)*.12,x=Math.cos(a)*.11,z=Math.sin(a)*.11,rx=Math.cos(a)*w,rz=Math.sin(a)*w;for(const v of[[x-rx,0,z-rz,0],[x+rx,0,z+rz,0],[x+.10,h,z+.06,1]]){p.push(...v.slice(0,3));c.push(...(v[3]?[1.08,1.08,.99]:[.67,.72,.63]));tip.push(v[3]);}}
  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(p,3));geo.setAttribute('color',new T.Float32BufferAttribute(c,3));geo.setAttribute('grassTip',new T.Float32BufferAttribute(tip,1));geo.computeVertexNormals();
  const material=new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:1,side:T.DoubleSide});assignSurface(material,'foliage');const u={uMeadowTime:{value:0},uMeadowMotion:{value:1},uMeadowPlayer:{value:new T.Vector2()},uMeadowQuiet:{value:0}};material.userData.stylized='meadow';material.userData.meadow=u;
@@ -29,9 +29,9 @@ export function makeMeadowGrass(area,chunks){
   if(clear<.65||hash(ix+501,iz+61)>.88)continue;
   const y=sample(x,z);if(y===null||Math.abs(sample(x+.35,z)-y)>.75||Math.abs(sample(x,z+.35)-y)>.75)continue;
   const edge=smooth((clear-.65)/2),h=(.38+hash(ix+11,iz+9)*.62)*(.32+edge*.68),row={x,y:y-.015,z,h,turn:hash(ix+2,iz+33)*Math.PI*2,color:terrainTint(x,z,y,area)};
-  groups[Math.max(0,Math.min(11,Math.floor((z-TERRAIN_BOUNDS.minZ)/((TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/12))))].push(row);
+  groups[Math.max(0,Math.min(TERRAIN_CHUNKS-1,Math.floor((z-TERRAIN_BOUNDS.minZ)/((TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/TERRAIN_CHUNKS))))].push(row);
  }
- const dummy=new T.Object3D();groups.forEach((rows,index)=>{if(!rows.length)return;for(let i=rows.length-1;i>0;i--){const j=Math.min(i,Math.floor(hash(i,index+91)*(i+1)));[rows[i],rows[j]]=[rows[j],rows[i]];}const m=new T.InstancedMesh(geo,material,rows.length);m.name='meadow-chunk-'+index;m.userData={total:rows.length,centerZ:TERRAIN_BOUNDS.minZ+(index+.5)*(TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/12,taskTransparent:true,nonBlocking:true};rows.forEach((v,i)=>{dummy.position.set(v.x,v.y,v.z);dummy.rotation.set(0,v.turn,0);const spread=1.7+hash(i,index+51)*.4;dummy.scale.set(spread,v.h,spread);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix);m.setColorAt(i,v.color);});m.computeBoundingSphere();m.castShadow=false;m.receiveShadow=false;root.add(m);});
+ const dummy=new T.Object3D();groups.forEach((rows,index)=>{if(!rows.length)return;for(let i=rows.length-1;i>0;i--){const j=Math.min(i,Math.floor(hash(i,index+91)*(i+1)));[rows[i],rows[j]]=[rows[j],rows[i]];}const m=new T.InstancedMesh(geo,material,rows.length);m.name='meadow-chunk-'+index;m.userData={total:rows.length,centerZ:TERRAIN_BOUNDS.minZ+(index+.5)*(TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/TERRAIN_CHUNKS,taskTransparent:true,nonBlocking:true};rows.forEach((v,i)=>{dummy.position.set(v.x,v.y,v.z);dummy.rotation.set(0,v.turn,0);const spread=1.7+hash(i,index+51)*.4;dummy.scale.set(spread,v.h,spread);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix);m.setColorAt(i,v.color);});m.computeBoundingSphere();m.castShadow=false;m.receiveShadow=false;root.add(m);});
  Object.defineProperty(root,'_meadow',{value:{uniforms:u,groups,material,geometry:geo},enumerable:false});root.userData={nonBlocking:true,clumps:groups.reduce((n,g)=>n+g.length,0),blades:6};return root;
 }
 export function updateMeadowGrass(root,{player={x:0,z:0},time=0,preset='balanced',reduced=false,strength=0}={}){const s=root?._meadow;if(!s)return;s.uniforms.uMeadowTime.value=time;s.uniforms.uMeadowMotion.value=reduced?0:preset==='low'?.4:1;s.uniforms.uMeadowPlayer.value.set(player.x,player.z);s.uniforms.uMeadowQuiet.value=strength;for(const m of root.children){m.visible=Math.abs(player.z-m.userData.centerZ)<(preset==='low'?72:110);m.count=Math.ceil(m.userData.total*(preset==='low'?.28:preset==='high'?1:.65));}}

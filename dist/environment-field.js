@@ -6,7 +6,7 @@ import{makeAqueductStory}from'./aqueduct-story.js';
 import * as T from './vendor/three.module.min.js';
 import {rockFormation,treeTrunk,treeCanopy,fernCluster,fallenLog,masonryFragment} from './environment-kit.js';
 import {makeEnvironmentMaterials,environmentPalette} from './environment-materials.js';
-import {buildTerrainChunks,terrainHeight,TERRAIN_BOUNDS} from './valley-terrain.js';
+import {buildTerrainChunks,terrainHeight,TERRAIN_BOUNDS,TERRAIN_CHUNKS} from './valley-terrain.js';
 import {groundMaterial} from './world-style.js';
 import {chapterPath,pathDistance,START,END} from './trail-layout.js';
 import {composedHalfWidth,scenicSurface} from './expedition-composition.js';
@@ -40,7 +40,7 @@ export function makeEnvironmentField(e){
  const terrainMeshes=[];for(const geometry of buildTerrainChunks(area)){const mesh=new T.Mesh(geometry,ground);mesh.name='sculpted-ground-'+geometry.userData.chunk;mesh.receiveShadow=true;mesh.castShadow=false;root.add(mesh);mesh.updateMatrixWorld(true);terrainMeshes.push(mesh);}
  const meadow=makeMeadowGrass(area,terrainMeshes.map(m=>m.geometry));root.add(meadow);
  const groundRay=new T.Raycaster(new T.Vector3(),new T.Vector3(0,-1,0),0,50),groundY=(x,z)=>{groundRay.ray.origin.set(x,30,z);return (groundRay.intersectObjects(terrainMeshes,false)[0]?.point.y??terrainHeight(x,z,area))-.015;};
- function chunkFor(z){const c=Math.max(0,Math.min(11,Math.floor((TERRAIN_BOUNDS.maxZ-z)/((TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/12))));if(!chunks.has(c)){const g=new T.Group();g.name='environment-cluster-'+c;g.userData.centerZ=30-(c+.5)*(730/12);chunks.set(c,g);root.add(g);}return c;}
+ function chunkFor(z){const c=Math.max(0,Math.min(TERRAIN_CHUNKS-1,Math.floor((TERRAIN_BOUNDS.maxZ-z)/((TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/TERRAIN_CHUNKS))));if(!chunks.has(c)){const g=new T.Group();g.name='environment-cluster-'+c;g.userData.centerZ=TERRAIN_BOUNDS.maxZ-(c+.5)*((TERRAIN_BOUNDS.maxZ-TERRAIN_BOUNDS.minZ)/TERRAIN_CHUNKS);chunks.set(c,g);root.add(g);}return c;}
  function geometryFor(kind,variant){const key=kind+':'+variant;if(!geometryCache.has(key))geometryCache.set(key,(({rock:rockFormation,trunk:treeTrunk,canopy:treeCanopy,fern:fernCluster,log:fallenLog,masonry:masonryFragment})[kind]?.(variant)||sceneryGeometry(kind)));return geometryCache.get(key);}
  function put(kind,role,x,y,z,sx=1,sy=sx,sz=sx,turn=0,{variant=0,solid=false,detail=false,flex=0,feature=kind,pitch=0,roll=0}={}){
   const geo=geometryFor(kind,variant),c=chunkFor(z),key=[c,role,detail].join(':');object.position.set(x,y,z);object.rotation.set(pitch,turn,roll);object.scale.set(sx,sy,sz);object.updateMatrix();matrix.copy(object.matrix);normalMatrix.getNormalMatrix(matrix);

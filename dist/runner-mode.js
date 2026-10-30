@@ -1,12 +1,22 @@
-// Runner prototype switch. `?mode=runner` (or `<html data-play-mode="runner">`, as the runner Drop package does)
-// opens the auto-run version on a longer trail; `?mode=classic` or no setting plays the classic expedition.
+// Play mode. The runner (auto-run between gates on a longer trail) is the game; classic play stays available
+// through `?mode=classic` or the Help screen's switch (remembered on this device), or `<html data-play-mode>`.
 // The two keep separate saves, so trying the runner never touches a classic journey.
+const MODE_KEY='maxima.playMode';
 export function playMode(){
  try{
   const asked=new URLSearchParams(globalThis.location?.search||'').get('mode');
-  if(asked==='runner'||asked==='classic')return asked;
-  return globalThis.document?.documentElement?.dataset?.playMode==='runner'?'runner':'classic';
+  // An address choice is remembered, so a home-screen app opened later keeps the mode.
+  if(asked==='runner'||asked==='classic'){try{globalThis.localStorage?.setItem(MODE_KEY,asked);}catch{}return asked;}
+  const saved=globalThis.localStorage?.getItem(MODE_KEY);if(saved==='runner'||saved==='classic')return saved;
+  const page=globalThis.document?.documentElement?.dataset?.playMode;if(page==='runner'||page==='classic')return page;
+  // The runner is the game; outside a browser (tests, build checks) MAXIMA_MODE picks, classic by default.
+  if(globalThis.document)return'runner';return globalThis.process?.env?.MAXIMA_MODE==='runner'?'runner':'classic';
  }catch{return'classic';}
+}
+// Switch modes from inside the game (Help), then reload into the chosen mode.
+export function switchPlayMode(mode){
+ try{globalThis.localStorage?.setItem(MODE_KEY,mode);}catch{}
+ const url=new URL(globalThis.location.href);url.searchParams.delete('mode');globalThis.location.replace(url.toString());
 }
 export const RUNNER=playMode()==='runner';
 
