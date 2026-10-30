@@ -12,6 +12,16 @@ The game is prebuilt: `dist/index.html`, local modules, all creature assets and 
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
+## Vivid look, phone framing and installable app · Tier 1 (on v0.46.0)
+
+**Colour and light on every preset.** Low and Balanced now share High's tone curve: a neutral filmic curve with a light saturation, contrast and warm-light/cool-shade grade (`dist/color-grade.js`), in place of ACES, which greyed greens and skies. Each arena has one palette in `dist/arena-palette.js` covering sky, fog, sun, terrain, rock, foliage, water, cliffs, banks and path edges. Whisperwood is a sunny meadow, Skyreach a bright sandstone highland and Stormglass a violet-and-teal twilight. Low no longer darkens the ground: the sun stops casting shadows when the preset disables them, so materials never sample an undrawn shadow map.
+
+**Phone framing.** Tall portrait screens pull the camera back and up so more of the trail ahead is visible. Coins within about three metres of the camera dissolve instead of filling the screen.
+
+**Readability and goals.** Labels on stone, bronze, scroll and paper have a halo and heavier weight. The HUD shows the next goal ("3 gates → Form 2", "Guardian next") and a coin-chain chip whose fill shows boost fuel. On tall phones the opening screen leaves the top third to the creature and world.
+
+**Install, full screen and offline.** `dist/manifest.webmanifest` and the icons in `dist/icons` make Maxima installable as a full-screen app. Chrome, Edge and Android show an Install button in the opening footer. Help explains Share → Add to Home Screen on iPhone and iPad and offers a full-screen button in the browser. The screen stays awake during play. `dist/sw.js` caches the app shell (code, styles, fonts, icons, lesson catalogue) on install. Lessons, creatures, pictures, voice and music are cached when first used, including those loaded before the worker took control, so a lesson played once also opens offline. Code and lessons are network-first with a 4.5-second fallback; media is served from the cache and refreshed in the background. After changing any shell file run `npm run offline`; `npm run build` fails when `dist/offline-shell.json` or the hash in `sw.js` is out of date. Add `?nosw` to the address to run without the worker.
+
 ## Loading and sustained performance · v0.46.0
 
 Startup now loads a small 44-lesson catalogue and only the selected lesson. Its

@@ -20,3 +20,12 @@ verifyRuntimeRigs();
 console.log('Static runtime verified: enclosed branching corridors, world-mounted mechanisms, physical obstacles, checkpoint runtime, 20 activity formats, 44 units, all forty-four GLBs, four creature partners, recorded voice, music and sound effects, and local assets.');
 
 const catalog=JSON.parse(readFileSync('dist/data/lesson-catalog.json'));for(const u of expeditionData.units){const split=JSON.parse(readFileSync(`dist/data/lessons/${u.id}.json`));if(JSON.stringify(split)!==JSON.stringify(u))throw Error('Stale split lesson '+u.id);}if(catalog.units.length!==44)throw Error('Missing lesson catalogue entries');
+
+// Offline app shell: every listed file exists, nothing in the shell is missing, and sw.js carries the current hash.
+{const{shellFiles,shellHash}=await import('./build-offline.mjs');const listed=JSON.parse(readFileSync('dist/offline-shell.json')),expected=shellFiles();
+ if(JSON.stringify(listed.files)!==JSON.stringify(expected))throw Error('Stale dist/offline-shell.json: run npm run offline');
+ for(const f of expected)if(f!=='./'&&!existsSync('dist/'+f))throw Error('Offline shell file missing: '+f);
+ const hash=shellHash(expected);if(listed.hash!==hash||!readFileSync('dist/sw.js','utf8').includes(`const SHELL_HASH='${hash}';`))throw Error('Offline shell hash out of date: run npm run offline');
+ for(const f of['manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png','app-shell.js'])if(!existsSync('dist/'+f))throw Error('Missing app file '+f);
+ const manifest=JSON.parse(readFileSync('dist/manifest.webmanifest'));if(!manifest.icons?.some(i=>i.sizes==='512x512')||manifest.start_url!=='./')throw Error('Incomplete web app manifest');
+ console.log(`Offline shell verified: ${expected.length} files, hash ${hash}.`);}

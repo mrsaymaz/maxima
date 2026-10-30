@@ -1,5 +1,6 @@
 // One local stroke family. Icons are decorative; their controls retain text/ARIA names.
 const paths={
+ download:'M12 4v11M7 10l5 5 5-5M5 20h14',expand:'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
  attack:'m13 3-8 11h6l-1 7 9-12h-6z',jump:'M12 19V5m-5 5 5-5 5 5M5 21h14',
  follow:'M7 17 17 7M7 7h10v10',use:'M8 12V7a2 2 0 0 1 4 0v5m0-4a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v5c0 4-3 6-6 6h-2c-2 0-3-1-4-3l-3-5a2 2 0 0 1 3-2l3 3',
  left:'M17 17 7 7m0 9V7h9',right:'M7 17 17 7M8 7h9v9',close:'m6 6 12 12M6 18 18 6',
