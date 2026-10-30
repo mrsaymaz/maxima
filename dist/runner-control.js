@@ -1,5 +1,6 @@
 import{courseCoordinates,localPoint}from'./traversal-layout.js';
-import{LANES,LANE_HALF,RUN_LEAD,laneSpan,speedAt,runSurface,hurdleHeight}from'./runner-course.js';
+import{LANES,LANE_HALF,RUN_LEAD,laneSpan,speedAt,runSurface,hurdleHeight,finaleRun,GUARDIAN_ENTER,GUARDIAN_LEAVE}from'./runner-course.js';
+import{activeNode,approachPoint}from'./trail-layout.js';
 
 // Drives the creature through a runner section on a moving track. Progress is measured in track metres (`s`,
 // up to run.length). While s is below run.length - run.real the creature holds its place in the valley and the
@@ -89,6 +90,7 @@ export class RunnerControl{
     for(const b of st.rolling){b.s-=o.roll*dt;b.spin+=dt*(o.roll+this.speed)/.5;}
     st.rolling=st.rolling.filter(b=>b.s>this.s-12&&!b.hit);
    }
+   if(o.type==='guardian'){this.updateGuardian(o,dt);continue;}
    if(o.type==='wind'){
     if(this.s<o.start||this.s>o.end){if(this.trials.get(o.id))this.trials.get(o.id).phase=0;continue;}
     let st=this.trials.get(o.id);if(!st){st={t0:this.clock,gusts:0};this.trials.set(o.id,st);}
@@ -97,6 +99,39 @@ export class RunnerControl{
     if(phase>=.85&&st.gusts<=cycle){st.gusts=cycle+1;if(!this.has('dash')){const next=Math.max(0,Math.min(2,this.lane+o.dir));if(next!==this.lane){this.lane=next;this.events.gust?.(o);}}}
    }
   }
+ }
+ // The guardian rides ahead (track metre s + dist), rises in, roars, attacks after each warning and backs away.
+ updateGuardian(o,dt){
+  let st=this.trials.get(o.id);
+  if(!st&&this.s>=o.start&&this.s<o.end){st={t0:this.clock,next:0,warned:-1,flying:[],waves:[],roared:false,leaveAt:null,dist:70,rise:-9};this.trials.set(o.id,st);this.events.guardian?.(o);}
+  if(!st)return;const t=this.clock-st.t0;st.t=t;
+  if(st.leaveAt==null&&(o.finale?this.s>=o.end:t>o.duration-GUARDIAN_LEAVE))st.leaveAt=t;
+  const enter=Math.min(1,t/GUARDIAN_ENTER),leave=st.leaveAt==null?0:Math.min(1,(t-st.leaveAt)/GUARDIAN_LEAVE);
+  st.dist=70-32*enter+40*leave;st.rise=-9*(1-enter)-9*leave;st.visible=leave<1;
+  if(!st.roared&&enter>=1){st.roared=true;this.events.roar?.(o);}
+  st.pose=null;const a=st.leaveAt==null?o.attacks[st.next]:null;
+  if(a&&t>=a.t-o.warn){st.pose={kind:a.kind,lane:a.lane,k:Math.min(1,(t-(a.t-o.warn))/o.warn)};if(st.warned<st.next){st.warned=st.next;this.events.warn?.(a);}}
+  if(a&&t>=a.t){this.launch(o,st,a);st.next++;}
+  for(const p of st.flying){if(p.flight>0){p.flight=Math.max(0,p.flight-dt);const k=1-p.flight/p.total;p.s=p.from+(p.to-p.from)*k;p.y=p.y0*(1-k)+p.y1*k+p.arc*Math.sin(Math.PI*k);}else{p.s-=p.speed*dt;p.y=p.y1;}p.spin+=dt*9;
+   if(!p.passed&&!p.flight&&p.s<this.s-.8){p.passed=true;if(!p.hit&&this.clock-this.lastMove.t<.6&&this.lastMove.kind==='lane'&&this.lastMove.lane===p.lane)this.events.perfect?.(p);}}
+  for(const w of st.waves){w.s-=w.speed*dt;if(!w.passed&&w.s<this.s-.6){w.passed=true;if(!w.hit&&this.clock-this.lastMove.t<.6&&this.lastMove.kind==='jump')this.events.perfect?.(w);}}
+  st.flying=st.flying.filter(p=>p.s>this.s-10&&!p.hit);st.waves=st.waves.filter(w=>w.s>this.s-8&&!w.hit);
+ }
+ launch(o,st,a){
+  const g=this.s+st.dist,id=`${o.id}:${a.kind}:${st.next}`;
+  // Boulders arc from the guardian's hand, land ahead and roll down their lane; bolts race straight down theirs.
+  if(a.kind==='boulder')st.flying.push({id,kind:'boulder',lane:a.lane,from:g-2,to:this.s+22,s:g-2,y:7,y0:7,y1:.5,arc:3,total:.9,flight:.9,speed:5,spin:0});
+  if(a.kind==='bolt')st.flying.push({id,kind:'bolt',lane:a.lane,from:g-2,to:g-2,s:g-2,y:1.2,y0:1.2,y1:1.2,arc:0,total:0,flight:0,speed:20,spin:0});
+  // A stomp sends a shockwave across all lanes toward the creature: jump it.
+  if(a.kind==='stomp')st.waves.push({id,s:g-3,speed:13});
+  this.events.attack?.(a);
+ }
+ // The final chase: a run from just past the last gate to the guardian's arena at the end of the trail.
+ finale(e,mode){
+  if(!e||e.index<20||e.battle||!e.choices?.[4])return null;const key=e.id+':'+mode;if(this.finaleKey===key)return this.finaleSection;
+  const node=activeNode({...e,index:19}),exit=activeNode(e),from={x:node.x,z:node.z},to=approachPoint(exit),dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz),forward={x:dx/len,z:dz/len},start={x:from.x+forward.x*2.5,z:from.z+forward.z*2.5},length=len-2.5;
+  const section={id:`${e.id}:travel:finale`,index:20,chapter:4,side:e.choices[4],area:e.area,kind:'coins',start,end:to,length,forward,right:{x:-forward.z,z:forward.x},platforms:[],plants:[],coins:[],enemies:[],enemy:null,trial:null,finale:true};
+  section.run=finaleRun(section,mode);this.finaleKey=key;this.finaleSection=section;return section;
  }
  thornUp(o,lane,clock=this.clock){return((clock/o.period+o.phase+THORN_LANES[lane])%1)<THORN_UP;}
  // A stumble: a short stop and a step back, never a fail; a shield absorbs it and a dash smashes through.
@@ -114,6 +149,10 @@ export class RunnerControl{
   for(const o of run.obstacles){
    const span=laneSpan(o.lanes);
    if(o.type==='swamp'){if(!this.has('dash')&&Math.abs(this.s-o.s)<o.depth/2&&this.lat>span.min&&this.lat<span.max&&feet<.12){this.mire=.25;if(this.mired!==o.id){this.mired=o.id;nav.rush?.reset();this.events.swamp?.(o);}}continue;}
+   if(o.type==='guardian'){const st=this.trials.get(o.id);if(!st||nav.invincible>0)continue;
+    for(const p of st.flying)if(!p.hit&&!p.flight&&Math.abs(p.s-this.s)<.7&&p.lane===lane&&nav.y<(p.kind==='boulder'?BOULDER_HEIGHT:1.5)-.1){p.hit=true;return this.stumble(nav,{id:p.id,type:p.kind,s:this.s+1.2,depth:0});}
+    for(const w of st.waves)if(!w.hit&&Math.abs(w.s-this.s)<.55&&feet<.35){w.hit=true;return this.stumble(nav,{id:w.id,type:'stomp',s:this.s+1.2,depth:0});}
+    continue;}
    if(o.type==='boulders'){const st=this.trials.get(o.id);for(const b of st?.rolling||[])if(!b.hit&&Math.abs(b.s-this.s)<.75&&b.lane===lane&&nav.y<BOULDER_HEIGHT-.1&&nav.invincible<=0){b.hit=true;return this.stumble(nav,{...o,id:b.id,s:this.s+1.2,depth:0});}continue;}
    if(['hole','stone','wind','ledge'].includes(o.type)||this.knocked.has(o.id)||Math.abs(this.s-o.s)>o.depth/2+.28)continue;if(this.lat<span.min-.2||this.lat>span.max+.2)continue;
    const hit=o.type==='barrier'?feet<hurdle-.06:o.type==='bar'?this.sliding<=0:o.type==='thorns'?this.thornUp(o,lane)&&feet<THORN_HEIGHT-.1:o.type==='crystal';

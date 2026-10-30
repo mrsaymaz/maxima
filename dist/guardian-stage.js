@@ -2,7 +2,7 @@ import{jumpTuning}from'./jump-tuning.js';
 import * as T from './vendor/three.module.min.js';
 import{GuardianCombat,BOSS,ARENA,beamEnd,quakeRadius,attackDuration,guardianPhase}from'./guardian-combat.js';
 import{ElementalFX}from'./elemental-fx.js';
-import{surfaceMaterial}from'./surface-materials.js';
+import{surfaceMaterial}from'./surface-materials.js';import{buildGuardianFigure}from'./guardian-figure.js';
 const palettes=[{stone:'#56675a',edge:'#a3ae88',dark:'#273d36',energy:'#bde37d',ground:'#888a6d'},{stone:'#637d89',edge:'#c2cfca',dark:'#273e51',energy:'#a8e5ed',ground:'#9aaba9'},{stone:'#5c5679',edge:'#a49db8',dark:'#302c49',energy:'#debbef',ground:'#77748a'}];
 const smooth=t=>t*t*(3-2*t),clamp=(t,a=0,b=1)=>Math.max(a,Math.min(b,t));
 function mesh(parent,g,m,x=0,y=0,z=0){const o=new T.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
@@ -33,18 +33,7 @@ export class GuardianStage{
   // Broken aqueduct / ridge / crystal cathedral silhouettes frame the arena.
   for(let i=0;i<13;i++){const a=Math.PI*.58+i/12*Math.PI*.84,x=Math.sin(a)*19,z=3+Math.cos(a)*19,h=7+(i%4)*2;const cliff=mesh(this.root,new T.DodecahedronGeometry(3,0),i%3?m.stone:m.dark,x,h*.34-1,z);cliff.scale.set(1,h/4,1);cliff.rotation.y=i*.7;}
   for(const side of[-1,1])for(let i=0;i<3;i++){const column=mesh(this.root,new T.CylinderGeometry(.6,.85,5+i,7),m.edge,side*(12+i*1.3),1.8,-3-i*4);column.rotation.z=side*(i===1?.22:.03);mesh(column,new T.BoxGeometry(2,.45,1.7),m.stone,0,(5+i)/2,0);}
-  this.boss=new T.Group();this.boss.name='colossal-guardian';this.boss.position.set(BOSS.x,0,BOSS.z);this.root.add(this.boss);this.torso=new T.Group();this.torso.position.y=5.8;this.boss.add(this.torso);
-  mesh(this.torso,new T.DodecahedronGeometry(2.2,0),m.stone,0,0,0).scale.set(1.25,1.12,.75);
-  mesh(this.torso,new T.DodecahedronGeometry(1.3,0),m.dark,0,-2.0,0).scale.set(1.25,.8,1);
-  this.head=new T.Group();this.head.position.set(0,2.65,.1);this.torso.add(this.head);
-  mesh(this.head,new T.DodecahedronGeometry(1.42,0),m.stone,0,0,0).scale.set(1,1.05,.8);
-  mesh(this.head,new T.BoxGeometry(1.7,.42,.38),m.dark,0,-.07,1.0);for(const side of[-1,1]){const eye=mesh(this.head,new T.BoxGeometry(.49,.14,.18),m.energy,side*.47,.10,1.24);eye.rotation.z=side*.2;mesh(this.head,new T.ConeGeometry(.43,2.2,5),m.edge,side*1.05,1.5,-.2).rotation.z=-side*.35;mesh(this.head,new T.BoxGeometry(.36,.65,.55),m.edge,side*.52,-.75,.8).rotation.z=side*.15;}
-  mesh(this.head,new T.BoxGeometry(.8,.22,.35),m.dark,0,-.63,1.01);mesh(this.head,new T.ConeGeometry(.55,.9,5),m.edge,0,-1.18,.4).rotation.x=Math.PI;
-  this.arms=[];for(const side of[-1,1]){const arm=limb(this.torso,side*2.65,.9,0,m.stone);mesh(arm,new T.DodecahedronGeometry(1.35,0),m.edge,0,-.1,0).scale.set(1,.75,1);const forearm=limb(arm,0,-2.4,.2,m.edge);mesh(forearm,new T.DodecahedronGeometry(.97,0),m.dark,0,-2.4,.25).scale.set(1.1,.75,1);for(let j=0;j<3;j++)mesh(forearm,new T.ConeGeometry(.18,.85,5),m.edge,(j-1)*.45,-2.85,.6).rotation.x=2.1;this.arms.push({arm,forearm,side});const leg=limb(this.boss,side*1.25,3,0,m.stone);mesh(leg,new T.BoxGeometry(1.8,.8,2.5),m.edge,0,-2.55,.55);}
-  // Arena-specific crown silhouettes: living roots, a wind crest, fractured crystal.
-  for(const side of[-1,1])for(let i=0;i<3;i++){const x=side*(1.6+i*.35),y=.9-i*.15;const crown=mesh(this.torso,this.area===0?new T.CylinderGeometry(.08,.23,2.0,5):this.area===1?new T.ConeGeometry(.3,2.6,4):new T.OctahedronGeometry(.7,0),this.area===0?m.dark:m.edge,x,y,-.3);crown.rotation.z=side*(.8+i*.25);if(this.area===2)crown.scale.set(.6,2,.6);if(this.area===0)mesh(crown,new T.IcosahedronGeometry(.42,0),m.energy,0,1,0).scale.set(1,.4,1);}
-  this.core=new T.Group();this.core.position.set(0,-.2,1.8);this.torso.add(this.core);mesh(this.core,new T.OctahedronGeometry(.73,1),m.energy).scale.set(.82,1,.45);this.petals=[];for(let i=0;i<6;i++){const a=i*Math.PI/3,g=new T.Group();g.rotation.z=a;this.core.add(g);mesh(g,new T.BoxGeometry(.7,.75,.34),m.metal,0,.48,.2);this.petals.push(g);}
-  this.seals=[];for(let i=0;i<3;i++){const g=new T.Group();g.position.set((i-1)*2.1,3.4,2.2);this.boss.add(g);const hoop=mesh(g,new T.TorusGeometry(.52,.08,5,12),m.energy);hoop.rotation.z=Math.PI/4;mesh(g,new T.OctahedronGeometry(.22),m.metal);this.seals.push(g);}
+  Object.assign(this,buildGuardianFigure(this.area,m));this.boss.position.set(BOSS.x,0,BOSS.z);this.root.add(this.boss);this.materials=m;
   // Warning footprints use the same centres, widths and radii as combat collisions.
   this.wave=mesh(this.root,bandGeometry(),m.warning,0,.04,BOSS.z);this.wave.castShadow=false;
   this.beam=mesh(this.root,new T.PlaneGeometry(1.7,1),m.warning);this.beam.rotation.x=-Math.PI/2;this.beam.castShadow=false;

@@ -1,5 +1,5 @@
 {
- "hash": "c43aa05d7058",
+ "hash": "a7e80f5395ea",
  "files": [
   "./",
   "index.html",
@@ -63,6 +63,7 @@
   "game-audio.js",
   "game-feel.js",
   "guardian-combat.js",
+  "guardian-figure.js",
   "guardian-stage.js",
   "guardian-ui.js",
   "guardian.css",

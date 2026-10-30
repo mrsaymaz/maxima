@@ -184,3 +184,39 @@ test('never stuck at a stream: after a second fall its stones settle into a brid
  for(let fall=0;fall<2;fall++){r.running=true;r.s=water[1].s;r.lane=water[1].lanes[0];r.lat=LANES[r.lane];assert.equal(r.surface(),null);r.afterRetry(nav);}
  assert.equal(bridges.length,1);r.s=water[1].s;r.lat=LANES[water[1].lanes[0]];assert.equal(r.surface(),0,'the whole stream now carries the creature');
 });
+test('guardian sightings come in the last run of chapters 2, 3 and 4 only, each longer and fiercer',async()=>{
+ const{SIGHTINGS}=await import('../dist/runner-course.js');const found=[];
+ for(let index=0;index<20;index++){const run=withRun(index).run,g=run.obstacles.filter(o=>o.type==='guardian');if(index%4===3&&index>=7&&index<=15){assert.equal(g.length,1,`run ${index}`);found.push(g[0]);}else assert.equal(g.length,0,`run ${index}`);}
+ assert.deepEqual(found.map(g=>g.level),[1,2,3]);
+ for(let i=1;i<3;i++){assert.ok(found[i].duration>found[i-1].duration);assert.ok(found[i].attacks.length>found[i-1].attacks.length);}
+ assert.deepEqual(found[0].attacks.map(a=>a.kind),['boulder','boulder'],'the first sighting teaches one attack');assert.ok(new Set(found[2].attacks.map(a=>a.kind)).size===3,'the last shows all three');
+ for(const g of found){assert.ok(SIGHTINGS[g.level].duration>=10&&SIGHTINGS[g.level].duration<=15);assert.ok(g.attacks.every(a=>a.t-g.warn>=1.5),'nothing before it has risen and roared');}
+});
+function guardianRun(level=3,mode='relaxed'){const index=[7,11,15][level-1];const section=withRun(index,mode),o=section.run.obstacles.find(x=>x.type==='guardian');return{section,o};}
+function playGuardian(section,o,policy,seconds=20){
+ const nav=navFor(section),r=new RunnerControl(),log=[];r.events={roar:()=>log.push('roar'),warn:a=>log.push('warn:'+a.kind),attack:a=>log.push('attack:'+a.kind),stumble:x=>log.push('hit:'+x.type)};r.engage(nav);r.s=o.start-1;
+ let vy=0;for(let i=0;i<seconds*60;i++){const st=r.trials.get(o.id);policy?.(r,nav,st);r.advance(nav,1/60);
+  if(nav.jumpUntil>r.clock){nav.y=1.1;}else nav.y=0;r.collide(nav);}
+ return{r,log,st:r.trials.get(o.id),nav};
+}
+test('the guardian rises, roars, warns before every attack and backs away when the sighting ends',()=>{
+ const{section,o}=guardianRun(3),{log,st}=playGuardian(section,o,null,o.duration+3);
+ assert.equal(log[0],'roar');const warns=log.filter(x=>x.startsWith('warn:')),attacks=log.filter(x=>x.startsWith('attack:'));assert.equal(warns.length,o.attacks.length);assert.equal(attacks.length,o.attacks.length);
+ for(const kind of['boulder','stomp','bolt'])assert.ok(log.indexOf('warn:'+kind)<log.indexOf('attack:'+kind),`${kind} is warned first`);
+ assert.equal(st.visible,false,'gone after its sighting');assert.ok(log.some(x=>x.startsWith('hit:')),'standing still gets hit');
+});
+test('a lane change dodges boulders and bolts, and a jump clears every shockwave',()=>{
+ const{section,o}=guardianRun(3);
+ const dodge=(r,nav,st)=>{if(!st)return;for(const p of st.flying)if(!p.flight&&p.lane===r.lane&&p.s-r.s<9&&p.s>r.s)r.lane=(p.lane+1)%3;if(st.pose&&st.pose.kind!=='stomp'&&st.pose.lane===r.lane)r.lane=(r.lane+1)%3;for(const w of st.waves)if(w.s-r.s<3.2&&w.s>r.s&&!(nav.jumpUntil>r.clock))nav.jumpUntil=r.clock+.5;};
+ const{log}=playGuardian(section,o,dodge,o.duration+3);assert.deepEqual(log.filter(x=>x.startsWith('hit:')),[],'clean run');
+});
+test('the final chase exists only after the last gate, runs to the arena and asks for the fight',()=>{
+ const e={id:'t',area:0,index:19,choices:['left','left','left','left','left'],battle:null},r=new RunnerControl();
+ assert.equal(r.finale(e,'relaxed'),null,'not before the last gate');e.index=20;const section=r.finale(e,'relaxed');assert.ok(section?.run?.finale);
+ const run=section.run,g=run.obstacles.find(o=>o.type==='guardian');assert.ok(g.finale&&g.attacks.length>20&&new Set(g.attacks.map(a=>a.kind)).size===3);assert.ok(run.length>=600);
+ for(let i=1;i<g.attacks.length;i++)assert.ok(g.attacks[i].t-g.attacks[i-1].t>=g.warn+.3,'every attack gets its warning');
+ e.battle={};assert.equal(new RunnerControl().finale(e,'relaxed'),null,'not during the fight');e.battle=null;
+ const nav={...navFor(section),state:{index:20,travel:{collected:[]}}},rc=new RunnerControl(),finished=[];rc.events={finish:x=>finished.push(x.id)};nav.section=section;rc.engage(nav);rc.power.dash=999;
+ for(let i=0;i<60*120&&!finished.length;i++){rc.power.dash=999;rc.advance(nav,1/60);rc.collide(nav);}
+ assert.deepEqual(finished,[section.id]);assert.ok(Math.abs(courseCoordinates(section,nav.player).s-run.to)<.6,'arrives at the arena');
+});

@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.min.js';
 import{mergeGeometries}from'./vendor/utils/BufferGeometryUtils.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
+import{buildGuardianFigure}from'./guardian-figure.js';
 import{localPoint}from'./traversal-layout.js';
 import{LANES,laneSpan,hurdleHeight}from'./runner-course.js';
 
@@ -211,6 +212,14 @@ const MOMENTS={
    anim.push(t=>{const r=data.runner,up=r?.thornUp?r.thornUp(o,lane,data.live?r.clock:t):true;cluster.position.y+=((up?0:-1.05)-cluster.position.y)*.25;glow.material.opacity=up?0:.45;});});
   return g;
  },
+ // The guardian at its true size, riding ahead of the creature; its throws, stomps and bolts come down the lanes.
+ guardian(o,kit,anim,data){
+  const g=new T.Group(),fig=buildGuardianFigure(data.section.area||0);fig.boss.rotation.y=Math.PI;fig.boss.visible=false;data.pools.push({o,pool:[],guardian:fig});
+  const warnMats=LANES.map(()=>new T.MeshBasicMaterial({color:'#ffb020',transparent:true,opacity:0,depthWrite:false,toneMapped:false})),warn=LANES.map((x,i)=>{const m=mesh(geo('gwarn',()=>new T.PlaneGeometry(1.2,30).rotateX(-Math.PI/2).translate(0,0,15)),warnMats[i],-x,.12,0);m.renderOrder=3;m.visible=false;return m;});
+  const band=mesh(geo('gstompwarn',()=>new T.PlaneGeometry(5.4,.6).rotateX(-Math.PI/2)),new T.MeshBasicMaterial({color:'#ff5b3a',transparent:true,opacity:0,depthWrite:false,toneMapped:false}),0,.13,0);band.renderOrder=3;
+  const energy=fig.materials.energy,boulders=Array.from({length:4},()=>mesh(geo('gboulder',()=>new T.IcosahedronGeometry(.55,1)),mat(kit.rock,{flat:true,rough:.95}))),bolts=Array.from({length:3},()=>mesh(geo('gbolt',()=>new T.SphereGeometry(.38,14,10)),new T.MeshBasicMaterial({color:energy.color,toneMapped:false}))),waves=Array.from({length:3},()=>mesh(geo('gwave',()=>new T.BoxGeometry(5.6,.32,.35)),new T.MeshBasicMaterial({color:'#ffd9a0',transparent:true,opacity:.85,toneMapped:false})));
+  data.guardianParts={o,fig,warn,warnMats,band,boulders,bolts,waves};return g;
+ },
  ledge(o,kit){
   const g=new T.Group(),top=o.depth-o.ramp,stone=mat(kit.masonry||'#d6c49a',{flat:true}),gold=mat('#ffd23f',{emissive:'#c98a00',glow:.5});
   const ramp=geo('ramp'+o.h,()=>{const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(o.ramp,0);sh.lineTo(o.ramp,o.h);sh.closePath();return new T.ExtrudeGeometry(sh,{depth:1.3,bevelEnabled:false}).rotateY(-Math.PI/2).translate(.65,0,0);});
@@ -274,10 +283,23 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
  // Power-ups float above their lane until taken.
  const powers=[];for(const p of run.powerups||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:powerTexture(p.kind),transparent:true,depthWrite:false}));sprite.scale.set(1.05,1.05,1);sprite.name=p.id;sprite.raycast=()=>{};at(sprite,p.s,LANES[p.lane],1.15);powers.push({object:sprite,from:p.s,to:p.s,id:p.id});}
  for(const{pool}of data.pools)for(const b of pool)root.add(b);
+ if(data.guardianParts){const gp=data.guardianParts;root.add(gp.fig.boss,gp.band,...gp.warn,...gp.boulders,...gp.bolts,...gp.waves);for(const m of[gp.band,...gp.boulders,...gp.bolts,...gp.waves])m.visible=false;}
  // userData is the very object the animations close over, so they see the live run each frame.
  Object.assign(data,{tiles,items,tokens,coins,rims,powers,runnerAnim:anim});root.userData=data;return root;
 }
 const dummy=new T.Object3D();
+function updateGuardianParts(gp,runner,time){
+ const st=runner?.trials.get(gp.o.id),show=!!st&&st.visible,f=gp.fig;f.boss.visible=show;
+ if(show){const g=runner.s+st.dist;f.boss.position.set(0,st.rise,g);f.head.rotation.y=Math.sin(time*.8)*.12;f.torso.rotation.z=Math.sin(time*1.6)*.03;
+  // Poses: one arm winds up to throw, both rise for a stomp, the core flares for a bolt.
+  const pose=st.pose,k=pose?.k||0;f.arms.forEach(({arm,side})=>{const target=pose?.kind==='boulder'&&side===(pose.lane===0?1:-1)?-2.4*k:pose?.kind==='stomp'?-2.6*k:0;arm.rotation.x+=(target-arm.rotation.x)*.25;});
+  f.materials.energy.emissiveIntensity=.7+(pose?.kind==='bolt'?2.5*k:0)+Math.sin(time*4)*.1;}
+ const pose=show?st.pose:null;gp.warn.forEach((m,i)=>{const on=!!pose&&pose.kind!=='stomp'&&pose.lane===i;m.visible=on;if(on){m.position.z=runner.s+3;gp.warnMats[i].opacity=.3+.35*Math.abs(Math.sin(time*12));}});
+ gp.band.visible=!!pose&&pose.kind==='stomp';if(gp.band.visible){gp.band.position.z=runner.s+st.dist-3;gp.band.material.opacity=.4+.4*Math.abs(Math.sin(time*12));}
+ const flying=show||st?st.flying:[];let b=0,v=0;for(const p of flying||[]){const target=p.kind==='boulder'?gp.boulders[b++]:gp.bolts[v++];if(!target)continue;target.visible=true;target.position.set(-LANES[p.lane],p.y,p.s);target.rotation.x=-p.spin;}
+ for(let i=b;i<gp.boulders.length;i++)gp.boulders[i].visible=false;for(let i=v;i<gp.bolts.length;i++)gp.bolts[i].visible=false;
+ gp.waves.forEach((m,i)=>{const w=st?.waves[i];m.visible=!!w;if(w)m.position.set(0,.18,w.s);});
+}
 export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={}){
  const data=root?.userData,section=data?.section,run=section?.run;if(!run)return;
  const live=runner?.running&&runner.section?.id===section.id,s=live?runner.s:run.length,origin=live?runner.origin():run.from-(run.length-run.real);
@@ -289,6 +311,7 @@ export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={})
  for(const tile of data.tiles){tile.object.visible=show(tile);if(tile.object.visible)tile.object.position.y=rise(tile.from)*4.5;}
  const knocked=runner?.knocked,taken=runner?.taken;data.runner=runner;data.live=!!live;
  for(const{o,pool}of data.pools){const rolling=live?runner.trials.get(o.id)?.rolling||[]:[];pool.forEach((b,i)=>{const r=rolling[i];b.visible=!!r&&r.s<=ahead;if(r){b.position.set(-LANES[r.lane],.5,r.s);b.rotation.x=-r.spin;}});}
+ if(data.guardianParts)updateGuardianParts(data.guardianParts,live?runner:null,time);
  for(const p of data.powers){p.object.visible=show(p)&&!taken?.has(p.id);if(p.object.visible)p.object.position.y=1.15+Math.sin(time*4+p.from)*.12;}
  for(const item of data.items){item.object.visible=show(item);if(!item.object.visible)continue;item.base??=item.object.position.y;if(knocked?.has(item.id)&&item.style==='stream'){if(!item.settled){item.settled=true;item.object.traverse(m=>{if(m.material){m.material=m.material.clone();m.material.color?.set('#9a8a66');if(m.material.emissive)m.material.emissiveIntensity=0;}});}}
   else if(knocked?.has(item.id)&&!item.moment&&item.style!=='stream'){item.object.rotation.x=Math.min(1.45,item.object.rotation.x+.12);item.sink=Math.max(-.8,(item.sink||0)-.015);}item.object.position.y=item.base+(item.sink||0)+rise(item.from)*2.5;}
