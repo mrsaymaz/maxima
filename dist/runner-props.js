@@ -2,7 +2,7 @@ import * as T from './vendor/three.module.min.js';
 import{mergeGeometries}from'./vendor/utils/BufferGeometryUtils.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
 import{localPoint}from'./traversal-layout.js';
-import{LANES,laneSpan}from'./runner-course.js';
+import{LANES,laneSpan,hurdleHeight}from'./runner-course.js';
 
 // What a runner section looks like. Three coloured lanes with neon edges and pulsing neon arches make the track
 // read as a track; every obstacle has an arena look (logs, mushrooms, vines, lanterns, crystal lasers, swamps…)
@@ -124,34 +124,69 @@ function compact(group){
  const out=new T.Group();for(const[material,list]of byMaterial){const merged=mergeGeometries(list,false);if(merged)out.add(new T.Mesh(merged,material));list.forEach(g=>g.dispose());}
  return out;
 }
+// The track: 24 m tiles of coloured lanes, a floor, neon edges, themed side walls and an arch, built along the
+// run's track metres. Each frame the whole track is placed so track metre `s` sits where the run says
+// (runner-control: the track slides under the creature, then the final metres are real), and only the stretch
+// the creature can see (never past the real clearing) is drawn.
+const TILE=24;
+const WALLS={
+ 0(tile,kit){const g=new T.Group();for(const side of[-1,1]){g.add(mesh(geo('hedge',()=>new T.BoxGeometry(.7,2.6,TILE)),mat(kit.leaf,{rough:.95}),side*3.15,1.3,TILE/2));
+   for(let z=1;z<TILE;z+=2.4)g.add(mesh(geo('hedgetop',()=>new T.IcosahedronGeometry(.55,0)),mat(kit.leafLight||kit.leaf,{flat:true}),side*3.15,2.6,z));
+   for(let z=4;z<TILE;z+=8){g.add(mesh(geo('wtrunk',()=>new T.CylinderGeometry(.16,.22,3.4,7).translate(0,1.7,0)),mat(kit.bark),side*3.9,0,z));g.add(mesh(geo('wcrown',()=>new T.IcosahedronGeometry(1.25,0)),mat(kit.leaf,{flat:true}),side*3.9,4,z));}}return g;},
+ 1(tile){const g=new T.Group();for(const side of[-1,1]){g.add(mesh(geo('sand',()=>new T.BoxGeometry(.8,3,TILE)),mat('#e6c48c',{flat:true}),side*3.2,1.5,TILE/2));
+   for(const y of[.9,2.2])g.add(mesh(geo('sandband',()=>new T.BoxGeometry(.84,.16,TILE)),mat('#d0794a'),side*3.2,y,TILE/2));
+   for(let z=0;z<TILE;z+=8)g.add(mesh(geo('sandpillar',()=>new T.CylinderGeometry(.42,.5,3.6,8).translate(0,1.8,0)),mat('#f1dcae',{flat:true}),side*3.25,0,z));}return g;},
+ 2(tile){const g=new T.Group();for(const side of[-1,1]){g.add(mesh(geo('cwall',()=>new T.BoxGeometry(.7,2.8,TILE)),mat('#3a2f72',{flat:true}),side*3.15,1.4,TILE/2));
+   g.add(mesh(geo('cseam',()=>new T.BoxGeometry(.74,.08,TILE)),mat('#5ff3ff',{basic:true}),side*3.15,2.82,TILE/2));
+   for(let z=1.5;z<TILE;z+=3)g.add(mesh(geo('cspike',()=>new T.ConeGeometry(.28,1.1,5).translate(0,.55,0)),mat(z%2?'#9f7bff':'#62f5ff',{emissive:z%2?'#7a4dff':'#22c8ff',glow:.7,flat:true}),side*3.15,2.8,z));}return g;},
+};
+const wallCache=new Map();
+function wallsFor(area,kit){if(!wallCache.has(area))wallCache.set(area,compact((WALLS[area]||WALLS[0])(0,kit)));return wallCache.get(area);}
 export function makeRunnerScenery(section,{creatureHeight=.65}={}){
- const run=section.run,group=new T.Group();group.name='runner-course';if(!run)return group;
- const area=section.area||0,kit=(ARENA_LOOKS[area]||ARENA_LOOKS[0]).kit,neon=NEON[area]||NEON[0],yaw=Math.atan2(section.forward.x,section.forward.z),anim=[];
- const place=(object,s,lateral,y=0)=>{const p=localPoint(section,s,lateral);object.position.set(p.x,y,p.z);object.rotation.order='YXZ';object.rotation.y=yaw;group.add(object);return object;};
- // Lanes: a translucent colour per lane, neon edges outside and between them, and arches that pulse in sequence.
- const length=run.to-run.from,mid=(run.from+run.to)/2;
- const laneMats=LANE_COLORS.map(color=>{const map=laneTexture(color).clone();map.needsUpdate=true;map.repeat.set(1,length/2.4);return new T.MeshBasicMaterial({map,color:'#ffffff',transparent:true,opacity:.62,depthWrite:false,toneMapped:false});});
- LANES.forEach((x,i)=>place(mesh(geo('lane'+length.toFixed(1),()=>new T.PlaneGeometry(1.32,length).rotateX(-Math.PI/2)),laneMats[i]),mid,x,.04).renderOrder=1);
- anim.push(t=>{for(const m of laneMats)m.map.offset.y=-t*1.6;});
- for(const x of[LANES[0]-.73,(LANES[0]+LANES[1])/2,(LANES[1]+LANES[2])/2,LANES[2]+.73])place(mesh(geo('edge'+length.toFixed(1),()=>new T.PlaneGeometry(.07,length).rotateX(-Math.PI/2)),mat(neon,{basic:true,additive:true,opacity:.9})),mid,x,.05).renderOrder=2;
- const arches=[];for(let s=run.from+5,i=0;s<run.to-2;s+=13,i++){const color=i%2?LANE_COLORS[(i>>1)%3]:neon,arch=mesh(geo('arch',()=>new T.TorusGeometry(2.75,.06,6,40,Math.PI)),mat(color,{basic:true,additive:true,opacity:.85}));arch.material=arch.material.clone();place(arch,s,0,0);arches.push({arch,i});}
- anim.push(t=>{for(const{arch,i}of arches)arch.material.opacity=.35+.6*Math.max(0,Math.sin(t*5-i*.9));});
+ const run=section.run,root=new T.Group();root.name='runner-course';root.rotation.order='YXZ';if(!run)return root;
+ const area=section.area||0,kit=(ARENA_LOOKS[area]||ARENA_LOOKS[0]).kit,neon=NEON[area]||NEON[0],anim=[],items=[];
+ const at=(object,s,lateral,y=0)=>{object.position.set(-lateral,y,s);root.add(object);return object;};
+ const laneMats=LANE_COLORS.map(color=>{const map=laneTexture(color).clone();map.needsUpdate=true;map.repeat.set(1,TILE/2.4);return Object.assign(new T.MeshBasicMaterial({map,color:'#ffffff',transparent:true,opacity:.62,depthWrite:false,toneMapped:false}),{userData:{surface:'effect'}});});
+ const floor=mat(area===2?'#2a2357':area===1?'#cfae78':'#5c7a3a');
+ const tiles=[],arches=[];
+ for(let z=-TILE,i=0;z<run.length+2;z+=TILE,i++){
+  const tile=new T.Group();
+  tile.add(mesh(geo('floor',()=>new T.PlaneGeometry(5.9,TILE).rotateX(-Math.PI/2).translate(0,0,TILE/2)),floor,0,.06,0));
+  LANES.forEach((x,k)=>{const lane=mesh(geo('lane',()=>new T.PlaneGeometry(1.32,TILE).rotateX(-Math.PI/2).translate(0,0,TILE/2)),laneMats[k],-x,.075,0);lane.renderOrder=1;tile.add(lane);});
+  for(const x of[LANES[0]-.73,(LANES[0]+LANES[1])/2,(LANES[1]+LANES[2])/2,LANES[2]+.73]){const edge=mesh(geo('edge',()=>new T.PlaneGeometry(.07,TILE).rotateX(-Math.PI/2).translate(0,0,TILE/2)),mat(neon,{basic:true,additive:true,opacity:.9}),-x,.085,0);edge.renderOrder=2;tile.add(edge);}
+  tile.add(wallsFor(area,kit).clone());
+  const arch=mesh(geo('arch',()=>new T.TorusGeometry(2.75,.07,6,40,Math.PI)),mat(i%2?LANE_COLORS[(i>>1)%3]:neon,{basic:true,additive:true,opacity:.85}).clone(),0,0,TILE/2);tile.add(arch);arches.push({arch,i});
+  at(tile,z,0);tiles.push({object:tile,from:z,to:z+TILE});
+ }
+ anim.push(t=>{for(const{arch,i}of arches)if(arch.parent.visible)arch.material.opacity=.35+.6*Math.max(0,Math.sin(t*5-i*.9));});
+ const hurdle=hurdleHeight(creatureHeight)/.5;
  for(const o of run.obstacles){
   const span=laneSpan(o.lanes),width=+(span.max-span.min-.1).toFixed(2),center=(span.max+span.min)/2,moving=anim.length;let g;
-  if(o.type==='barrier')g=(JUMPS[o.style]||JUMPS.crates)(width,kit,anim);
+  if(o.type==='barrier'){g=(JUMPS[o.style]||JUMPS.crates)(width,kit,anim);g.scale.set(1,hurdle,Math.min(1.6,hurdle));}
   else if(o.type==='bar')g=(SLIDES[o.style]||SLIDES.trunk)(width,Math.max(.55,creatureHeight*.62),kit,anim);
   else g=(GROUNDS[o.style]||GROUNDS.pit)(width,o.depth,kit,anim);
-  if(anim.length===moving)g=compact(g);g.name=o.id;place(g,o.s,center);
+  if(anim.length===moving&&o.type!=='barrier')g=compact(g);g.name=o.id;at(g,o.s,center);items.push({object:g,from:o.s-o.depth,to:o.s+o.depth,id:o.id});
  }
- const tokens=new Map();
- for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter,run.word.language),transparent:true,depthWrite:false}));sprite.scale.set(.82,.82,1);sprite.name=t.id;place(sprite,t.s,LANES[t.lane],.95);tokens.set(t.id,sprite);}
- const obstacles=new Map();for(const child of group.children)if(child.name.includes(':run:'))obstacles.set(child.name,child);
- Object.assign(group.userData,{runnerTokens:tokens,runnerObstacles:obstacles,runnerAnim:anim});return group;
+ // Coins: one instanced mesh for the whole run; collected and out-of-view coins are scaled away.
+ const coins=new T.InstancedMesh(geo('runcoin',()=>new T.CylinderGeometry(.22,.22,.05,18).rotateZ(Math.PI/2)),mat('#ffcc3a',{emissive:'#c98a00',glow:.55,rough:.3}),Math.max(1,run.coins.length));
+ const rims=new T.InstancedMesh(geo('runcoinrim',()=>new T.TorusGeometry(.22,.035,6,20).rotateY(Math.PI/2)),mat('#b8730f',{rough:.4}),Math.max(1,run.coins.length));
+ coins.name='runner-coins';coins.frustumCulled=rims.frustumCulled=false;root.add(coins,rims);
+ const tokens=[];
+ for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter,run.word.language),transparent:true,depthWrite:false}));sprite.scale.set(.9,.9,1);sprite.name=t.id;at(sprite,t.s,LANES[t.lane],1);tokens.push({object:sprite,from:t.s,to:t.s,id:t.id});}
+ Object.assign(root.userData,{section,tiles,items,tokens,coins,rims,runnerAnim:anim});return root;
 }
-export function updateRunnerScenery(group,{time=0,taken=new Set(),knocked=new Set()}={}){
- const data=group?.userData;if(!data?.runnerTokens)return;
- for(const step of data.runnerAnim||[])step(time);
- // A knocked hurdle or bar tips over and sinks out of the way.
- for(const[id,object]of data.runnerObstacles||[])if(knocked.has(id)){object.rotation.x=Math.min(1.45,object.rotation.x+.12);object.position.y=Math.max(-.8,object.position.y-.015);}
- for(const[id,sprite]of data.runnerTokens){sprite.visible=!taken.has(id);if(sprite.visible)sprite.position.y=.95+Math.sin(time*3+sprite.position.x)*.06;}
+const dummy=new T.Object3D();
+export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={}){
+ const data=root?.userData,section=data?.section,run=section?.run;if(!run)return;
+ const live=runner?.running&&runner.section?.id===section.id,s=live?runner.s:run.length,origin=live?runner.origin():run.from-(run.length-run.real);
+ const p=localPoint(section,origin,0);root.position.set(p.x,0,p.z);root.rotation.y=Math.atan2(section.forward.x,section.forward.z);
+ // Visible: a little behind the creature up to the real end of the run (and at most ~95 m ahead).
+ const behind=s-14,ahead=Math.min(run.length+1,s+95,run.to+1-origin),show=o=>o.to>=behind&&o.from<=ahead;
+ for(const tile of data.tiles)tile.object.visible=show(tile);
+ const knocked=runner?.knocked,taken=runner?.taken;
+ for(const item of data.items){item.object.visible=show(item);if(knocked?.has(item.id)){item.object.rotation.x=Math.min(1.45,item.object.rotation.x+.12);item.object.position.y=Math.max(-.8,item.object.position.y-.015);}}
+ for(const token of data.tokens){token.object.visible=show(token)&&!taken?.has(token.id);if(token.object.visible)token.object.position.y=1+Math.sin(time*3+token.from)*.07;}
+ run.coins.forEach((c,i)=>{const visible=c.s>=behind&&c.s<=ahead&&!taken?.has(c.id)&&!collected?.has?.(c.id);dummy.position.set(-c.lateral,c.y,c.s);dummy.rotation.set(0,time*3+i*.4,0);dummy.scale.setScalar(visible?1:0);dummy.updateMatrix();data.coins.setMatrixAt(i,dummy.matrix);data.rims.setMatrixAt(i,dummy.matrix);});
+ data.coins.instanceMatrix.needsUpdate=data.rims.instanceMatrix.needsUpdate=true;
+ for(const step of data.runnerAnim)step(time);
 }

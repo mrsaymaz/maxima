@@ -24,7 +24,8 @@ export const RUNNER=playMode()==='runner';
 // (the first 9 m) and stretches the rest, so the map is a monotonic warp of the classic one: scenery placed from
 // classic coordinates goes through stretchZ, and anything shaped by position (hills, clearings, tree rhythm)
 // reads classicZ, so the valley keeps its composition around the longer route.
-export const TRAIL_STRETCH=RUNNER?2.5:1;
+function stretchSetting(){try{const v=Number(new URLSearchParams(globalThis.location?.search||'').get('stretch')||globalThis.process?.env?.MAXIMA_STRETCH);return Number.isFinite(v)&&v>=1&&v<=40?v:null;}catch{return null;}}
+export const TRAIL_STRETCH=RUNNER?stretchSetting()??2.5:1;
 // A chapter runs from its fork top (local +2) to the next fork top (local -130).
 const CLASSIC_CHAPTER=132,TOP=2,FORK=-9;
 export function trailWarp(k){
