@@ -1,5 +1,5 @@
 {
- "hash": "7f7a673419ef",
+ "hash": "04192d6ea437",
  "files": [
   "./",
   "index.html",
@@ -17,6 +17,7 @@
   "asset-network.js",
   "asset-resources.js",
   "body-motion.js",
+  "brick-style.js",
   "camera-ground.js",
   "camera-rig.js",
   "camp-ui.js",
@@ -140,6 +141,7 @@
   "voice.js",
   "world-layout.js",
   "world-mechanisms.js",
+  "world-style-mode.js",
   "world-style.js",
   "vendor/loaders/GLTFLoader.js",
   "vendor/three.core.min.js",
