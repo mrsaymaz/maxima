@@ -71,8 +71,14 @@ test('GLTF timeout rejects promptly, retries are bounded, and late parsed models
  }finally{GLTFLoader.prototype.loadAsync=previous;}
 });
 test('adaptive resolution responds to sustained load, stays under manual caps and does not react to background gaps',()=>{
- const a=new AdaptiveResolution(1,true);let now=0;for(let i=0;i<1200;i++){now+=34;a.sample(34,now);}assert.equal(a.ratio,.5);assert.ok(a.changes>0);const low=a.ratio;for(let i=0;i<20;i++)a.sample(50000,now+=50000,{active:false});assert.equal(a.ratio,low);
- for(let i=0;i<6000;i++){now+=16.7;a.sample(16.7,now);}assert.ok(a.ratio>.5&&a.ratio<=1);a.configure(.75,false);for(let i=0;i<2000;i++)a.sample(100,now+=100);assert.equal(a.ratio,.75);
+ // GPU-bound: frame time follows the pixel count, so stepping down helps and continues to the 0.75 floor.
+ const a=new AdaptiveResolution(1,true);let now=0;for(let i=0;i<3000;i++){const ms=40*a.ratio*a.ratio;now+=ms;a.sample(ms,now);}assert.equal(a.ratio,.75);assert.ok(a.changes>0);const low=a.ratio;for(let i=0;i<20;i++)a.sample(50000,now+=50000,{active:false});assert.equal(a.ratio,low);
+ for(let i=0;i<6000;i++){now+=16.7;a.sample(16.7,now);}assert.ok(a.ratio>.75&&a.ratio<=1);a.configure(.75,false);for(let i=0;i<2000;i++)a.sample(100,now+=100);assert.equal(a.ratio,.75);
+});
+test('adaptive resolution keeps a steady 30 fps sharp and undoes steps that do not speed frames up',()=>{
+ const capped=new AdaptiveResolution(1.5,true);let now=0;for(let i=0;i<2000;i++){now+=33.4;capped.sample(33.4,now);}assert.equal(capped.ratio,1.5,'a frame-rate cap is not GPU pressure');assert.ok(capped.changes<=2,'one trial step at most');
+ const cpu=new AdaptiveResolution(1.5,true);now=0;for(let i=0;i<4000;i++){const ms=24+(i%10);now+=ms;cpu.sample(ms,now);}
+ assert.equal(cpu.ratio,1.5,'a step that did not help is undone');assert.equal(cpu.floor,1.5,'and becomes the floor');assert.ok(cpu.changes<=2);
 });
 function lifecycleWorld(){const canvas=new EventTarget(),doc=new EventTarget(),win=new EventTarget(),world={renderer:{domElement:canvas,state:{reset(){}}},scene:new T.Group(),post:{dispose(){}},nav:{stop(){},invincible:0},keys:new Set(['w']),input:{x:1,z:0},clock:{getDelta(){return 50;}},setInput(x,z){this.input={x,z};},resize(){}};doc.hidden=false;return{canvas,doc,win,world};}
 test('background and BFCache recovery clear input, preserve task progress and require an explicit safe resume',()=>{

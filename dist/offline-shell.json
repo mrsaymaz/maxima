@@ -1,5 +1,5 @@
 {
- "hash": "e4568cbeb03b",
+ "hash": "7f7a673419ef",
  "files": [
   "./",
   "index.html",
@@ -85,6 +85,7 @@
   "mechanisms.css",
   "mistakes.js",
   "mobile-ui.css",
+  "occlusion-fade.js",
   "overworld.js",
   "partner-attack.js",
   "partners.js",

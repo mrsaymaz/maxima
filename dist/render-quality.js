@@ -2,7 +2,15 @@ import{AdaptiveResolution}from'./adaptive-resolution.js';
 export const GRAPHICS_KEY='maxima.graphics.v1';
 export const QUALITY={low:{resolution:.75,shadows:false,effects:'low',shadowSize:512},balanced:{resolution:1,shadows:true,effects:'medium',shadowSize:512},high:{resolution:1.5,shadows:true,effects:'full',shadowSize:1024}};
 export function graphicsSettings(value){const p=Object.hasOwn(QUALITY,value?.preset)?value.preset:'balanced',base=QUALITY[p];return{adaptive:value?.adaptive!==false,preset:p,resolution:[.75,1,1.5].includes(value?.resolution)?value.resolution:base.resolution,shadows:typeof value?.shadows==='boolean'?value.shadows:base.shadows,effects:['low','medium','full'].includes(value?.effects)?value.effects:base.effects};}
-export function applyGraphics(world,settings,dpr=1){const s=graphicsSettings(settings),renderer=world.renderer;if(!renderer)return s;const cap=Math.min(Math.max(.5,dpr||1),s.resolution);world.adaptiveResolution??=new AdaptiveResolution(cap,s.adaptive);world.adaptiveResolution.configure(cap,s.adaptive);renderer.setPixelRatio(cap);renderer.shadowMap.enabled=s.shadows;
+// Phones have dense screens but few CSS pixels, so a fixed 1× ratio looks soft there. Each preset spends a pixel
+// budget instead: small screens render up to 1.5× (High 2×) within it, large screens keep the preset ratio, and a
+// resolution the player picked in the graphics menu is used as is.
+const PIXEL_BUDGET={low:5e5,balanced:9e5,high:1.6e6},SMALL_SCREEN_MAX={low:1.25,balanced:1.5,high:2};
+export function renderScale(s,dpr=1,width=globalThis.innerWidth||0,height=globalThis.innerHeight||0){
+ const device=Math.max(.5,dpr||1),manual=s.resolution!==QUALITY[s.preset].resolution,budget=!manual&&width*height>0?Math.sqrt(PIXEL_BUDGET[s.preset]/(width*height)):0;
+ return Math.round(Math.min(device,Math.max(s.resolution,Math.min(SMALL_SCREEN_MAX[s.preset],budget)))*100)/100;
+}
+export function applyGraphics(world,settings,dpr=1){const s=graphicsSettings(settings),renderer=world.renderer;if(!renderer)return s;const cap=renderScale(s,dpr);world.adaptiveResolution??=new AdaptiveResolution(cap,s.adaptive);world.adaptiveResolution.configure(cap,s.adaptive);renderer.setPixelRatio(cap);renderer.shadowMap.enabled=s.shadows;
  // The sun must stop casting too: materials compiled with shadows would otherwise keep sampling a shadow map that is no
  // longer drawn, leaving the whole valley in shadow on Low. Changing castShadow makes three.js recompile the lighting.
  if(world.sun)world.sun.castShadow=s.shadows;world.storyRange=s.preset==='low'?35:s.preset==='high'?65:50;world.effectsBudget=s.effects==='low'?20:s.effects==='medium'?45:90;if(world.sun){const n=QUALITY[s.preset].shadowSize;if(world.sun.shadow.mapSize.x!==n){world.sun.shadow.map?.dispose();world.sun.shadow.map=null;world.sun.shadow.mapSize.set(n,n);}world.sun.shadow.needsUpdate=true;}if(world.post){if(world.post.enabled&&s.effects!=='full')world.post.dispose();world.post.enabled=s.effects==='full';}world.juice?.setLevel(s.effects);const grass=world.edgeGrassMesh;if(grass){grass.visible=s.preset!=='low';grass.count=Math.floor(grass.userData.total*(s.preset==='high'?1:.55));}if(world.dressing)world.dressing.visible=s.preset!=='low';world.resize();world.graphics=s;world.setSceneDetail?.(s);return s;}

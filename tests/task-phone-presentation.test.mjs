@@ -32,3 +32,8 @@ test('gate review is isolated from journeys and ships the real task camera with 
 test('completing a tall gate keeps the established camera through its opening animation',()=>{
  const stage=new WorldMechanism(new T.Scene()),t=makeTask(units.at(-1),'qa-pairs','opening','long',{},10),node={x:0,z:-30,index:0,chapter:0,side:'left'},rect=taskReadingRect(320,568);stage.render(t,node);const before=stage.cameraPose(320,568,{reserved:true,viewport:rect});for(const i of[0,1,2]){actTask(t,{kind:'left',index:i});actTask(t,{kind:'right',index:i});}assert.equal(t.complete,true);stage.render(t,node);const after=stage.cameraPose(320,568,{reserved:true,viewport:rect});assert.deepEqual(after,before);assert.equal(stage.departures.length,1);stage.clear();
 });
+test('plate text shrinks so whole words fit instead of splitting a word across lines',()=>{
+ let size=17;const ink={style:{overflowWrap:''},get scrollWidth(){return this.style.overflowWrap==='normal'?size*6:90;},clientWidth:90,scrollHeight:40,clientHeight:60};
+ const el={clientWidth:100,querySelector:()=>ink,dataset:{},style:{set fontSize(v){size=parseFloat(v);}}};
+ const fit=fitPlateText(el,17);assert.equal(fit.size,15);assert.equal(fit.scroll,false);assert.equal(ink.style.overflowWrap,'','anywhere-wrapping returns for words that can never fit');
+});

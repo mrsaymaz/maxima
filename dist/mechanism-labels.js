@@ -52,7 +52,7 @@ let readingContext;const widths=new Map();
 function measuredWidth(text,size){
  if(readingContext===undefined)readingContext=typeof document==='undefined'?null:document.createElement('canvas').getContext('2d');
  if(!readingContext)return[...text].reduce((n,c)=>n+charWidth(c,size),0);
- const key=size+'|'+text;if(widths.has(key))return widths.get(key);readingContext.font='650 '+size+'px system-ui, -apple-system, \"Segoe UI\", sans-serif';const width=readingContext.measureText(text).width;if(widths.size>4096)widths.clear();widths.set(key,width);return width;
+ const key=size+'|'+text;if(widths.has(key))return widths.get(key);readingContext.font='720 '+size+'px system-ui, -apple-system, \"Segoe UI\", sans-serif';const width=readingContext.measureText(text).width;if(widths.size>4096)widths.clear();widths.set(key,width);return width;
 }
 const charWidth=(c,size)=>size*(/[MW@]/.test(c)?.82:/[ilI.,!:'’]/.test(c)?.26:c===' '?.29:.52);
 export function textLines(text,width,size=14){

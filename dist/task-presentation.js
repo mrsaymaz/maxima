@@ -16,8 +16,12 @@ export function fitPlateText(el,initial=17){
  const ink=el.querySelector('.label-ink');if(!ink)return;
  let size=Math.min(21,Math.max(13,initial));
  const fits=()=>ink.scrollHeight<=ink.clientHeight+1&&ink.scrollWidth<=ink.clientWidth+1;
+ // Words may only break as a last resort: while sizing, a word that is too wide overflows instead of splitting
+ // ("celebrat/e"), so the text shrinks until whole words fit; the stylesheet's anywhere-wrapping returns after.
+ if(ink.style)ink.style.overflowWrap='normal';
  el.style.fontSize=size+'px';
  while(size>13&&!fits()){size-=.5;el.style.fontSize=size+'px';}
+ if(ink.style)ink.style.overflowWrap='';
  const scroll=!fits();if(el.dataset)el.dataset.overflow=scroll?'scroll':'none';
  return{size,scroll};
 }

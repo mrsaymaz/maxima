@@ -101,9 +101,23 @@ body.opening .topbar #save-indicator{display:none}
 @media(prefers-reduced-motion:reduce){.launch-panel button{transition:none!important}.launch-panel button:hover{transform:none!important}}
 /* Tall phones: the camp card becomes a bottom sheet so the creature stands in a hero space above it. The card
    scrolls inside; the Play button stays visible in its footer. */
-@media(max-width:759px) and (min-height:700px) and (orientation:portrait){
+@media(max-width:759px) and (min-height:760px) and (orientation:portrait){
  body.opening .launch-shell{inset-block-start:calc(34vh + var(--safe-top,0px));align-items:flex-end}
  body.opening .launch-panel{max-height:100%}
 }
 .launch-footer-links .launch-install{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:3px solid #1b294f;border-radius:12px;background:#ffe9a3;color:#1b294f;font:inherit;font-weight:800;box-shadow:0 3px 0 #1b294f;cursor:pointer}
 .launch-footer-links .launch-install .ui-icon{width:16px;height:16px}
+/* Phones, including Safari's larger page zoom: keep arena, team, lesson and pace on one screen. The unlock note
+   moves to the arena cards' own captions, art shrinks a little, and a soft fade shows when the panel scrolls. */
+@media(max-width:599px){
+ .arena-unlock-note{display:none}
+ .launch-body{gap:11px;padding-bottom:18px;-webkit-mask-image:linear-gradient(#000 calc(100% - 18px),#0000);mask-image:linear-gradient(#000 calc(100% - 18px),#0000)}
+ .launch-arena{aspect-ratio:1.7}
+ .launch-team{padding:5px 1px 6px;gap:2px}.launch-team-art{height:44px;width:52px}
+ .launch-lesson-button{min-height:62px;padding:6px 10px}
+ .launch-mode-switch{padding:3px}.launch-mode-switch button{min-height:32px;font-size:15px;padding:2px}
+}
+@media(max-width:599px) and (max-height:620px){
+ .launch-team small{display:none}.launch-team-art{height:38px;width:46px}
+ .launch-header h1{font-size:22px}.launch-play{min-height:62px}
+}
