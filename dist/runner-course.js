@@ -3,7 +3,9 @@ import{RUNNER}from'./runner-mode.js';
 // Runner sections (runner mode only). Between gates the creature runs on its own in three lanes; the last
 // CLEARING metres before each gate stay free movement, so tasks and fights keep their current feel.
 // Everything here is deterministic per section, so a course rebuilds identically after reloads and retries.
-export const LANES=[-1.45,0,1.45],LANE_HALF=.74,CLEARING=14,RUN_FROM=2.5;
+// RUN_LEAD: a run also picks the creature up just behind its start line (an opened gate, a chosen fork, a new
+// journey), so running begins without having to walk into it.
+export const LANES=[-1.45,0,1.45],LANE_HALF=.74,CLEARING=14,RUN_FROM=2.5,RUN_LEAD=7.5;
 const rngFor=text=>{let h=2166136261;for(const c of String(text)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return()=>{h=Math.imul(h^(h>>>15),2246822507)^Math.imul(h^(h>>>13),3266489909);return((h^=h>>>16)>>>0)/4294967296;};};
 const pick=(r,list)=>list[Math.floor(r()*list.length)%list.length];
 
@@ -27,19 +29,27 @@ function wordRun(section,r,runTo){
  return{id:word.id,direction,prompt:direction==='tr-en'?word.tr:word.en,answer,language:target,tokens,bonusId:section.id+':word'};
 }
 
-// Beats: a barrier to jump, a bar to slide under, a hole to dodge or jump, or a free coin stretch.
+// Each obstacle carries a look from its arena's set; the rules depend only on its type.
+export const RUNNER_STYLES={
+ barrier:[['log','mushrooms','hedge','crates'],['crates','sandstone','tumbleweed','mushrooms'],['crystals','slime','crates','log']],
+ bar:[['vines','trunk','spinner'],['lanterns','banner','spinner'],['laser','spinner','vines']],
+ hole:[['pit','water'],['chasm','pit'],['void','pit']],
+ swamp:[['swamp'],['quicksand'],['glowmire']],
+};
+// Beats: a barrier to jump, a bar to slide under, a hole to dodge or jump, a swamp that slows, or a coin stretch.
 // Word runs (quiet) carry letters only, so coins never sit on top of a letter.
 function beats(section,r,mode,runTo,quiet){
  const hard=mode==='challenge',spacing=quiet?16:hard?7.6:10,list=[],coins=[];let s=8,k=0,lastFree=1;
  const tutorial=section.chapter===0&&section.index===0;
  while(s<runTo-3){
-  const roll=r(),type=quiet?'coins':roll<.3?'barrier':roll<.55?'hole':roll<.75?'bar':'coins';
+  const roll=r(),type=quiet?'coins':roll<.26?'barrier':roll<.44?'hole':roll<.58?'swamp':roll<.78?'bar':'coins';
   let lanes=[0,1,2];
   if(type==='hole')lanes=(hard&&!tutorial&&r()<.45)?pick(r,[[0,1],[1,2]]):[Math.floor(r()*3)%3];
   if(type==='barrier')lanes=tutorial?[Math.floor(r()*3)%3]:hard&&r()<.4?[0,1,2]:pick(r,[[0],[1],[2],[0,1],[1,2]]);
+  if(type==='swamp')lanes=hard?pick(r,[[0,1],[1,2],[0,2]]):pick(r,[[0],[1],[2],[0,1],[1,2]]);
   if(type==='bar')lanes=tutorial||!hard?pick(r,[[0,1],[1,2],[0,2],[0,1,2]]):[0,1,2];
   const free=[0,1,2].find(l=>!lanes.includes(l)&&l===lastFree)??[0,1,2].find(l=>!lanes.includes(l))??lastFree;
-  if(type!=='coins')list.push({id:`${section.id}:run:${type}:${k}`,type,s,depth:type==='hole'?(hard?2.8:2.3):type==='bar'?.5:.45,lanes,h:type==='barrier'?.5:0});
+  if(type!=='coins'){const looks=RUNNER_STYLES[type][section.area]||RUNNER_STYLES[type][0];list.push({id:`${section.id}:run:${type}:${k}`,type,style:looks[Math.floor(r()*looks.length)%looks.length],s,depth:type==='hole'?(hard?2.8:2.3):type==='swamp'?(hard?5.2:4.2):type==='bar'?.5:.45,lanes,h:type==='barrier'?.5:0});}
   // Coins lead into the lane that stays open; over a barrier they arc, inviting the jump.
   const lead=type==='coins'?Math.floor(r()*3)%3:free;
   if(!quiet)for(let i=0;i<4;i++){const cs=s-spacing+2.2+i*1.5;if(cs>RUN_FROM+1)coins.push({id:`${section.id}:run-coin:${k}:${i}`,s:cs,lateral:LANES[lead],y:.58});}

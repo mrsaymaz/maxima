@@ -33,7 +33,23 @@
    "loop": 20,
    "bpm": 100,
    "base": "evolution-fanfare.mp3"
+  },
+  "run-whisperwood": {
+   "loop": 54.857143,
+   "bpm": 140,
+   "base": "run-whisperwood.mp3"
+  },
+  "run-skyreach": {
+   "loop": 52.60274,
+   "bpm": 146,
+   "base": "run-skyreach.mp3"
+  },
+  "run-stormglass": {
+   "loop": 56.470588,
+   "bpm": 136,
+   "base": "run-stormglass.mp3"
   }
  },
- "originalFlowMusic": "Guardian and transformation tracks are original offline synthesized compositions by Maxima."
+ "originalFlowMusic": "Guardian and transformation tracks are original offline synthesized compositions by Maxima.",
+ "runnerMusic": "Runner loops are original offline synthesized compositions by Maxima."
 }

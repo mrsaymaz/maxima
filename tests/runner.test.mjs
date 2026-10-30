@@ -55,3 +55,16 @@ test('after falling into a hole the creature returns before it, in a lane the ho
  assert.equal(r.afterRetry(nav),true);const q=courseCoordinates(section,nav.player);
  assert.ok(q.s<12-1.2-5);assert.equal(r.lane,0);assert.ok(Math.abs(q.lateral-LANES[0])<1e-9);
 });
+test('every obstacle wears a look from its own arena, and swamps slow the creature instead of dropping it',async()=>{
+ const{RUNNER_STYLES}=await import('../dist/runner-course.js');
+ for(const area of[0,1,2])for(let index=0;index<20;index++){const s=withRun(index,index%2?'challenge':'relaxed');s.area=area;s.run=runFor({...s,area},expedition,index%2?'challenge':'relaxed',true);
+  for(const o of s.run.obstacles){assert.ok(RUNNER_STYLES[o.type][area].includes(o.style),`${o.style} belongs to arena ${area}`);if(o.type==='swamp'){assert.ok(o.lanes.length<3);assert.equal(runSurface(s,o.s,LANES[o.lanes[0]]),0,'swamps are ground, not holes');}}}
+ const section=withRun(1),nav=navFor(section),r=new RunnerControl(),events=[];r.events={swamp:o=>events.push(o.id)};
+ section.run.obstacles=[{id:'sw',type:'swamp',style:'swamp',s:12,depth:4,lanes:[1]}];nav.player=localPoint(section,12,0);r.engage(nav);r.speed=section.run.speed;
+ r.collide(nav);r.collide(nav);assert.deepEqual(events,['sw'],'one splash per swamp');for(let i=0;i<30;i++){r.collide(nav);r.input(nav,1/30);}assert.ok(r.speed<section.run.speed*.6,'wading is slow');
+ r.mire=0;for(let i=0;i<60;i++)r.input(nav,1/30);assert.ok(r.speed>section.run.speed*.9,'speed returns on firm ground');
+});
+test('runner mode has its own running loop per arena',async()=>{
+ const{readFileSync,existsSync}=await import('node:fs');const m=JSON.parse(readFileSync('dist/assets/music/manifest.json','utf8'));
+ for(const arena of['whisperwood','skyreach','stormglass']){const t=m.tracks['run-'+arena];assert.ok(t&&t.bpm>=130&&t.loop>40,arena);assert.ok(existsSync('dist/assets/music/'+t.base));}
+});
