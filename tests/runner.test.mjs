@@ -7,7 +7,7 @@ import{sectionFor,localPoint,courseCoordinates}from'../dist/traversal-layout.js'
 
 const expedition={id:'t',area:0,adventureVersion:2,level:0,serial:1,choices:Array(5).fill('left'),index:1};
 // Runner sections exist only on the stretched map, so these tests use a straight 60 m section of the same shape.
-const withRun=(index,mode='relaxed',length=index%4===0?44:60)=>{const s={id:`t:travel:${index}`,index,chapter:Math.floor(index/4),side:'left',area:0,start:{x:0,z:0},forward:{x:0,z:-1},right:{x:1,z:0},length};s.run=runFor(s,expedition,mode,true);return s;};
+const withRun=(index,mode='relaxed',length=index%4===0?44:60,area=0)=>{const s={id:`t:travel:${index}`,index,chapter:Math.floor(index/4),side:'left',area,start:{x:0,z:0},forward:{x:0,z:-1},right:{x:1,z:0},length};s.run=runFor(s,expedition,mode,true);return s;};
 
 test('[classic] classic play is untouched unless runner mode is asked for',()=>{
  assert.equal(RUNNER,false);assert.equal(TRAIL_STRETCH,1);assert.equal(CHAPTER_LENGTH,132);assert.equal(END.z,-666);assert.equal(stretchZ(-400),-400);
@@ -184,39 +184,59 @@ test('never stuck at a stream: after a second fall its stones settle into a brid
  for(let fall=0;fall<2;fall++){r.running=true;r.s=water[1].s;r.lane=water[1].lanes[0];r.lat=LANES[r.lane];assert.equal(r.surface(),null);r.afterRetry(nav);}
  assert.equal(bridges.length,1);r.s=water[1].s;r.lat=LANES[water[1].lanes[0]];assert.equal(r.surface(),0,'the whole stream now carries the creature');
 });
-test('guardian sightings come in the last run of chapters 2, 3 and 4 only, each longer and fiercer',async()=>{
- const{SIGHTINGS}=await import('../dist/runner-course.js');const found=[];
- for(let index=0;index<20;index++){const run=withRun(index).run,g=run.obstacles.filter(o=>o.type==='guardian');if(index%4===3&&index>=7&&index<=15){assert.equal(g.length,1,`run ${index}`);found.push(g[0]);}else assert.equal(g.length,0,`run ${index}`);}
- assert.deepEqual(found.map(g=>g.level),[1,2,3]);
- for(let i=1;i<3;i++){assert.ok(found[i].duration>found[i-1].duration);assert.ok(found[i].attacks.length>found[i-1].attacks.length);}
- assert.deepEqual(found[0].attacks.map(a=>a.kind),['boulder','boulder'],'the first sighting teaches one attack');assert.ok(new Set(found[2].attacks.map(a=>a.kind)).size===3,'the last shows all three');
- for(const g of found){assert.ok(SIGHTINGS[g.level].duration>=10&&SIGHTINGS[g.level].duration<=15);assert.ok(g.attacks.every(a=>a.t-g.warn>=1.5),'nothing before it has risen and roared');}
+test('guardian sightings come in the last run of chapters 2, 3 and 4 only, each longer and fiercer, with the area guardian\'s own attacks',async()=>{
+ const{SIGHTINGS,CHASE_KITS}=await import('../dist/runner-course.js');
+ for(const area of[0,1,2]){const found=[];
+  for(let index=0;index<20;index++){const run=withRun(index,'relaxed',undefined,area).run,g=run.obstacles.filter(o=>o.type==='guardian');if(index%4===3&&index>=7&&index<=15){assert.equal(g.length,1,`run ${index}`);found.push(g[0]);}else assert.equal(g.length,0,`run ${index}`);}
+  assert.deepEqual(found.map(g=>g.level),[1,2,3]);
+  for(let i=1;i<3;i++){assert.ok(found[i].duration>found[i-1].duration);assert.ok(new Set(found[i].attacks.map(a=>a.kind)).size>new Set(found[i-1].attacks.map(a=>a.kind)).size||found[i].attacks.length>found[i-1].attacks.length);}
+  assert.deepEqual([...new Set(found[0].attacks.map(a=>a.kind))],[CHASE_KITS[area][0]],'the first sighting teaches one attack');assert.deepEqual([...new Set(found[2].attacks.map(a=>a.kind))].sort(),[...CHASE_KITS[area]].sort(),'the last shows all three');
+  for(const g of found){assert.ok(SIGHTINGS[g.level].duration>=10&&SIGHTINGS[g.level].duration<=15);assert.ok(g.attacks.every(a=>a.t-g.warn>=1.5),'nothing before it has risen and roared');assert.ok(g.attacks.at(-1).t<g.duration-2,'the last attack comes before it leaves');}}
 });
-function guardianRun(level=3,mode='relaxed'){const index=[7,11,15][level-1];const section=withRun(index,mode),o=section.run.obstacles.find(x=>x.type==='guardian');return{section,o};}
+function guardianRun(level=3,mode='relaxed',area=0){const index=[7,11,15][level-1];const section=withRun(index,mode,undefined,area),o=section.run.obstacles.find(x=>x.type==='guardian');return{section,o};}
 function playGuardian(section,o,policy,seconds=20){
- const nav=navFor(section),r=new RunnerControl(),log=[];r.events={roar:()=>log.push('roar'),warn:a=>log.push('warn:'+a.kind),attack:a=>log.push('attack:'+a.kind),stumble:x=>log.push('hit:'+x.type)};r.engage(nav);r.s=o.start-1;
+ const nav=navFor(section),r=new RunnerControl(),log=[];r.events={roar:()=>log.push('roar'),warn:a=>log.push('warn:'+a.kind),attack:a=>log.push('attack:'+a.kind),stumble:x=>log.push((String(x.id).startsWith(o.id)?'hit:':'track:')+x.type)};r.engage(nav);r.s=o.start-1;
  let vy=0;for(let i=0;i<seconds*60;i++){const st=r.trials.get(o.id);policy?.(r,nav,st);r.advance(nav,1/60);
   if(nav.jumpUntil>r.clock){nav.y=1.1;}else nav.y=0;r.collide(nav);}
  return{r,log,st:r.trials.get(o.id),nav};
 }
-test('the guardian rises, roars, warns before every attack and backs away when the sighting ends',()=>{
- const{section,o}=guardianRun(3),{log,st}=playGuardian(section,o,null,o.duration+3);
- assert.equal(log[0],'roar');const warns=log.filter(x=>x.startsWith('warn:')),attacks=log.filter(x=>x.startsWith('attack:'));assert.equal(warns.length,o.attacks.length);assert.equal(attacks.length,o.attacks.length);
- for(const kind of['boulder','stomp','bolt'])assert.ok(log.indexOf('warn:'+kind)<log.indexOf('attack:'+kind),`${kind} is warned first`);
- assert.equal(st.visible,false,'gone after its sighting');assert.ok(log.some(x=>x.startsWith('hit:')),'standing still gets hit');
+// A student who reads the warnings: leaves amber lanes for a blue or clear one, sidesteps what is coming down
+// its lane, and jumps every wave unless it stands in the storm chain's gap.
+const readWarnings=(r,nav,st)=>{if(!st)return;const danger=new Set(st.pose?.lanes||[]),near=new Set();
+ for(const p of st.flying){const at=p.flight?p.to:p.s;if(at>r.s-.5&&at-r.s<16){danger.add(p.lane);if(p.turn!=null)danger.add(p.turn);}if(at>r.s-.5&&at-r.s<9)near.add(p.lane);}
+ // Never cut across a lane with something about to arrive in it.
+ const path=l=>[...Array(Math.abs(l-r.lane)+1).keys()].map(i=>r.lane+Math.sign(l-r.lane)*i).slice(1,-1).every(m=>!near.has(m));
+ if(danger.has(r.lane)){const options=[st.pose?.gap,...[0,1,2].sort((x,y)=>Math.abs(x-r.lane)-Math.abs(y-r.lane))].filter(l=>l!=null&&!danger.has(l)&&path(l));if(options.length)r.lane=options[0];}
+ for(const w of st.waves)if(w.gap!==r.lane&&w.s-r.s<3.2&&w.s>r.s&&!(nav.jumpUntil>r.clock))nav.jumpUntil=r.clock+.5;};
+test('the guardian rises, roars, warns before every attack and backs away when the sighting ends',async()=>{
+ const{CHASE_KITS}=await import('../dist/runner-course.js');
+ for(const area of[0,1,2]){const{section,o}=guardianRun(3,'relaxed',area),{log,st}=playGuardian(section,o,null,o.duration+3);
+  assert.equal(log[0],'roar');const warns=log.filter(x=>x.startsWith('warn:')),attacks=log.filter(x=>x.startsWith('attack:'));assert.equal(warns.length,o.attacks.length);assert.equal(attacks.length,o.attacks.length);
+  for(const kind of CHASE_KITS[area])assert.ok(log.indexOf('warn:'+kind)>=0&&log.indexOf('warn:'+kind)<log.indexOf('attack:'+kind),`${kind} is warned first`);
+  assert.equal(st.visible,false,'gone after its sighting');assert.ok(log.some(x=>x.startsWith('hit:')),'standing still gets hit');}
 });
-test('a lane change dodges boulders and bolts, and a jump clears every shockwave',()=>{
- const{section,o}=guardianRun(3);
- const dodge=(r,nav,st)=>{if(!st)return;for(const p of st.flying)if(!p.flight&&p.lane===r.lane&&p.s-r.s<9&&p.s>r.s)r.lane=(p.lane+1)%3;if(st.pose&&st.pose.kind!=='stomp'&&st.pose.lane===r.lane)r.lane=(r.lane+1)%3;for(const w of st.waves)if(w.s-r.s<3.2&&w.s>r.s&&!(nav.jumpUntil>r.clock))nav.jumpUntil=r.clock+.5;};
- const{log}=playGuardian(section,o,dodge,o.duration+3);assert.deepEqual(log.filter(x=>x.startsWith('hit:')),[],'clean run');
+test('every guardian\'s chase attacks can be dodged by reading the warnings, in every sighting and both modes',()=>{
+ for(const area of[0,1,2])for(const mode of['relaxed','challenge'])for(const level of[1,2,3]){const{section,o}=guardianRun(level,mode,area);
+  const{log}=playGuardian(section,o,readWarnings,o.duration+3);assert.deepEqual(log.filter(x=>x.startsWith('hit:')),[],`area ${area} ${mode} sighting ${level}`);}
+});
+test('volley and sky dive aim at the lane the creature is in, the prism beam bounces into its second lane, and the storm chain spares its gap',()=>{
+ const{section,o}=guardianRun(3,'relaxed',1),seen=[];const{log}=playGuardian(section,o,(r,nav,st)=>{if(st?.pose&&['volley','dive'].includes(st.pose.kind)){seen.push(st.pose.lane===r.laneNow());r.lane=2;}},o.duration+3);assert.ok(seen.length&&seen[0],'aimed at the lane the creature was in');
+ const p=guardianRun(3,'relaxed',2),prism=p.o.attacks.find(a=>a.kind==='prism'),chain=p.o.attacks.find(a=>a.kind==='chain');assert.notEqual(prism.lanes[0],prism.lanes[1]);
+ let bounced=false;playGuardian(p.section,p.o,(r,nav,st)=>{r.lane=3-prism.lanes[0]-prism.lanes[1];for(const f of st?.flying||[])if(f.kind==='prism'&&f.bounced)bounced=f.lane===prism.turn;},p.o.duration+3);assert.ok(bounced,'the beam switched lanes');
+ const g=playGuardian(p.section,p.o,(r,nav,st)=>{r.lane=chain.gap;},p.o.duration+3);assert.ok(!g.log.includes('hit:chain'),'the gap lane is safe without jumping');
 });
 test('the final chase exists only after the last gate, runs to the arena and asks for the fight',()=>{
  const e={id:'t',area:0,index:19,choices:['left','left','left','left','left'],battle:null},r=new RunnerControl();
  assert.equal(r.finale(e,'relaxed'),null,'not before the last gate');e.index=20;const section=r.finale(e,'relaxed');assert.ok(section?.run?.finale);
  const run=section.run,g=run.obstacles.find(o=>o.type==='guardian');assert.ok(g.finale&&g.attacks.length>20&&new Set(g.attacks.map(a=>a.kind)).size===3);assert.ok(run.length>=600);
- for(let i=1;i<g.attacks.length;i++)assert.ok(g.attacks[i].t-g.attacks[i-1].t>=g.warn+.3,'every attack gets its warning');
+ for(let i=1;i<g.attacks.length;i++)if(!g.attacks[i].shot)assert.ok(g.attacks[i].t-g.attacks[i-1].t>=g.warn+.3,'every attack gets its warning');
  e.battle={};assert.equal(new RunnerControl().finale(e,'relaxed'),null,'not during the fight');e.battle=null;
  const nav={...navFor(section),state:{index:20,travel:{collected:[]}}},rc=new RunnerControl(),finished=[];rc.events={finish:x=>finished.push(x.id)};nav.section=section;rc.engage(nav);rc.power.dash=999;
  for(let i=0;i<60*120&&!finished.length;i++){rc.power.dash=999;rc.advance(nav,1/60);rc.collide(nav);}
  assert.deepEqual(finished,[section.id]);assert.ok(Math.abs(courseCoordinates(section,nav.player).s-run.to)<.6,'arrives at the arena');
+});
+test('each guardian\'s final chase can be run without a guardian hit by reading the warnings',()=>{
+ for(const area of[0,1,2])for(const mode of['relaxed','challenge']){const e={id:'t'+area,area,index:20,choices:Array(5).fill('left'),battle:null},section=new RunnerControl().finale(e,mode),o=section.run.obstacles.find(x=>x.type==='guardian');
+  assert.equal(o.area,area);const{log}=playGuardian(section,{...o,start:o.start},readWarnings,70);const kinds=new Set(log.filter(x=>x.startsWith('attack:')).map(x=>x.slice(7)));
+  assert.ok(kinds.size===3,`area ${area} shows all three attacks`);assert.deepEqual(log.filter(x=>x.startsWith('hit:')),[],`area ${area} ${mode}`);}
 });

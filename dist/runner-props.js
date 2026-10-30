@@ -212,14 +212,26 @@ const MOMENTS={
    anim.push(t=>{const r=data.runner,up=r?.thornUp?r.thornUp(o,lane,data.live?r.clock:t):true;cluster.position.y+=((up?0:-1.05)-cluster.position.y)*.25;glow.material.opacity=up?0:.45;});});
   return g;
  },
- // The guardian at its true size, riding ahead of the creature; its throws, stomps and bolts come down the lanes.
+ // The guardian at its true size, riding ahead of the creature; lane versions of its arena attacks come down the
+ // track: seed pods, roots and canopy slams (Whisperwood), orbit stones, gale walls and sky dives (Skyreach),
+ // crystals, storm chains and prism beams (Stormglass).
  guardian(o,kit,anim,data){
-  const g=new T.Group(),fig=buildGuardianFigure(data.section.area||0);fig.boss.rotation.y=Math.PI;fig.boss.visible=false;data.pools.push({o,pool:[],guardian:fig});
+  const area=data.section.area||0,g=new T.Group(),fig=buildGuardianFigure(area);fig.boss.rotation.y=Math.PI;fig.boss.visible=false;data.pools.push({o,pool:[],guardian:fig});
   const warnMats=LANES.map(()=>new T.MeshBasicMaterial({color:'#ffb020',transparent:true,opacity:0,depthWrite:false,toneMapped:false})),warn=LANES.map((x,i)=>{const m=mesh(geo('gwarn',()=>new T.PlaneGeometry(1.2,30).rotateX(-Math.PI/2).translate(0,0,15)),warnMats[i],-x,.12,0);m.renderOrder=3;m.visible=false;return m;});
   const band=mesh(geo('gstompwarn',()=>new T.PlaneGeometry(5.4,.6).rotateX(-Math.PI/2)),new T.MeshBasicMaterial({color:'#ff5b3a',transparent:true,opacity:0,depthWrite:false,toneMapped:false}),0,.13,0);band.renderOrder=3;
-  const energy=fig.materials.energy,boulders=Array.from({length:4},()=>mesh(geo('gboulder',()=>new T.IcosahedronGeometry(.55,1)),mat(kit.rock,{flat:true,rough:.95}))),bolts=Array.from({length:3},()=>mesh(geo('gbolt',()=>new T.SphereGeometry(.38,14,10)),new T.MeshBasicMaterial({color:energy.color,toneMapped:false}))),waves=Array.from({length:3},()=>mesh(geo('gwave',()=>new T.BoxGeometry(5.6,.32,.35)),new T.MeshBasicMaterial({color:'#ffd9a0',transparent:true,opacity:.85,toneMapped:false})));
-  data.guardianParts={o,fig,warn,warnMats,band,boulders,bolts,waves};return g;
+  const energy=fig.materials.energy;
+  // Thrown things: pods (thorn bushes once landed), stones and sky-dive rocks, or crystals.
+  const lobGeometry=area===0?geo('gpod',()=>new T.IcosahedronGeometry(.6,0)):area===2?geo('gshard',()=>new T.OctahedronGeometry(.5,0).scale(1,2.2,1).translate(0,.5,0)):geo('gstone',()=>new T.DodecahedronGeometry(.55,0));
+  const lobMaterial=area===0?mat('#4f8a32',{flat:true,rough:.8}):area===2?mat('#a8f6ff',{emissive:'#38d8ff',glow:.9,flat:true,rough:.2}):mat(kit.rock,{flat:true,rough:.95});
+  const lobs=Array.from({length:6},()=>{const m=mesh(lobGeometry,lobMaterial);if(area===0)for(let i=0;i<5;i++){const thorn=mesh(geo('gthorn',()=>new T.ConeGeometry(.12,.7,4).translate(0,.35,0)),mat('#5a4a2c',{flat:true}),0,0,0);thorn.rotation.set(Math.cos(i*1.26)*1.1,0,Math.sin(i*1.26)*1.1);m.add(thorn);}return m;});
+  // Racing down a lane: roots tearing up the ground, or a prism beam.
+  const streaks=Array.from({length:3},()=>{const s=new T.Group();if(area===2){s.add(mesh(geo('gbeam',()=>new T.BoxGeometry(.5,.5,8)),mat('#f2fdff',{basic:true}),0,0,-3.5));s.add(mesh(geo('gbeamglow',()=>new T.BoxGeometry(1.1,1.1,8.4)),mat(energy.color.getStyle(),{basic:true,opacity:.45,additive:true}),0,0,-3.5));}else for(let i=0;i<6;i++){const root=mesh(geo('groot',()=>new T.ConeGeometry(.22,1.3,5).translate(0,.65,0)),mat('#5a4a2c',{flat:true,rough:.9}),Math.sin(i*2.3)*.25,-.4,-i*.7);root.scale.y=1-i*.12;root.rotation.x=-.35;s.add(root);}return s;});
+  // Waves across the three lanes: a shockwave, a low wall of wind or a storm chain; one segment per lane.
+  const waveMaterial=area===0?mat('#ffd9a0',{basic:true,opacity:.85}):area===1?mat('#e8fbff',{basic:true,opacity:.6}):mat('#fbe8ff',{basic:true}),waveGeometry=area===1?geo('gwall',()=>new T.BoxGeometry(1.5,.75,.3)):area===2?geo('gchain',()=>new T.BoxGeometry(1.5,.28,.28)):geo('gwave',()=>new T.BoxGeometry(1.5,.32,.35));
+  const waves=Array.from({length:3},()=>{const w=new T.Group();LANES.forEach(x=>w.add(mesh(waveGeometry,waveMaterial,-x,area===2?.5:area===1?.38:0,0)));return w;});
+  data.guardianParts={o,area,fig,warn,warnMats,band,lobs,streaks,waves};return g;
  },
+
  ledge(o,kit){
   const g=new T.Group(),top=o.depth-o.ramp,stone=mat(kit.masonry||'#d6c49a',{flat:true}),gold=mat('#ffd23f',{emissive:'#c98a00',glow:.5});
   const ramp=geo('ramp'+o.h,()=>{const sh=new T.Shape();sh.moveTo(0,0);sh.lineTo(o.ramp,0);sh.lineTo(o.ramp,o.h);sh.closePath();return new T.ExtrudeGeometry(sh,{depth:1.3,bevelEnabled:false}).rotateY(-Math.PI/2).translate(.65,0,0);});
@@ -283,22 +295,26 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
  // Power-ups float above their lane until taken.
  const powers=[];for(const p of run.powerups||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:powerTexture(p.kind),transparent:true,depthWrite:false}));sprite.scale.set(1.05,1.05,1);sprite.name=p.id;sprite.raycast=()=>{};at(sprite,p.s,LANES[p.lane],1.15);powers.push({object:sprite,from:p.s,to:p.s,id:p.id});}
  for(const{pool}of data.pools)for(const b of pool)root.add(b);
- if(data.guardianParts){const gp=data.guardianParts;root.add(gp.fig.boss,gp.band,...gp.warn,...gp.boulders,...gp.bolts,...gp.waves);for(const m of[gp.band,...gp.boulders,...gp.bolts,...gp.waves])m.visible=false;}
+ if(data.guardianParts){const gp=data.guardianParts;root.add(gp.fig.boss,gp.band,...gp.warn,...gp.lobs,...gp.streaks,...gp.waves);for(const m of[gp.band,...gp.lobs,...gp.streaks,...gp.waves])m.visible=false;}
  // userData is the very object the animations close over, so they see the live run each frame.
  Object.assign(data,{tiles,items,tokens,coins,rims,powers,runnerAnim:anim});root.userData=data;return root;
 }
 const dummy=new T.Object3D();
+const LOBS=['seeds','volley','dive','shards'],WAVES=['slam','gale','chain'];
 function updateGuardianParts(gp,runner,time){
  const st=runner?.trials.get(gp.o.id),show=!!st&&st.visible,f=gp.fig;f.boss.visible=show;
- if(show){const g=runner.s+st.dist;f.boss.position.set(0,st.rise,g);f.head.rotation.y=Math.sin(time*.8)*.12;f.torso.rotation.z=Math.sin(time*1.6)*.03;
-  // Poses: one arm winds up to throw, both rise for a stomp, the core flares for a bolt.
-  const pose=st.pose,k=pose?.k||0;f.arms.forEach(({arm,side})=>{const target=pose?.kind==='boulder'&&side===(pose.lane===0?1:-1)?-2.4*k:pose?.kind==='stomp'?-2.6*k:0;arm.rotation.x+=(target-arm.rotation.x)*.25;});
-  f.animate?.(time);if(pose?.kind==='bolt')f.materials.energy.emissiveIntensity+=2.5*k;}
- const pose=show?st.pose:null;gp.warn.forEach((m,i)=>{const on=!!pose&&pose.kind!=='stomp'&&pose.lane===i;m.visible=on;if(on){m.position.z=runner.s+3;gp.warnMats[i].opacity=.3+.35*Math.abs(Math.sin(time*12));}});
- gp.band.visible=!!pose&&pose.kind==='stomp';if(gp.band.visible){gp.band.position.z=runner.s+st.dist-3;gp.band.material.opacity=.4+.4*Math.abs(Math.sin(time*12));}
- const flying=show||st?st.flying:[];let b=0,v=0;for(const p of flying||[]){const target=p.kind==='boulder'?gp.boulders[b++]:gp.bolts[v++];if(!target)continue;target.visible=true;target.position.set(-LANES[p.lane],p.y,p.s);target.rotation.x=-p.spin;}
- for(let i=b;i<gp.boulders.length;i++)gp.boulders[i].visible=false;for(let i=v;i<gp.bolts.length;i++)gp.bolts[i].visible=false;
- gp.waves.forEach((m,i)=>{const w=st?.waves[i];m.visible=!!w;if(w)m.position.set(0,.18,w.s);});
+ if(show){const g=runner.s+st.dist,pose=st.pose,k=pose?.k||0;
+  // Poses: one arm winds up to throw, both rise for a wave, it crouches to leap for a sky dive, the core flares for roots and beams.
+  f.boss.position.set(0,st.rise+(pose?.kind==='dive'?-k*.8:0),g);f.head.rotation.y=Math.sin(time*.8)*.12;f.torso.rotation.z=Math.sin(time*1.6)*.03;
+  f.arms.forEach(({arm,side})=>{const target=pose&&LOBS.includes(pose.kind)&&side===(pose.lane===0?1:-1)?-2.4*k:pose&&(WAVES.includes(pose.kind)||pose.kind==='dive')?-2.6*k:0;arm.rotation.x+=(target-arm.rotation.x)*.25;});
+  f.animate?.(time);if(pose&&['roots','prism'].includes(pose.kind))f.materials.energy.emissiveIntensity+=2.5*k;}
+ // Amber lanes are dangerous, a blue lane is the way through; the red band warns of a wave.
+ const pose=show?st.pose:null,flash=Math.abs(Math.sin(time*12));gp.warn.forEach((m,i)=>{const danger=!!pose&&pose.lanes.includes(i),safe=!!pose&&pose.gap===i;m.visible=danger||safe;if(m.visible){m.position.z=runner.s+3;gp.warnMats[i].color.set(safe?'#5fe0ff':'#ffb020');gp.warnMats[i].opacity=safe?.45+.2*flash:.3+.35*flash;}});
+ gp.band.visible=!!pose?.wave;if(gp.band.visible){gp.band.position.z=runner.s+st.dist-3;gp.band.material.opacity=.4+.4*flash;}
+ let l=0,r=0;for(const p of st?.flying||[]){if(LOBS.includes(p.kind)){const m=gp.lobs[l++];if(!m)continue;m.visible=true;m.position.set(-LANES[p.lane],p.kind==='shards'&&!p.flight?0:p.y,p.s);const landed=!p.flight;m.rotation.set(landed&&p.kind!=='volley'?0:-p.spin,landed?0:p.spin*.3,0);m.scale.setScalar(p.kind==='dive'?2:p.kind==='seeds'&&landed?1.35:1);}
+  else{const m=gp.streaks[r++];if(!m)continue;m.visible=true;m.position.set(-LANES[p.lane],p.y,p.s);m.rotation.y=Math.PI;}}
+ for(let i=l;i<gp.lobs.length;i++)gp.lobs[i].visible=false;for(let i=r;i<gp.streaks.length;i++)gp.streaks[i].visible=false;
+ gp.waves.forEach((m,i)=>{const w=st?.waves[i];m.visible=!!w;if(w){m.position.set(0,.18,w.s);m.children.forEach((c,lane)=>{c.visible=w.gap!==lane;});}});
 }
 export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={}){
  const data=root?.userData,section=data?.section,run=section?.run;if(!run)return;

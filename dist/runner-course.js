@@ -104,26 +104,59 @@ function moment(kind,section,r,run,s,hard){
 // Power-ups: a coin magnet, a shield, double coins and a creature dash, two or three per run in open lanes.
 export const POWERUPS=['magnet','shield','double','dash'];
 
-// The guardian. It stays ahead of the creature at its true size and attacks with lane-sized dangers: hurled
-// boulders (change lane), stomp shockwaves (jump) and elemental bolts (change lane), each after a warning.
+// The guardian. It stays ahead of the creature at its true size and chases with lane versions of its own arena
+// attacks (guardian-attacks.js), each after a warning: amber lanes are dangerous, a blue lane is the way through.
+//  Mossback Warden:     seed pods that become thorn bushes (change lane) · Canopy Slam shockwave (jump) ·
+//                       roots racing down a lane (change lane)
+//  Galecrest Warden:    Orbit Volley stones aimed at your lane (keep switching) · Gale Sweep wall (jump) ·
+//                       Sky Dive: a crash into your lane, then its shockwave (switch, then jump)
+//  Stormglass Sentinel: Shard Rain crystals in two lanes (take the blue lane) · Storm Chain with one open lane
+//                       (jump or take the gap) · Prism Beam that bounces into a second lane (read both lanes)
 // Sightings in the last run of chapters 2, 3 and 4 (code chapters 1–3) teach one attack at a time and grow
 // longer and fiercer; the final chase, from the last chest to the guardian's arena, tests all of them.
-export const SIGHTINGS={1:{duration:10,attacks:['boulder','boulder']},2:{duration:12.5,attacks:['boulder','stomp','boulder']},3:{duration:15,attacks:['boulder','stomp','bolt','boulder','stomp']}};
-export const GUARDIAN_ENTER=1.5,GUARDIAN_LEAVE=2;
-function guardianAttacks(kinds,r,first,gap){return kinds.map((kind,i)=>({kind,t:first+i*gap,lane:Math.floor(r()*3)%3}));}
-function sighting(section,r,run,s,hard,level){
+export const CHASE_KITS=[['seeds','slam','roots'],['volley','gale','dive'],['shards','chain','prism']];
+export const CHASE_WAVES=['slam','gale','chain'],CHASE_STREAKS=['roots','prism'];
+export const SIGHTINGS={1:{duration:10,attacks:[0,0]},2:{duration:12.5,attacks:[0,1,0]},3:{duration:15,attacks:[0,1,2,0,1]}};
+export const GUARDIAN_ENTER=1.5,GUARDIAN_LEAVE=2,VOLLEY_SHOTS=3,VOLLEY_GAP=.75;
+const kitFor=area=>CHASE_KITS[area]||CHASE_KITS[0];
+// One planned attack. Lanes are fixed in the plan, except Volley and Sky Dive, which aim at the lane the
+// creature is in when the warning starts ('aim').
+// `standing` is the lanes still blocked by the previous attack's bushes or crystals: the next attack always
+// leaves one of the other lanes open, so two attacks never close the track between them.
+function chaseAttack(kind,t,r,standing=[]){const free=[0,1,2].filter(l=>!standing.includes(l)),pick=list=>list[Math.floor(r()*list.length)%list.length];
+ let lane=Math.floor(r()*3)%3,other=(lane+1+Math.floor(r()*2))%3;
+ if(kind==='shards'&&standing.length)lane=pick(free);
+ if(kind==='prism'&&standing.length){const open=pick(free),pair=[0,1,2].filter(l=>l!==open);lane=pair[Math.floor(r()*2)%2];other=pair.find(l=>l!==lane);}
+ if(kind==='volley')return Array.from({length:VOLLEY_SHOTS},(_,i)=>({kind,t:t+i*VOLLEY_GAP,lane:'aim',shot:i}));
+ if(kind==='dive')return[{kind,t,lane:'aim'}];
+ if(kind==='shards')return[{kind,t,lane,lanes:[0,1,2].filter(l=>l!==lane),gap:lane}];
+ if(kind==='chain')return[{kind,t,lane,gap:lane}];
+ if(kind==='prism')return[{kind,t,lane,lanes:[lane,other],turn:other}];
+ return[{kind,t,lane}];}
+const tailOf=kind=>kind==='volley'?(VOLLEY_SHOTS-1)*VOLLEY_GAP:0;
+const standingAfter=list=>{const a=list.at(-1);return a?.kind==='seeds'?[a.lane]:a?.kind==='shards'?a.lanes:[];};
+function planAttacks(kinds,times,r){const out=[];kinds.forEach((k,i)=>out.push(...chaseAttack(k,times[i],r,standingAfter(out))));return out;}
+function sighting(section,r,run,s,hard,level,area){
  // The first warning begins only after the guardian has risen and roared; the last attack lands before it leaves.
- const plan=SIGHTINGS[level],v=speedAt(run,s),warn=hard?.85:1.2,first=GUARDIAN_ENTER+.5+warn,gap=(plan.duration-GUARDIAN_LEAVE-.6-first)/Math.max(1,plan.attacks.length-1);
- const o={id:`${section.id}:guardian:${level}`,type:'guardian',level,start:s,duration:plan.duration,warn,attacks:guardianAttacks(plan.attacks,r,first,gap),lanes:[0,1,2]};
+ const plan=SIGHTINGS[level],kinds=plan.attacks.map(i=>kitFor(area)[i]),v=speedAt(run,s),warn=hard?.85:1.2,first=GUARDIAN_ENTER+.5+warn,gap=(plan.duration-GUARDIAN_LEAVE-.6-first-tailOf(kinds.at(-1)))/Math.max(1,kinds.length-1);
+ const o={id:`${section.id}:guardian:${level}`,type:'guardian',level,area,start:s,duration:plan.duration,warn,attacks:planAttacks(kinds,kinds.map((k,i)=>first+i*gap),r),lanes:[0,1,2]};
  o.depth=v*plan.duration*1.15;o.end=s+o.depth;o.s=s+o.depth/2;
  return{obstacles:[o],coins:[],length:o.depth};
 }
-// The final chase is its own run, from the last chapter's chest to the guardian's arena.
+// What the warning says, shown with the amber or blue lane.
+export function chaseWarning(a){const side=l=>l===0?'◀':l===2?'▶':'▲',kind=a.kind;
+ if(kind==='slam')return{text:'Canopy Slam · Jump!',style:'swamp'};if(kind==='gale')return{text:'Gale wall · Jump!',style:'swamp'};
+ if(kind==='chain')return{text:`Storm Chain · jump or ${side(a.gap)} blue lane`,style:'swamp'};
+ if(kind==='shards')return{text:`Crystals · ${side(a.gap)} blue lane`,style:'stumble'};
+ if(kind==='dive')return{text:'Sky Dive · switch, then jump!',style:'stumble'};
+ if(kind==='volley')return{text:'Volley · switch lanes!',style:'stumble'};
+ if(kind==='prism')return{text:'Prism Beam · it bounces!',style:'stumble'};
+ return{text:`${side(a.lane)} ${kind==='roots'?'Roots':'Seed pod'}`,style:'stumble'};}
 export function finaleRun(section,mode='relaxed'){
  const hard=mode==='challenge',r=rngFor(section.id+':finale:'+mode),{start,top}=speedRange(mode,4),real=Math.max(4,section.length-4-1),length=hard?720:620;
  const run={from:1,to:section.length-4,clearFrom:section.length-4,real,length,start,top:top+.6,obstacles:[],coins:[],word:null,moments:['guardian'],powerups:[],finale:true};
- const attacks=[];let t=GUARDIAN_ENTER+.5+(hard?.8:1.15);const cycle=['boulder','stomp','bolt','boulder','bolt','stomp','boulder'];for(let i=0;t<160;i++){attacks.push({kind:cycle[i%cycle.length],t,lane:Math.floor(r()*3)%3});t+=Math.max(hard?1.4:1.8,(hard?2.4:2.9)-i*.04);}
- run.obstacles.push({id:`${section.id}:guardian:finale`,type:'guardian',level:4,finale:true,start:6,end:length-real-4,s:(length-real)/2,depth:length-real-10,duration:999,warn:hard?.8:1.15,attacks,lanes:[0,1,2]});
+ const area=section.area||0,kit=kitFor(area),cycle=[0,1,2,0,2,1,0].map(i=>kit[i]),attacks=[];let t=GUARDIAN_ENTER+.5+(hard?.8:1.15);for(let i=0;t<160;i++){const kind=cycle[i%cycle.length];attacks.push(...chaseAttack(kind,t,r,standingAfter(attacks)));t+=tailOf(kind)+Math.max(hard?1.4:1.8,(hard?2.4:2.9)-i*.04)+(kind==='dive'?1:0);}
+ run.obstacles.push({id:`${section.id}:guardian:finale`,type:'guardian',level:4,area,finale:true,start:6,end:length-real-4,s:(length-real)/2,depth:length-real-10,duration:999,warn:hard?.8:1.15,attacks,lanes:[0,1,2]});
  for(let k=0;k*24+30<length-30;k++){const lane=k%3===1?1:(k%2?0:2);for(let i=0;i<4;i++)run.coins.push({id:`${section.id}:chase-coin:${k}:${i}`,s:30+k*24+i*2.2,lateral:LANES[lane],y:.58});}
  run.powerups.push({id:`${section.id}:power:shield:chase`,kind:'shield',s:length*.18,lane:1},{id:`${section.id}:power:magnet:chase`,kind:'magnet',s:length*.5,lane:0},{id:`${section.id}:power:dash:chase`,kind:'dash',s:length*.78,lane:2});
  return run;
@@ -139,7 +172,7 @@ export function runFor(section,e,mode='relaxed',enabled=RUNNER){
  while(s<length-12){
   // A power-up whose spot fell inside a moment or sighting waits just before the next one.
   const pending=()=>{while(powers.length&&powers[0].at<=s){const p=powers.shift();run.powerups.push({id:`${section.id}:power:${p.kind}:m${k++}`,kind:p.kind,s:s-2,lane:lastFree});}};
-  if(s>=sightingAt&&!run.obstacles.some(o=>o.type==='guardian')){pending();const g=sighting(section,r,run,s+speedAt(run,s)*.6,hard,sightingLevel);run.obstacles.push(...g.obstacles);s+=speedAt(run,s)*.6+g.length+speedAt(run,s)*reaction;continue;}
+  if(s>=sightingAt&&!run.obstacles.some(o=>o.type==='guardian')){pending();const g=sighting(section,r,run,s+speedAt(run,s)*.6,hard,sightingLevel,section.area??e?.area??0);run.obstacles.push(...g.obstacles);s+=speedAt(run,s)*.6+g.length+speedAt(run,s)*reaction;continue;}
   if(momentAt.length&&s>=momentAt[0]&&!(run.word&&s<run.word.tokens.at(-1).s)){pending();momentAt.shift();const kind=kinds[kinds.length-momentAt.length-1],m=moment(kind,section,r,run,s+speedAt(run,s)*.6,hard);if(s+speedAt(run,s)*.6+m.length>length-15)continue;run.obstacles.push(...m.obstacles);run.coins.push(...m.coins);s+=speedAt(run,s)*.6+m.length+speedAt(run,s)*reaction*1.2;lastFree=1;continue;}
   if(s>=wordAt&&!run.word){const w=wordRun(section,r,run,s);if(w){run.word=w.word;run.coins.push(...w.coins);s=w.end+speedAt(run,w.end)*reaction;continue;}}
   const b=beat(section,r,mode,run,s,k,lastFree,tutorial&&s<length*.25),spacing=speedAt(run,s)*reaction*(.9+r()*.35);

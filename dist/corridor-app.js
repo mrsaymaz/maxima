@@ -1,4 +1,4 @@
-import{RUNNER,switchPlayMode}from'./runner-mode.js';import{importClassicSave}from'./runner-save.js';import{setRunnerWords}from'./runner-course.js';import{showWord,showProgress,finishWord,hideWord,controlHint,flash as runFlash,runProgress,powerChips,speedLines}from'./runner-hud.js';
+import{RUNNER,switchPlayMode}from'./runner-mode.js';import{importClassicSave}from'./runner-save.js';import{setRunnerWords,chaseWarning}from'./runner-course.js';import{showWord,showProgress,finishWord,hideWord,controlHint,flash as runFlash,runProgress,powerChips,speedLines}from'./runner-hud.js';
 import{registerOffline,watchUpdates,watchInstall,canInstall,promptInstall,keepAwake,toggleFullscreen,fullscreenAvailable,inFullscreen,isAppleTouch,installed}from'./app-shell.js';
 import{createFormCache,formKey}from'./asset-cache.js';
 import{fetchJSON,LessonLibrary}from'./asset-network.js';
@@ -64,7 +64,7 @@ function configureTravel(){if(RUNNER)setRunnerWords(unit().vocabulary||[]);nav.r
 const POWER_NAMES={magnet:'Coin magnet!',shield:'Shield!',double:'Double coins!',dash:'Creature dash!'};
 // Runner mode: the hint bar names what is coming next, so students learn which move each obstacle needs.
 const RUNNER_NAMES={log:'mossy log',mushrooms:'bouncy mushrooms',hedge:'bramble hedge',crates:'rune crates',sandstone:'sandstone wall',tumbleweed:'tumbleweeds',crystals:'crystal spikes',slime:'jelly slimes',vines:'hanging vines',trunk:'fallen trunk',spinner:'spiky spinner',lanterns:'lantern string',banner:'flag bunting',laser:'laser beam',pit:'pit',water:'water gap',chasm:'chasm',void:'void rift',swamp:'swamp',quicksand:'quicksand',glowmire:'glowing mire'};
-const MOMENT_COACH={guardian:o=>o.finale?'Chase the guardian! Dodge boulders and bolts, jump the shockwaves.':'The guardian! Dodge its boulders, jump its shockwaves.',boulders:()=>'Rolling boulders! Watch the amber lane and switch.',wind:o=>`Wind ${o.dir>0?'→':'←'}: it pushes you a lane. Grab the coins upwind!`,crystal:()=>'Crystal gate! Tap Cast to shatter it.',thorns:()=>'Thorns rise and fall: run where they are down.',ledge:()=>'Optional: take the ramp for bonus coins!',hole:o=>o.style==='stream'?'Stepping stones: hop lane to lane!':null};
+const MOMENT_COACH={guardian:o=>`${o.finale?'Chase the guardian!':'The guardian!'} Leave the amber lanes, take a blue lane, jump the waves.`,boulders:()=>'Rolling boulders! Watch the amber lane and switch.',wind:o=>`Wind ${o.dir>0?'→':'←'}: it pushes you a lane. Grab the coins upwind!`,crystal:()=>'Crystal gate! Tap Cast to shatter it.',thorns:()=>'Thorns rise and fall: run where they are down.',ledge:()=>'Optional: take the ramp for bonus coins!',hole:o=>o.style==='stream'?'Stepping stones: hop lane to lane!':null};
 function runnerCoach(r){const s=r.section,run=s?.run,at=r.s??0;if(!run)return'';if(run.word)return'Collect the letters in order!';
  const next=run.obstacles.find(o=>o.type!=='stone'&&o.s+o.depth/2>at&&(o.start??o.s)-at<Math.max(14,r.speed*2.2)&&!r.knocked.has(o.id));const coach=next&&MOMENT_COACH[next.type]?.(next);if(coach)return coach;if(!next)return'Run! Grab the coins in your lane.';const name=RUNNER_NAMES[next.style]||next.type;
  return next.type==='barrier'?`Jump over the ${name}!`:next.type==='bar'?`Slide under the ${name}!`:next.type==='swamp'?`Swerve around the ${name} (or jump it)!`:`Dodge the ${name}: change lane or jump!`;}
@@ -83,8 +83,8 @@ function runnerEvents(){return{
  lane:()=>cue('lane'),
  guardian:o=>{if(o.finale)toast(`Chase ${AREAS[state().area]?.guardian||'the guardian'} to its arena!`);},
  roar:()=>{cue('defeat');buzz(HAPTICS.crit);runFlash('The guardian!','stumble');},
- warn:a=>{cue('select');runFlash(a.kind==='stomp'?'Jump!':a.lane===0?'◀ Boulder lane':a.lane===2?'Boulder lane ▶':'▲ Middle lane!',a.kind==='stomp'?'swamp':'stumble');},
- attack:a=>{if(a.kind==='stomp'){cue('impact');buzz(HAPTICS.hit);}else cue('lane');},
+ warn:a=>{cue('select');const w=chaseWarning(a);runFlash(w.text,w.style);},
+ attack:a=>{if(['slam','gale','chain','dive'].includes(a.kind)){cue('impact');buzz(HAPTICS.hit);}else cue('lane');},
  finish:section=>{if(section.run?.finale&&screen==='play')setTimeout(()=>{if(screen==='play'&&!task&&!modal&&!resultCard)endRoute();},350);},
  power:p=>{cue('reward');buzz(HAPTICS.reward);runFlash(POWER_NAMES[p.kind],'great');},
  shield:()=>{cue('blocked');runFlash('Shield!','great');buzz(HAPTICS.hit);},

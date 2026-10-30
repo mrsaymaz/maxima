@@ -1,5 +1,5 @@
 import{courseCoordinates,localPoint}from'./traversal-layout.js';
-import{LANES,LANE_HALF,RUN_LEAD,laneSpan,speedAt,runSurface,hurdleHeight,finaleRun,GUARDIAN_ENTER,GUARDIAN_LEAVE}from'./runner-course.js';
+import{LANES,LANE_HALF,RUN_LEAD,laneSpan,speedAt,runSurface,hurdleHeight,finaleRun,GUARDIAN_ENTER,GUARDIAN_LEAVE,CHASE_WAVES}from'./runner-course.js';
 import{activeNode,approachPoint}from'./trail-layout.js';
 
 // Drives the creature through a runner section on a moving track. Progress is measured in track metres (`s`,
@@ -9,6 +9,8 @@ import{activeNode,approachPoint}from'./trail-layout.js';
 // Lane changes, slides, jumps, Cast and Boost arrive as discrete requests from keys, swipes and buttons.
 export const POWER_SECONDS={magnet:8,double:10,dash:2.5};
 const BOULDER_HEIGHT=1,THORN_HEIGHT=1.05,THORN_UP=.45,THORN_LANES=[0,.67,.34];
+// How high a guardian projectile stands: pods and stones can be jumped, rocks, crystals, roots and beams cannot.
+const CHASE_HEIGHT={seeds:BOULDER_HEIGHT,volley:BOULDER_HEIGHT};
 export class RunnerControl{
  constructor(){this.lane=1;this.lat=0;this.s=0;this.clock=0;this.sliding=0;this.speed=0;this.stun=0;this.mire=0;this.mired=null;this.running=false;this.section=null;
   this.taken=new Set();this.knocked=new Set();this.wordsDone=new Set();this.filled=new Map();this.done=new Set();this.progress=new Map();this.events={};
@@ -110,21 +112,31 @@ export class RunnerControl{
   st.dist=70-32*enter+40*leave;st.rise=-9*(1-enter)-9*leave;st.visible=leave<1;
   if(!st.roared&&enter>=1){st.roared=true;this.events.roar?.(o);}
   st.pose=null;const a=st.leaveAt==null?o.attacks[st.next]:null;
-  if(a&&t>=a.t-o.warn){st.pose={kind:a.kind,lane:a.lane,k:Math.min(1,(t-(a.t-o.warn))/o.warn)};if(st.warned<st.next){st.warned=st.next;this.events.warn?.(a);}}
+  if(a&&t>=a.t-o.warn){if(st.warned<st.next){st.warned=st.next;st.aim=a.lane==='aim'?this.laneNow():a.lane;this.events.warn?.({...a,lane:st.aim});}
+   const wave=CHASE_WAVES.includes(a.kind);st.pose={kind:a.kind,lane:st.aim,lanes:a.lanes||(wave?[]:[st.aim]),gap:a.gap,wave:wave||a.kind==='dive',k:Math.min(1,(t-(a.t-o.warn))/o.warn)};}
   if(a&&t>=a.t){this.launch(o,st,a);st.next++;}
-  for(const p of st.flying){if(p.flight>0){p.flight=Math.max(0,p.flight-dt);const k=1-p.flight/p.total;p.s=p.from+(p.to-p.from)*k;p.y=p.y0*(1-k)+p.y1*k+p.arc*Math.sin(Math.PI*k);}else{p.s-=p.speed*dt;p.y=p.y1;}p.spin+=dt*9;
+  for(const p of st.flying){if(p.turn!=null&&!p.flight&&p.s<this.s+12){p.lane=p.turn;p.turn=null;p.bounced=true;}if(p.flight>0){p.flight=Math.max(0,p.flight-dt);const k=1-p.flight/p.total;p.s=p.from+(p.to-p.from)*k;p.y=p.y0*(1-k)+p.y1*k+p.arc*Math.sin(Math.PI*k);}else{p.s-=p.speed*dt;p.y=p.y1;}p.spin+=dt*9;
    if(!p.passed&&!p.flight&&p.s<this.s-.8){p.passed=true;if(!p.hit&&this.clock-this.lastMove.t<.6&&this.lastMove.kind==='lane'&&this.lastMove.lane===p.lane)this.events.perfect?.(p);}}
   for(const w of st.waves){w.s-=w.speed*dt;if(!w.passed&&w.s<this.s-.6){w.passed=true;if(!w.hit&&this.clock-this.lastMove.t<.6&&this.lastMove.kind==='jump')this.events.perfect?.(w);}}
   st.flying=st.flying.filter(p=>p.s>this.s-10&&!p.hit);st.waves=st.waves.filter(w=>w.s>this.s-8&&!w.hit);
  }
  launch(o,st,a){
-  const g=this.s+st.dist,id=`${o.id}:${a.kind}:${st.next}`;
-  // Boulders arc from the guardian's hand, land ahead and roll down their lane; bolts race straight down theirs.
-  if(a.kind==='boulder')st.flying.push({id,kind:'boulder',lane:a.lane,from:g-2,to:this.s+22,s:g-2,y:7,y0:7,y1:.5,arc:3,total:.9,flight:.9,speed:5,spin:0});
-  if(a.kind==='bolt')st.flying.push({id,kind:'bolt',lane:a.lane,from:g-2,to:g-2,s:g-2,y:1.2,y0:1.2,y1:1.2,arc:0,total:0,flight:0,speed:20,spin:0});
-  // A stomp sends a shockwave across all lanes toward the creature: jump it.
-  if(a.kind==='stomp')st.waves.push({id,s:g-3,speed:13});
-  this.events.attack?.(a);
+  const g=this.s+st.dist,id=`${o.id}:${a.kind}:${st.next}`,lane=st.aim??a.lane,v=Math.max(4,this.speed||0);
+  const lob=(kind,l,to,roll=0)=>st.flying.push({id:`${id}:${l}`,kind,lane:l,from:g-2,to,s:g-2,y:7,y0:7,y1:.5,arc:3,total:.9,flight:.9,speed:roll,spin:0});
+  const streak=(kind,speed,extra={})=>st.flying.push({id,kind,lane,from:g-2,to:g-2,s:g-2,y:kind==='roots'?.4:1.1,y0:1.2,y1:kind==='roots'?.4:1.1,arc:0,total:0,flight:0,speed,spin:0,...extra});
+  // Pods land and grow into thorn bushes; stones land and roll; crystals land and stand.
+  // Landing spots scale with speed, so there is always about a second to react after a landing.
+  const ahead=Math.max(22,v*2.2);
+  if(a.kind==='seeds')lob('seeds',lane,this.s+ahead);
+  if(a.kind==='volley')lob('volley',lane,this.s+Math.max(18,v*2.1),5);
+  if(a.kind==='shards')for(const l of a.lanes)lob('shards',l,this.s+ahead);
+  if(a.kind==='roots')streak('roots',20);
+  if(a.kind==='prism')streak('prism',24,{turn:a.turn});
+  // Waves cross all lanes toward the creature: jump them (the storm chain leaves one lane open).
+  if(['slam','gale','chain'].includes(a.kind))st.waves.push({id,kind:a.kind,gap:a.gap,s:g-3,speed:13});
+  // Sky Dive: it crashes into the creature's lane (reached in ~1.4 s), then its shockwave arrives (~2.3 s).
+  if(a.kind==='dive'){lob('dive',lane,this.s+v*1.4);st.waves.push({id:id+':wave',kind:'dive',s:g-3,speed:Math.max(2,(st.dist-3)/2.3-v)});}
+  this.events.attack?.({...a,lane});
  }
  // The final chase: a run from just past the last gate to the guardian's arena at the end of the trail.
  finale(e,mode){
@@ -150,8 +162,8 @@ export class RunnerControl{
    const span=laneSpan(o.lanes);
    if(o.type==='swamp'){if(!this.has('dash')&&Math.abs(this.s-o.s)<o.depth/2&&this.lat>span.min&&this.lat<span.max&&feet<.12){this.mire=.25;if(this.mired!==o.id){this.mired=o.id;nav.rush?.reset();this.events.swamp?.(o);}}continue;}
    if(o.type==='guardian'){const st=this.trials.get(o.id);if(!st||nav.invincible>0)continue;
-    for(const p of st.flying)if(!p.hit&&!p.flight&&Math.abs(p.s-this.s)<.7&&p.lane===lane&&nav.y<(p.kind==='boulder'?BOULDER_HEIGHT:1.5)-.1){p.hit=true;return this.stumble(nav,{id:p.id,type:p.kind,s:this.s+1.2,depth:0});}
-    for(const w of st.waves)if(!w.hit&&Math.abs(w.s-this.s)<.55&&feet<.35){w.hit=true;return this.stumble(nav,{id:w.id,type:'stomp',s:this.s+1.2,depth:0});}
+    for(const p of st.flying)if(!p.hit&&!p.flight&&Math.abs(p.s-this.s)<.7&&p.lane===lane&&nav.y<(CHASE_HEIGHT[p.kind]??1.5)-.1){p.hit=true;return this.stumble(nav,{id:p.id,type:p.kind,s:this.s+1.2,depth:0});}
+    for(const w of st.waves)if(!w.hit&&w.gap!==lane&&Math.abs(w.s-this.s)<.55&&feet<.35){w.hit=true;return this.stumble(nav,{id:w.id,type:w.kind,s:this.s+1.2,depth:0});}
     continue;}
    if(o.type==='boulders'){const st=this.trials.get(o.id);for(const b of st?.rolling||[])if(!b.hit&&Math.abs(b.s-this.s)<.75&&b.lane===lane&&nav.y<BOULDER_HEIGHT-.1&&nav.invincible<=0){b.hit=true;return this.stumble(nav,{...o,id:b.id,s:this.s+1.2,depth:0});}continue;}
    if(['hole','stone','wind','ledge'].includes(o.type)||this.knocked.has(o.id)||Math.abs(this.s-o.s)>o.depth/2+.28)continue;if(this.lat<span.min-.2||this.lat>span.max+.2)continue;

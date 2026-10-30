@@ -14,7 +14,7 @@ Both packages contain identical gameplay files. Deploying to the same site prese
 
 ## Runner paths (the game)
 
-**0.49.0:** the guardian chases students through the last run of chapters 2–4 and all the way to its arena, and each of the three arena guardians has a new look and its own attacks (roots, seeds and vines; wind walls, orbiting stones and twisters; prism beams, crystal cages and storm chains), with a shared amber/red/blue warning code, critical hits on a staggered guardian and two English wards mid-fight. See `docs/RELEASE-v0.49.0.md`.
+**0.49.0:** the guardian chases students through the last run of chapters 2–4 and all the way to its arena with lane versions of its own attacks, and each of the three arena guardians has a new look and its own attacks (roots, seeds and vines; wind walls, orbiting stones and twisters; prism beams, crystal cages and storm chains), with a shared amber/red/blue warning code, critical hits on a staggered guardian and two English wards mid-fight. See `docs/RELEASE-v0.49.0.md`.
 
 **0.48.0:** the six trials return as runner moments (rolling boulders, wind, stepping stones, crystal gates you break with Cast, thorn gaps and an optional higher route), with speed lines, a sprint camera, Boost bursts, Perfect dodges and four power-ups (coin magnet, shield, double coins, creature dash). See `docs/RELEASE-v0.48.0.md`.
 
