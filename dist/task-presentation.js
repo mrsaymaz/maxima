@@ -21,7 +21,10 @@ export function fitPlateText(el,initial=17){
  if(ink.style)ink.style.overflowWrap='normal';
  el.style.fontSize=size+'px';
  while(size>13&&!fits()){size-=.5;el.style.fontSize=size+'px';}
- if(ink.style)ink.style.overflowWrap='';
+ // A single long word ("playground") may go a little smaller still, so it is never split across lines.
+ const wordFits=()=>ink.scrollWidth<=ink.clientWidth+1;
+ while(size>11&&!wordFits()){size-=.5;el.style.fontSize=size+'px';}
+ if(ink.style)ink.style.overflowWrap=wordFits()?'normal':'';
  const scroll=!fits();if(el.dataset)el.dataset.overflow=scroll?'scroll':'none';
  return{size,scroll};
 }

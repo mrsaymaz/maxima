@@ -35,5 +35,10 @@ test('completing a tall gate keeps the established camera through its opening an
 test('plate text shrinks so whole words fit instead of splitting a word across lines',()=>{
  let size=17;const ink={style:{overflowWrap:''},get scrollWidth(){return this.style.overflowWrap==='normal'?size*6:90;},clientWidth:90,scrollHeight:40,clientHeight:60};
  const el={clientWidth:100,querySelector:()=>ink,dataset:{},style:{set fontSize(v){size=parseFloat(v);}}};
- const fit=fitPlateText(el,17);assert.equal(fit.size,15);assert.equal(fit.scroll,false);assert.equal(ink.style.overflowWrap,'','anywhere-wrapping returns for words that can never fit');
+ const fit=fitPlateText(el,17);assert.equal(fit.size,15);assert.equal(fit.scroll,false);assert.equal(ink.style.overflowWrap,'normal','whole words fit, so no word is ever split');
+ // A long word ("playground") may shrink below the usual 13 px floor to stay whole; only a word that cannot fit even at 11 px wraps.
+ let wide=17;const ink2={style:{overflowWrap:''},get scrollWidth(){return this.style.overflowWrap==='normal'?wide*7.5:90;},clientWidth:90,get scrollHeight(){return 40;},clientHeight:60};
+ const fit2=fitPlateText({clientWidth:100,querySelector:()=>ink2,dataset:{},style:{set fontSize(v){wide=parseFloat(v);}}},17);assert.equal(fit2.size,12);assert.equal(ink2.style.overflowWrap,'normal');
+ let huge=17;const ink3={style:{overflowWrap:''},get scrollWidth(){return this.style.overflowWrap==='normal'?huge*20:90;},clientWidth:90,scrollHeight:40,clientHeight:60};
+ fitPlateText({clientWidth:100,querySelector:()=>ink3,dataset:{},style:{set fontSize(v){huge=parseFloat(v);}}},17);assert.equal(ink3.style.overflowWrap,'','anywhere-wrapping returns only for words that can never fit');
 });

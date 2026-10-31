@@ -129,3 +129,12 @@ test('a real partially answered app task survives backgrounding and a context-lo
 test('a failed creature load during lesson selection restores the prior lesson and its exact accepted task',async()=>{
  const a=await app(new Map(),{split:true}),h=a.hooks;await h.enter();h.closeModal();h.branch('left');h.nav().stop();reachNode(h,activeNode(h.state()));h.interact(activeNode(h.state()).id);inputCorrect(h);const board=JSON.stringify(h.state().active),before=JSON.stringify(h.save().journeys);await h.home();const load=h.world().loadForm;h.world().loadForm=async()=>{throw Error('interrupted model');};await click(h,'unit',{unit:'g8u5'});assert.equal(h.save().selected,'g5u1');assert.equal(JSON.stringify(h.save().journeys),before);assert.equal(JSON.stringify(h.state().active),board);h.world().loadForm=load;await h.enter();assert.equal(JSON.stringify(h.task()),board);
 });
+
+test('the journal opens on compact tabs that keep every earlier entry, and remembers the last tab',async()=>{const a=await app(),h=a.hooks;await h.enter();h.closeModal();const html=()=>a.elements.get('#modal-layer').innerHTML;
+ await click(h,'journal');assert.match(html(),/journal-tabs/);for(const label of['Journey','Words','Rewards','Settings'])assert.ok(html().includes(label));assert.match(html(),/activities on this path/);assert.match(html(),/journal-formats/);
+ await click(h,'journal-tab',{tab:'words'});assert.match(html(),/Open the Wordex/);assert.match(html(),/accepted steps/);
+ await click(h,'journal-tab',{tab:'rewards'});assert.match(html(),/Wardrobe/);assert.match(html(),/coins/);
+ await click(h,'journal-tab',{tab:'settings'});for(const action of['controls','graphics','music','export','import','restart'])assert.ok(html().includes(`data-do="${action}"`),action);
+ h.closeModal();await click(h,'journal');assert.ok(html().includes('data-tab="settings" aria-selected="true"'),'opens on the last tab');});
+test('a task opens with its Hint and More buttons held back until later or a mistake',async()=>{const a=await app(),h=a.hooks;await h.enter();h.closeModal();const e=h.state();if(!e.choices[Math.floor(e.index/4)])h.branch('left');const node=activeNode(h.state());reachNode(h,node);h.interact(node.id);
+ assert.ok(h.task(),'a task is open');const ui=a.elements.get('#task-layer').innerHTML;assert.match(ui,/class="help-later" data-do="hint"/);assert.match(ui,/class="help-later" data-do="task-tools"/);});

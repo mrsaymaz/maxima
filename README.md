@@ -1,18 +1,20 @@
 # Maxima · by Mr. Saymaz
 
-Version 0.51.0 · Gesture controls
+Version 0.52.0 · Cleaner screens
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `Maxima-v0.51.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `Maxima-v0.52.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.52.0:** cleaner screens. The top bar is one compact badge, and coaching lines, notices and hints share one message area that fades. Gate signs never split a word. Task panels have larger text, and Hint and More appear after 15 seconds or a mistake. The journal is four compact tabs. See `docs/RELEASE-v0.52.0.md`.
 
 **0.51.0:** gesture controls. Swipe up anywhere to jump and tap anywhere to cast (tap a rival to aim at it). The joystick moves to the bottom right, and the Jump and Cast buttons are gone. Controls in the journal can move the joystick left for left-handed players or bring the buttons back. A short tutorial practises each gesture on first play. See `docs/RELEASE-v0.51.0.md`.
 

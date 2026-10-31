@@ -1,5 +1,5 @@
 {
- "hash": "362a9faae81f",
+ "hash": "425b9b8f1bcb",
  "files": [
   "./",
   "index.html",
@@ -148,6 +148,7 @@
   "traversal-props.js",
   "traversal.js",
   "ui-icons.js",
+  "ui-polish.css",
   "valley-banks.js",
   "valley-terrain.js",
   "visual-hierarchy.js",

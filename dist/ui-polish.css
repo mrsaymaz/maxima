@@ -1,0 +1,65 @@
+/* UI polish (0.52.0): one compact top badge, one message area, calmer task panel and a tabbed journal.
+   Loaded last, so these rules settle the layered phone styles above. */
+
+/* Top badge: creature, Form, progress to the next Form and coins, in larger type. */
+body.playing:not(.in-task) .play-status{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:8px;row-gap:3px;align-items:center;justify-content:start;
+ left:calc(58px + var(--safe-left,0px))!important;right:auto!important;top:calc(6px + var(--safe-top,0px))!important;max-width:calc(100% - 166px - var(--safe-left,0px) - var(--safe-right,0px));min-height:46px;
+ padding:4px 12px 4px 4px!important;border-radius:999px!important;background:#0c2d27e8!important;border:1px solid #f2dfa666!important;box-shadow:0 4px 14px #0315124d;overflow:hidden;color:#fff6dc;font-size:14px}
+body.playing:not(.in-task) .play-status img{grid-row:1/3;grid-column:1;width:36px!important;height:36px!important;border-radius:50%;background:radial-gradient(circle at 40% 35%,#2c6050,#173d33);object-fit:contain;padding:2px;box-sizing:border-box}
+body.playing:not(.in-task) .play-status .status-text{grid-column:2;grid-row:1;font:800 15px/1.05 system-ui,sans-serif;letter-spacing:.2px;white-space:nowrap}
+body.playing:not(.in-task) .play-status .status-goal{grid-column:2/4;grid-row:2;display:flex;align-items:center;gap:6px;min-width:0}
+body.playing:not(.in-task) .play-status .status-growth{flex:0 0 40px;width:40px;height:6px;border-radius:3px;background:#06201c;box-shadow:inset 0 0 0 1px #f2dfa633}
+body.playing:not(.in-task) .play-status .status-goal small{font:600 11px/1.1 system-ui,sans-serif!important;color:#cfe3d2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+body.playing:not(.in-task) .play-status .rush-chip{grid-column:3;grid-row:1}
+body.playing:not(.in-task) .play-status>b.status-coins{grid-column:3;grid-row:1;justify-self:end;display:flex;align-items:center;gap:4px;max-width:none;padding:2px 8px;border-radius:999px;background:#f5d58922;color:#ffe08f;font:800 15px/1 system-ui,sans-serif}
+body.playing:not(.in-task) .play-status>b.status-coins .ui-icon{width:19px;height:19px}
+
+/* One message area: coaching lines, notices and gesture hints share the slot under the top bar, one at a time,
+   and fade away after a few seconds (urgent ones stay while they matter). */
+body.playing:not(.in-task) .play-dock .traversal-hint{left:50%!important;right:auto!important;transform:translateX(-50%);width:max-content!important;max-width:min(440px,calc(100% - 32px))!important;
+ padding:7px 14px!important;border-radius:14px;background:#0c2d27e6;border:1px solid #f2dfa655;color:#fff6dc;font:700 14px/1.3 system-ui,sans-serif!important;text-shadow:none;box-shadow:0 6px 18px #0315123d;
+ transition:opacity .35s,transform .35s;text-align:center}
+body.playing:not(.in-task) .play-dock .traversal-hint.hint-resting{opacity:0;transform:translate(-50%,-6px)}
+body.playing:not(.in-task) .play-dock .traversal-hint[data-urgent=true]{border-color:#f2c873;background:#14392fe8}
+body.playing:not(.in-task) #toast{visibility:hidden}
+body.playing.hud-notice:not(.in-task) .play-dock .traversal-hint{visibility:visible!important}
+
+/* Task panel: larger, calmer type; Hint and More appear after a while or after a mistake. */
+body.in-task .mechanism-hud strong{font-size:18px}
+body.in-task .mechanism-hud span{font-size:13px}
+body.in-task .mechanism-tools p{font-size:15px;line-height:1.35}
+body.in-task .mechanism-tools button{min-height:46px;font-size:14px;padding:8px 14px}
+body.in-task:not(.task-help-ready) .mechanism-tools .help-later{display:none}
+body.in-task.task-help-ready .mechanism-tools .help-later{animation:help-in .4s ease-out}
+@keyframes help-in{from{opacity:0;transform:translateY(6px)}}
+/* Gentle feedback on the pieces themselves: a small pop when a pair or piece is right, a short shake for "try again". */
+@media(prefers-reduced-motion:no-preference){
+ .world-piece.joined{animation:piece-pop .45s ease-out}
+ .world-piece[data-feedback="retry"]{animation:piece-shake .4s ease-in-out}
+}
+@keyframes piece-pop{40%{scale:1.08}}
+@keyframes piece-shake{25%{translate:-4px 0}75%{translate:4px 0}}
+
+/* Journal: compact tabs with a fun, game-like look. */
+.modal.journal-modal{padding:20px 18px 18px}
+.journal-modal h2{margin-bottom:10px}
+.journal-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 14px;padding:4px;border-radius:14px;background:#0d2b26}
+.journal-tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;padding:6px 2px;border:0;border-radius:10px;background:none;color:#cfe0cf;font:700 12px/1.1 system-ui,sans-serif}
+.journal-tabs button .tab-icon{font-size:20px;line-height:1}
+.journal-tabs button[aria-selected=true]{background:linear-gradient(160deg,#f0d59b,#d5ad66);color:#24382e;box-shadow:0 3px 10px #0315124d}
+.journal-panel{display:grid;gap:10px}
+.journal-card{padding:12px 14px;border-radius:14px;background:#1d463d;border:1px solid #e7d5ac33}
+.journal-card h3{margin:0 0 4px;font:700 15px/1.2 system-ui,sans-serif;color:#ffeec4}
+.journal-card p{margin:0;font-size:13px;color:#d6e4d4}
+.journal-meter{height:10px;border-radius:6px;background:#0b2522;overflow:hidden;margin:8px 0 4px}.journal-meter i{display:block;height:100%;background:linear-gradient(90deg,#7fe0a6,#f3d47f)}
+.journal-formats{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.journal-formats span{display:grid;place-items:center;height:34px;border-radius:10px;background:#0f322c;border:1px solid #e7d5ac22;font-size:16px;color:#9fb8a8}
+.journal-formats span.done{background:#2f6a4f;border-color:#8ee4b3aa;color:#fff3c9}
+.journal-formats span.next{border-color:#f2c873;box-shadow:0 0 0 2px #f2c87355}
+.journal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.journal-stats div{padding:8px 4px;border-radius:12px;background:#0f322c;text-align:center}.journal-stats b{display:block;font:800 18px/1.1 system-ui,sans-serif;color:#ffe08f}.journal-stats small{font-size:11px;color:#c3d6c6}
+.journal-rows{display:grid;gap:6px}
+.journal-rows button{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;padding:8px 12px;border-radius:12px;border:1px solid #e7d5ac33;background:#1d463d;color:#f6ecd2;font:700 14px/1.2 system-ui,sans-serif;text-align:left}
+.journal-rows button .row-icon{font-size:20px;width:26px;text-align:center}
+.journal-rows button small{display:block;font:500 12px/1.2 system-ui,sans-serif;color:#c3d6c6}
+.journal-rows button .row-value{margin-left:auto;font-size:12px;color:#f2d38f;white-space:nowrap}

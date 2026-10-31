@@ -18,5 +18,6 @@ export function installControlLayout(win=globalThis.window,doc=globalThis.docume
 }
 export function updateTrailHint(el,text,{urgent=false,now=Date.now()}={}){
  if(!el)return;if(el._hintText!==text){el._hintText=text;el._hintAt=now;el.textContent=text;}
- el.dataset.urgent=String(urgent);el.classList.toggle('hint-resting',!urgent&&now-(el._hintAt??now)>6500);
+ el.dataset.urgent=String(urgent);// A message rests (fades away) after four seconds unless it is urgent; a new message shows again.
+ el.classList.toggle('hint-resting',!urgent&&now-(el._hintAt??now)>4000);
 }
