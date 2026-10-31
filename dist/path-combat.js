@@ -67,9 +67,11 @@ export class PathCombat{
  seedStep(r){const n=this.nav;if(r.phase==='seedwindup'&&r.timer>=r.duration){this.phase(r,'seedstrike',.44);r.slamHit=false;}else if(r.phase==='seedstrike'){if(!r.slamHit&&r.timer>=.14){r.slamHit=true;const d=distance(n.player,r),dot=((n.player.x-r.x)*Math.sin(r.heading)+(n.player.z-r.z)*Math.cos(r.heading))/(d||1);if(n.invincible<=0&&circlesTouchBody(profileOf(n,.30),n.player,n.heading,r,r.slamRange)&&dot>Math.cos(r.slamHalfAngle+Math.asin(Math.min(.8,bodyExtent(profileOf(n,.30),n.heading,{x:Math.cos(r.heading),z:-Math.sin(r.heading)})/(d||1))))&&n.y<.9){n.retry('leaf-slam');return;}}if(r.timer>=r.duration)this.phase(r,'recover',this.recoverDuration(r));}}
  // Rivals take turns: one attacks at a time (two in Challenge); the others wait, facing the creature.
  attackers(){return this.group.filter(r=>ATTACKING.includes(r.phase)).length;}
- step(dt){const n=this.nav;this.attackStep(dt);this.projectileStep(dt);
+ step(dt){const n=this.nav;this.attackStep(dt);
+  // Rivals hold their attacks while the creature is still running or skidding in, and for a breath after it stops.
+  this.grace=n.runner?.running||n.runner?.arrival?1.2:Math.max(0,(this.grace||0)-dt);this.projectileStep(dt);
   for(const r of this.enemies.values()){r.flash=Math.max(0,r.flash-dt);r.guardAge=(r.guardAge??9)+dt;r.timer+=dt;if(r.phase==='defeated')continue;if(r.section.index!==n.state.index)continue;const near=enemyCanSee(n,r);r.active=near;if(!near){if(r.phase!=='watch')this.resetEnemy(r);continue;}
-   if(r.phase==='watch'){const home=distance(r,r.spec),step=Math.min(home,2.2*dt);r.returning=home>.05;if(home>.05){r.heading=Math.atan2(r.spec.x-r.x,r.spec.z-r.z);r.x+=(r.spec.x-r.x)/home*step;r.z+=(r.spec.z-r.z)/home*step;}else{r.heading=Math.atan2(n.player.x-r.x,n.player.z-r.z);if(r.timer>.65&&this.attackers()<(n.mode==='challenge'?2:1))this.prepare(r);}}
+   if(r.phase==='watch'){const home=distance(r,r.spec),step=Math.min(home,2.2*dt);r.returning=home>.05;if(home>.05){r.heading=Math.atan2(r.spec.x-r.x,r.spec.z-r.z);r.x+=(r.spec.x-r.x)/home*step;r.z+=(r.spec.z-r.z)/home*step;}else{r.heading=Math.atan2(n.player.x-r.x,n.player.z-r.z);if(r.timer>.65&&!this.grace&&this.attackers()<(n.mode==='challenge'?2:1))this.prepare(r);}}
    else if(['seedwindup','seedstrike'].includes(r.phase))this.seedStep(r);
    else if(r.phase==='sporewindup'&&r.timer>=r.duration)this.beginPulse(r);
    else if(r.phase==='pulse')this.pulseStep(r,dt);

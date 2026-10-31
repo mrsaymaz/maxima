@@ -60,7 +60,8 @@ export class RunnerControl{
   a.speed=Math.min(a.speed,Math.sqrt(2*a.decel*Math.max(0,left)));a.s+=Math.min(left,Math.max(a.speed,.8)*dt);a.lat+=(a.toLat-a.lat)*Math.min(1,dt*6);
   if(!a.skid){a.skid=true;this.events.skid?.(a.section,a);}
   const p=localPoint(a.section,a.s,a.lat);nav.player={x:p.x,z:p.z};nav.heading=this.forwardYaw;nav.moving=left>.05;
-  if(a.to-a.s<=.02){this.arrival=null;nav.moving=false;this.events.arrive?.(a.section,a);}
+  // A retry during the fight brings the creature back here, in front of the rivals, not to the start of the run.
+  if(a.to-a.s<=.02){this.arrival=null;nav.moving=false;if(nav.state?.travel)nav.state.travel.safe={...nav.player,y:nav.y||0,heading:nav.heading};this.events.arrive?.(a.section,a);}
   return true;
  }
  move(kind){this.lastMove={t:this.clock,kind,lane:this.lane};}

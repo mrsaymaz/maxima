@@ -92,7 +92,7 @@ function runnerEvents(){return{
   approach:(section,a)=>{if(section.run?.finale)return;if(a.guarded){runFlash('Rivals ahead! Get ready to cast','stumble');cue('select');}else runFlash('Gate ahead!','swamp');},
   skid:()=>{cue('slide');buzz(HAPTICS.hit);},
   // A free gate opens its task as soon as the creature has stopped; at a guarded gate the fight takes over.
-  arrive:(section,a)=>{if(a.guarded){runFlash('Defeat the rivals to open the gate','stumble');return;}setTimeout(()=>{const node=activeNode(state());if(node&&screen==='play'&&!task&&!modal&&!resultCard)interact(node.id);},280);},
+  arrive:(section,a)=>{if(a.guarded){runFlash('Defeat the rivals to open the gate','stumble');return;}const node=activeNode(state());if(node&&screen==='play'&&!task&&!modal&&!resultCard)interact(node.id);},
  power:p=>{cue('reward');buzz(HAPTICS.reward);runFlash(POWER_NAMES[p.kind],'great');},
  shield:()=>{cue('blocked');runFlash('Shield!','great');buzz(HAPTICS.hit);},
  smash:()=>{cue('break');buzz(HAPTICS.hit);},
