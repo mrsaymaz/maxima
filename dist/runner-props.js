@@ -295,10 +295,24 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
  // Power-ups float above their lane until taken.
  const powers=[];for(const p of run.powerups||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:powerTexture(p.kind),transparent:true,depthWrite:false}));sprite.scale.set(1.05,1.05,1);sprite.name=p.id;sprite.raycast=()=>{};at(sprite,p.s,LANES[p.lane],1.15);powers.push({object:sprite,from:p.s,to:p.s,id:p.id});}
  for(const{pool}of data.pools)for(const b of pool)root.add(b);
+ if(run.chest){const arch=chestArch();at(arch,run.chest.s,0,0);root.add(arch);data.chestPart={id:run.chest.id,from:run.chest.s,to:run.chest.s,object:arch};}
  if(data.guardianParts){const gp=data.guardianParts;root.add(gp.fig.boss,gp.band,...gp.warn,...gp.lobs,...gp.streaks,...gp.waves);for(const m of[gp.band,...gp.lobs,...gp.streaks,...gp.waves])m.visible=false;}
  // userData is the very object the animations close over, so they see the live run each frame.
  Object.assign(data,{tiles,items,tokens,coins,rims,powers,runnerAnim:anim});root.userData=data;return root;
 }
+// The reward chest on the track: a golden arch across all three lanes with the chest glowing on top.
+// Running under it opens the chest (runner-control.js), so the run never stops for it.
+let glowTexture=null;
+function chestGlow(){if(glowTexture||typeof document==='undefined')return glowTexture;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,2,32,32,32);r.addColorStop(0,'rgba(255,240,180,1)');r.addColorStop(.4,'rgba(255,200,90,.55)');r.addColorStop(1,'rgba(255,180,60,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return glowTexture=new T.CanvasTexture(c);}
+function chestArch(){const g=new T.Group(),gold=mat('#f2c25a',{emissive:'#a8661a',glow:.35,rough:.4,flat:true}),wood=mat('#7a4a24',{rough:.8,flat:true});
+ for(const side of[-1,1]){const post=mesh(geo('chest-post',()=>new T.BoxGeometry(.32,3.1,.32).translate(0,1.55,0)),gold,side*2.55,0,0);g.add(post);g.add(mesh(geo('chest-cap',()=>new T.OctahedronGeometry(.3,0)),gold,side*2.55,3.25,0));}
+ g.add(mesh(geo('chest-beam',()=>new T.BoxGeometry(5.4,.3,.36)),gold,0,3.05,0));
+ const chest=new T.Group();chest.position.y=3.2;g.add(chest);chest.add(mesh(geo('chest-body',()=>new T.BoxGeometry(1.1,.62,.72).translate(0,.31,0)),wood));
+ const lid=mesh(geo('chest-lid',()=>new T.CylinderGeometry(.36,.36,1.1,10,1,false,0,Math.PI).rotateZ(Math.PI/2).translate(0,.62,0)),wood);chest.add(lid);
+ for(const x of[-.38,.38])chest.add(mesh(geo('chest-band',()=>new T.BoxGeometry(.1,1.02,.76).translate(0,.5,0)),gold,x,0,0));
+ chest.add(mesh(geo('chest-lock',()=>new T.BoxGeometry(.2,.24,.08)),gold,0,.5,.38));
+ const glow=new T.Sprite(new T.SpriteMaterial({map:chestGlow(),color:'#ffd27a',transparent:true,depthWrite:false,blending:T.AdditiveBlending}));glow.scale.set(2.6,2.6,1);glow.position.y=3.6;glow.raycast=()=>{};g.add(glow);
+ g.userData={chest,glow};return g;}
 const dummy=new T.Object3D();
 const LOBS=['seeds','volley','dive','shards'],WAVES=['slam','gale','chain'];
 function updateGuardianParts(gp,runner,time){
@@ -328,6 +342,7 @@ export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={})
  const knocked=runner?.knocked,taken=runner?.taken;data.runner=runner;data.live=!!live;
  for(const{o,pool}of data.pools){const rolling=live?runner.trials.get(o.id)?.rolling||[]:[];pool.forEach((b,i)=>{const r=rolling[i];b.visible=!!r&&r.s<=ahead;if(r){b.position.set(-LANES[r.lane],.5,r.s);b.rotation.x=-r.spin;}});}
  if(data.guardianParts)updateGuardianParts(data.guardianParts,live?runner:null,time);
+ if(data.chestPart){const c=data.chestPart,due=runner?.chestReady?.()!==false,open=!!taken?.has(c.id);c.object.visible=show(c)&&due&&!open;if(c.object.visible){const{chest,glow}=c.object.userData;chest.rotation.y=Math.sin(time*1.6)*.25;chest.position.y=3.2+Math.sin(time*3)*.08;glow.material.opacity=.55+.25*Math.sin(time*5);}}
  for(const p of data.powers){p.object.visible=show(p)&&!taken?.has(p.id);if(p.object.visible)p.object.position.y=1.15+Math.sin(time*4+p.from)*.12;}
  for(const item of data.items){item.object.visible=show(item);if(!item.object.visible)continue;item.base??=item.object.position.y;if(knocked?.has(item.id)&&item.style==='stream'){if(!item.settled){item.settled=true;item.object.traverse(m=>{if(m.material){m.material=m.material.clone();m.material.color?.set('#9a8a66');if(m.material.emissive)m.material.emissiveIntensity=0;}});}}
   else if(knocked?.has(item.id)&&!item.moment&&item.style!=='stream'){item.object.rotation.x=Math.min(1.45,item.object.rotation.x+.12);item.sink=Math.max(-.8,(item.sink||0)-.015);}item.object.position.y=item.base+(item.sink||0)+rise(item.from)*2.5;}

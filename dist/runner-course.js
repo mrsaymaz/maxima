@@ -155,6 +155,11 @@ export function chaseWarning(a){const side=l=>l===0?'◀':l===2?'▶':'▲',kind
  if(kind==='volley')return{text:'Volley · switch lanes!',style:'stumble'};
  if(kind==='prism')return{text:'Prism Beam · it bounces!',style:'stumble'};
  return{text:`${side(a.lane)} ${kind==='roots'?'Roots':'Seed pod'}`,style:'stumble'};}
+// The chapter's reward chest stands on the track under an arch across all lanes: running through it opens it.
+// It goes on the first run of the next chapter (and on the final chase), with a clear stretch around it.
+export const CHEST_CLEAR=9;
+function placeChest(run,id){const s=Math.round(Math.min(48,run.length*.12)),near=o=>Math.abs((o.s??0)-s)<CHEST_CLEAR+(o.depth||0)/2;
+ run.obstacles=run.obstacles.filter(o=>o.type==='guardian'||!near(o));run.coins=run.coins.filter(c=>Math.abs(c.s-s)>3);run.powerups=(run.powerups||[]).filter(p=>Math.abs(p.s-s)>4);run.chest={id,s};}
 export function finaleRun(section,mode='relaxed'){
  const hard=mode==='challenge',r=rngFor(section.id+':finale:'+mode),{start,top}=speedRange(mode,4),real=Math.max(4,section.length-4-1),length=hard?720:620;
  const run={from:1,to:section.length-4,clearFrom:section.length-4,real,length,start,top:top+.6,obstacles:[],coins:[],word:null,moments:['guardian'],powerups:[],finale:true};
@@ -162,6 +167,7 @@ export function finaleRun(section,mode='relaxed'){
  run.obstacles.push({id:`${section.id}:guardian:finale`,type:'guardian',level:4,area,finale:true,start:6,end:length-real-4,s:(length-real)/2,depth:length-real-10,duration:999,warn:hard?.8:1.15,attacks,lanes:[0,1,2]});
  for(let k=0;k*24+30<length-30;k++){const lane=k%3===1?1:(k%2?0:2);for(let i=0;i<4;i++)run.coins.push({id:`${section.id}:chase-coin:${k}:${i}`,s:30+k*24+i*2.2,lateral:LANES[lane],y:.58});}
  run.powerups.push({id:`${section.id}:power:shield:chase`,kind:'shield',s:length*.18,lane:1},{id:`${section.id}:power:magnet:chase`,kind:'magnet',s:length*.5,lane:0},{id:`${section.id}:power:dash:chase`,kind:'dash',s:length*.78,lane:2});
+ placeChest(run,`${section.id}:chest`);
  return run;
 }
 export function runFor(section,e,mode='relaxed',enabled=RUNNER){
@@ -187,6 +193,7 @@ export function runFor(section,e,mode='relaxed',enabled=RUNNER){
   if(powers.length&&s>=powers[0].at&&b.type!=='barrier'){const p=powers.shift();run.powerups.push({id:`${section.id}:power:${p.kind}:${k}`,kind:p.kind,s:s-spacing*.4,lane:b.free});}
   lastFree=b.free;s+=spacing;k++;
  }
+ if(section.index%4===0&&section.index>0)placeChest(run,`${section.id}:chest`);
  return run;
 }
 // Lane span covered by an obstacle, in lateral metres.

@@ -63,3 +63,7 @@ body.in-task.task-help-ready .mechanism-tools .help-later{animation:help-in .4s 
 .journal-rows button .row-icon{font-size:20px;width:26px;text-align:center}
 .journal-rows button small{display:block;font:500 12px/1.2 system-ui,sans-serif;color:#c3d6c6}
 .journal-rows button .row-value{margin-left:auto;font-size:12px;color:#f2d38f;white-space:nowrap}
+
+/* A short dash flash when the creature is carried to the start of the next run between chapters. */
+body.run-dash::after{content:'';position:fixed;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,#fff6dc00 30%,#fff6dccc 100%);animation:run-dash .6s ease-out forwards}
+@keyframes run-dash{from{opacity:1}to{opacity:0}}

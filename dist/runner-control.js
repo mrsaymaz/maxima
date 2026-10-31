@@ -100,6 +100,7 @@ export class RunnerControl{
   // The final real metres begin: the gate (and any rivals guarding it) come into view.
   if(before<run.length-run.real&&this.s>=run.length-run.real)this.events.approach?.(section,{guarded:!!run.rival&&!!nav.combat?.group?.some(r=>r.phase!=='defeated')});
   this.progress.set(section.id,this.s);this.checkPerfect(before);
+  const chest=run.chest;if(chest&&before<chest.s&&this.s>=chest.s&&!this.taken.has(chest.id)&&this.chestReady?.()!==false){this.taken.add(chest.id);this.events.chest?.(chest);}
   if(this.s>=run.length)this.finish(section,nav);
  }
  holeHere(){return this.section.run.obstacles.find(o=>o.type==='hole'&&Math.abs(this.s-o.s)<o.depth/2&&!this.knocked.has(o.id)&&this.lat>laneSpan(o.lanes).min&&this.lat<laneSpan(o.lanes).max);}
