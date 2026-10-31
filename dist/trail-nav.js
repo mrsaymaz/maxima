@@ -9,6 +9,8 @@ import{chapterOf}from'./path-shape.js';import{activeNode,approachPoint,routeTo,t
 import{sectionsFor,courseCoordinates,localPoint,surfaceOnCourse,plantPhase}from'./traversal-layout.js';
 import{travelState}from'./traversal.js';
 import{PathCombat,enemyHint}from'./path-combat.js';
+// Extra jump height on runs (metres).
+export const RUN_JUMP_BONUS=.22;
 export class TrailNavigator{
  constructor(state,onArrive=()=>{}){this.state=state;this.onArrive=onArrive;this.player={...START};this.heading=Math.PI;this.path=[];this.moving=false;this.level=0;this.area=state.area;this.y=0;this.vy=0;this.grounded=true;this.jumpStage='ground';this.jumpTimer=0;this.cooldown=0;this.radius=.24;this.height=.65;this.solids=[];this.destination=null;this.blocked=false;this.course=null;this.courseTime=0;this.mode='relaxed';this.recovery=0;this.invincible=0;this.events={};this.jumpBuffer=0;this.crumble=new Map();}
  // onFoot keeps a navigator walking (no runs), for tools and on-foot mechanics checks.
@@ -45,7 +47,10 @@ export class TrailNavigator{
    if(section.index<=this.state.index&&q.s>section.length-1.5&&this.grounded&&!t.completed.includes(section.index)){t.completed.push(section.index);this.events.checkpoint?.('Traversal complete',section);}
   }if(this.course.some(s=>s.platforms.some(r=>r.fragile&&Math.hypot(p.x-r.x,p.z-r.z)<r.r+.1)))safe=false;const enemy=this.combat?.blocking;if(enemy&&courseCoordinates(enemy.section,p).s>2)safe=false;if(this.grounded&&this.jumpStage==='ground'&&safe&&this.support()!==null){t.safe={x:p.x,z:p.z,y:this.y,heading:this.events.heading?.()??this.heading};}
  }
- step(dt,input={x:0,z:0}){this.passiveCarry=false;this.moving=false;this.blocked=false;const count=Math.max(1,Math.ceil(Math.min(dt,1)/.016));for(let k=0;k<count;k++){const d=Math.min(dt,1)/count;const previousTime=this.courseTime;this.courseTime+=d;this.trials?.carry(previousTime,this.courseTime);this.updateCrumble(d);this.recovery=Math.max(0,this.recovery-d);this.invincible=Math.max(0,this.invincible-d);if(this.recovery>0)continue;this.cooldown=Math.max(0,this.cooldown-d);if(this.jumpBuffer>0){this.jumpBuffer=Math.max(0,this.jumpBuffer-d);if(this.grounded&&this.jumpStage==='ground'&&this.cooldown<=0)this.requestJump();}this.jumpTimer+=d;if(this.jumpStage==='anticipation'&&this.jumpTimer>=.1){this.jumpStage='air';this.grounded=false;const tuning=jumpTuning(this.jumpAssisted?0:this.level);this.vy=tuning.velocity;this.airTime=0;this.flightDuration=tuning.flight;}
+ step(dt,input={x:0,z:0}){this.passiveCarry=false;this.moving=false;this.blocked=false;const count=Math.max(1,Math.ceil(Math.min(dt,1)/.016));for(let k=0;k<count;k++){const d=Math.min(dt,1)/count;const previousTime=this.courseTime;this.courseTime+=d;this.trials?.carry(previousTime,this.courseTime);this.updateCrumble(d);this.recovery=Math.max(0,this.recovery-d);this.invincible=Math.max(0,this.invincible-d);if(this.recovery>0)continue;this.cooldown=Math.max(0,this.cooldown-d);if(this.jumpBuffer>0){this.jumpBuffer=Math.max(0,this.jumpBuffer-d);if(this.grounded&&this.jumpStage==='ground'&&this.cooldown<=0)this.requestJump();}this.jumpTimer+=d;if(this.jumpStage==='anticipation'&&this.jumpTimer>=(this.runner?.running?0:.1)){this.jumpStage='air';this.grounded=false;const tuning=jumpTuning(this.jumpAssisted?0:this.level);
+    // On a run a swipe must lift the feet at once (no wind-up), and a little higher, so every Form clears its barriers
+    // even with a phone's touch delay.
+    this.vy=this.runner?.running?Math.sqrt(2*JUMP_GRAVITY*(tuning.rise+RUN_JUMP_BONUS)):tuning.velocity;this.airTime=0;this.flightDuration=2*this.vy/JUMP_GRAVITY;}
    const running=this.runner?.engage(this);
    // On a run the controller places the creature (moving track); otherwise the usual walking below.
    if(running){this.stop();if(this.rushEnabled){this.rush??=new RushMotion();this.rush.update(d,{moving:true,safe:true,gateDistance:Infinity,recovery:false,blocked:false});}this.runner.advance(this,d);}

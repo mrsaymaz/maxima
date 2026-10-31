@@ -1,18 +1,28 @@
 # solMaxima · by Mr. Saymaz
 
-Version 0.55.0 · Six-gate areas, a tougher guardian and elemental specials
+Version 0.56.0 · Shrine on the path, play-testing fixes, a clean slate
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `solMaxima-v0.55.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `solMaxima-v0.56.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.56.0:** the Elemental Shrine now stands on the path at the end of the chase, with three pedestals playing live previews of the specials and Buy buttons showing their prices. This release fixes:
+- the game failing to open after a reload mid-run;
+- uncollectable coins and invisible bumps;
+- plants on the chase track;
+- ground pieces that seemed to stick to the creature;
+- special buttons that could not be pressed;
+- jumps on phones.
+
+Saves start fresh in this version. See `docs/RELEASE-v0.56.0.md`.
 
 **0.55.0:** areas are now **six gates** (about 15–20 minutes): Forms at gates 2, 4 and 6, chests and guardian sightings on runs 3 and 5, then the chase. Each gate task comes in two parts of the same kind. A whole area holds about 360 coins. The guardian is much tougher (four English wards, small hits, a knock-out loses ground) but still beatable without help. At the new **Elemental Shrine** before the arena, coins buy one-use specials, three per team (60/120/200 coins). Each has its own large 3D animation, grows with Level and stops at the English wards. See `docs/RELEASE-v0.55.0.md`.
 

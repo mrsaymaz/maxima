@@ -1,4 +1,4 @@
-import{perChapter,chapterOf}from'./path-shape.js';
+import{perChapter,chapterOf,chapterCount}from'./path-shape.js';
 import{stretchZ}from'./runner-mode.js';
 import{sceneryPlan}from'./scenery-plan.js';import{sceneryGeometry,authorScenery}from'./scenery-art.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
@@ -34,7 +34,7 @@ export function makeEnvironmentField(e){
  const area=e.area||0,plan=sceneryPlan(area),root=new T.Group();root.name='enriched-valley-'+area;
  const materials=makeEnvironmentMaterials(area),uniforms={uEnvironmentTime:{value:0},uEnvironmentMotion:{value:1},uEnvironmentFocus:{value:new T.Vector2()},uEnvironmentQuiet:{value:0}},batches=new Map(),geometryCache=new Map(),placements=[],solids=[],chapters=[],chunks=new Map(),matrix=new T.Matrix4(),normalMatrix=new T.Matrix3(),object=new T.Object3D();
  let story=null;
- const quiet=Array.from({length:5},(_,chapter)=>['left','right'].map(side=>sectionFor({...e,choices:Array(5).fill(side)},chapter*4,'relaxed',side))).flat();
+ const quiet=Array.from({length:chapterCount(e)},(_,chapter)=>['left','right'].map(side=>sectionFor({...e,choices:Array(5).fill(side)},chapter*perChapter(e),'relaxed',side))).flat().filter(Boolean);
  const foot=(x,z)=>{for(const s of quiet){if(!s.scenicRise)continue;const p=courseCoordinates(s,{x,z});if(p.s>=0&&p.s<=s.length&&Math.abs(p.lateral)<composedHalfWidth(z)+.1)return scenicSurface(s,p.s,p.lateral)+.035;}return .018;};
  for(const name of ['leaf','leafLight','fern'])windMaterial(materials[name],uniforms);
  const ground=groundMaterial('#ffffff',environmentPalette(area).colors.soil);ground.vertexColors=true;ground.userData.ground.uComposition.value=area===0&&e.adventureVersion===2?1:0;ground.userData.ground.uCanopyShade.value=area===0?.17:area===1?.045:.09;

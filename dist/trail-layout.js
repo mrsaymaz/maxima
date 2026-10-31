@@ -3,9 +3,11 @@ import{routeHalfWidth}from'./expedition-composition.js';
 import{CHAPTER_SPAN,stretchZ}from'./runner-mode.js';import{gateCount,perChapter,chapterCount,chapterOf,shortPath}from'./path-shape.js';
 // Classic lengths; runner mode stretches every gap between gates (see runner-mode.js).
 export const CHAPTER_LENGTH=CHAPTER_SPAN,TRAIL_WIDTH=3.2,END={x:0,z:stretchZ(-666)},START={x:0,z:6};
-// A six-gate area ends where its third chapter's trail meets the centre again; the arena gate stands there.
-export const SHORT_END={x:0,z:stretchZ(-394)};
-export const endPoint=e=>shortPath(e)?SHORT_END:END;
+// A six-gate area's final chase runs straight on along its third chapter's trail, from the last gate to the next
+// bend (the arena is its own stage, so its entrance need not be on the centre line). Following the trail keeps the
+// chase track clear of the meadow plants and props inside the bend.
+export const shortEnd=side=>chapterPath(2,side||'left')[4];
+export const endPoint=e=>shortPath(e)?shortEnd(e.choices?.[2]):END;
 export const CHAPTERS=[['The silent spring','Fern Hollow','Willow Bend'],['The broken crossing','Root Passage','River Ledge'],['The missing signal','Lantern Rise','Mossy Steps'],['The hidden supplies','Bramble Hollow','Stone Gallery'],['The wind sanctuary','Echo Approach','Crystal Turn']];
 export function chapterPath(chapter,side){const z=-chapter*132,s=side==='left'?-1:1;return[{x:0,z:z+2},{x:s*6,z:z-9},{x:s*10,z:z-28},{x:s*11,z:z-58},{x:s*10,z:z-88},{x:s*6,z:z-118},{x:0,z:z-130}].map(p=>({x:p.x,z:stretchZ(p.z)}));}
 export function nodesFor(e,chapter,side){const copy={...e,choices:e.choices.slice()};copy.choices[chapter]=side;const order=orderFor(copy,chapter),path=chapterPath(chapter,side);const per=perChapter(e);return order.map((type,i)=>({...activity(type),...path[i+2],id:`task-${chapter*per+i}-${side}`,index:chapter*per+i,slot:i,chapter,side,type}));}

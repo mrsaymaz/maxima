@@ -22,8 +22,8 @@ class Kit{
  // A flat ring that expands across the ground.
  shock(color,{at,dur=.7,from=.5,to=12,y=.06,opacity=.9,p=this.to}){const m=this.glow(color,0,{additive:true}),o=this.mesh(new T.RingGeometry(.86,1,64),m);o.rotation.x=-Math.PI/2;o.position.set(p.x,y,p.z);o.visible=false;return{update:t=>{const k=span(t,at,at+dur);o.visible=t>=at&&k<1;const r=from+(to-from)*out(k);o.scale.set(r,r,1);m.opacity=opacity*(1-k);}};}
  // A light flash plus a white sphere bloom at a point.
- flash(color,{at,dur=.45,power=60,size=4,p=null}){const light=new T.PointLight(color,0,40,1.6),pos=p||new T.Vector3(this.to.x,CORE_Y,this.to.z);light.position.copy(pos);this.group.add(light);this.owned.push({dispose:()=>light.dispose?.()});const m=this.glow(color,0,{additive:true}),ball=this.mesh(new T.SphereGeometry(1,20,12),m);ball.position.copy(pos);
-  return{update:t=>{const k=span(t,at,at+dur);const on=t>=at&&k<1;light.intensity=on?power*(1-k)**2:0;ball.visible=on;ball.scale.setScalar(size*(.3+.7*out(k)));m.opacity=on?.45*(1-k)**2:0;}};}
+ flash(color,{at,dur=.45,power=60,size=4,p=null}){const fx=this.fx,pos=p||new T.Vector3(this.to.x,CORE_Y,this.to.z),tint=new T.Color(color);const m=this.glow(color,0,{additive:true}),ball=this.mesh(new T.SphereGeometry(1,20,12),m);ball.position.copy(pos);
+  return{update:t=>{const k=span(t,at,at+dur);const on=t>=at&&k<1,level=on?power*(1-k)**2:0;if(fx.light&&level>fx.light.intensity){fx.light.intensity=level;fx.light.color.copy(tint);fx.light.position.copy(pos);}ball.visible=on;ball.scale.setScalar(size*(.3+.7*out(k)));m.opacity=on?.45*(1-k)**2:0;}};}
  // Instanced particles: spawn(i) returns {p:Vector3,v:Vector3,life,size,delay}; gravity pulls down, drag slows.
  particles(color,count,spawn,{geometry=new T.OctahedronGeometry(.12,0),gravity=-6,drag=.4,spin=4,opacity=1}={}){const n=Math.max(4,Math.round(count*this.q)),m=this.glow(color,opacity),mesh=new T.InstancedMesh(this.own(geometry),m,n);mesh.frustumCulled=false;this.group.add(mesh);const ps=Array.from({length:n},(_,i)=>({...spawn(i,n),age:0,rot:Math.random()*6}));const o=new T.Object3D();
   const sys={update:(t,dt)=>{for(let i=0;i<n;i++){const p=ps[i],live=t-(p.delay||0);if(live<0||live>p.life){o.position.set(0,-99,0);o.scale.setScalar(0);}else if(p.orbit){p.a+=p.w*dt;p.y+=p.rise*dt;p.r+=p.out*dt;p.p.set(p.orbit.x+Math.sin(p.a)*p.r,p.y,p.orbit.z+Math.cos(p.a)*p.r);p.rot+=spin*dt;const k=live/p.life;o.position.copy(p.p);o.rotation.set(p.rot,p.rot*.7,0);o.scale.setScalar(p.size*(1-k*k));}else{p.v.y+=gravity*dt;p.v.multiplyScalar(Math.exp(-drag*dt));p.p.addScaledVector(p.v,dt);p.rot+=spin*dt;const k=live/p.life;o.position.copy(p.p);o.rotation.set(p.rot,p.rot*.7,0);o.scale.setScalar(p.size*(1-k*k));}o.updateMatrix();mesh.setMatrixAt(i,o.matrix);}mesh.instanceMatrix.needsUpdate=true;}};return sys;}
@@ -145,9 +145,11 @@ function ancientGrove(k){const c=k.colors,parts=[],bark=k.solid('#6b4424','#1c3a
 const BUILD={'fire-pillars':firePillars,'flame-prison':flamePrison,'meteor-storm':meteorStorm,'ice-spears':iceSpears,'frost-lock':frostLock,'tidal-wave':tidalWave,'thunderbolt':thunderbolt,'updraft':updraft,'tempest':tempest,'thorn-volley':thornVolley,'root-bind':rootBind,'ancient-grove':ancientGrove};
 export const SPECIAL_FX_IDS=Object.keys(BUILD);
 export class SpecialFX{
- constructor(parent){this.root=new T.Group();this.root.name='special-fx';parent.add(this.root);this.active=[];this.shake=0;this.lift=0;this.quality=1;}
+ // One light is kept for every flash (lights:false for small previews): adding and removing lights would make the
+ // renderer rebuild its shaders mid-effect, a visible hitch on phones.
+ constructor(parent,{lights=true}={}){this.root=new T.Group();this.root.name='special-fx';parent.add(this.root);this.active=[];this.shake=0;this.lift=0;this.quality=1;if(lights){this.light=new T.PointLight('#ffffff',0,40,1.6);this.root.add(this.light);}}
  play(spec,from,to,{effects='medium'}={}){this.quality=effects==='low'?.4:effects==='high'?1:.7;const k=new Kit(this,spec,new T.Vector3(from.x,from.y||0,from.z),new T.Vector3(to.x,0,to.z)),fx=BUILD[spec.id](k);this.active.push({k,fx,t:0,dur:spec.duration+.2});return k.group;}
- update(dt){this.shake=0;this.lift=0;for(const a of this.active){a.t+=dt;a.fx.update(a.t,dt);}this.active=this.active.filter(a=>{if(a.t<a.dur)return true;a.k.dispose();return false;});}
+ update(dt){this.shake=0;this.lift=0;if(this.light)this.light.intensity=0;for(const a of this.active){a.t+=dt;a.fx.update(a.t,dt);}this.active=this.active.filter(a=>{if(a.t<a.dur)return true;a.k.dispose();return false;});}
  get playing(){return this.active.length>0;}
- dispose(){for(const a of this.active)a.k.dispose();this.active=[];this.root.removeFromParent();}
+ dispose(){for(const a of this.active)a.k.dispose();this.active=[];this.light?.dispose?.();this.root.removeFromParent();}
 }

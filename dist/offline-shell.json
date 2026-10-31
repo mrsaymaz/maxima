@@ -1,5 +1,5 @@
 {
- "hash": "caf4bedf9358",
+ "hash": "03986ddd95d1",
  "files": [
   "./",
   "index.html",
@@ -130,6 +130,7 @@
   "scene.js",
   "scenery-art.js",
   "scenery-plan.js",
+  "shrine-stage.js",
   "solids.js",
   "special-fx.js",
   "special-icons.js",
