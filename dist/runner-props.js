@@ -4,6 +4,7 @@ import{ARENA_LOOKS}from'./arena-palette.js';
 import{buildGuardianFigure}from'./guardian-figure.js';
 import{localPoint}from'./traversal-layout.js';
 import{LANES,laneSpan,hurdleHeight}from'./runner-course.js';
+import{wallTile,makeFarLayer,updateFarLayer,makeDust,updateDust}from'./runner-walls.js';
 
 // What a runner section looks like. Three coloured lanes with neon edges and pulsing neon arches make the track
 // read as a track; every obstacle has an arena look (logs, mushrooms, vines, lanterns, crystal lasers, swamps…)
@@ -139,34 +140,6 @@ function compact(group){
 const TILE=24;
 // Side walls carry bold repeating patterns and lights, and a backdrop row (trees, mesas, crystal spires) stands
 // behind them: all of it slides with the track, so speed reads from every side, not only from the lanes.
-const wallTextures=new Map();
-function wallTexture(area){
- if(wallTextures.has(area))return wallTextures.get(area);const canvas=typeof document!=='undefined'?document.createElement('canvas'):null;let texture;
- if(canvas){canvas.width=128;canvas.height=128;const g=canvas.getContext('2d');
-  if(area===0){g.fillStyle='#2f7d2c';g.fillRect(0,0,128,128);g.fillStyle='#4fae3a';g.fillRect(0,0,64,128);for(let i=0;i<14;i++){g.fillStyle=i%3?'#7fd04e':'#1f5a22';g.beginPath();g.arc((i*37)%128,(i*53)%128,9+(i%3)*4,0,Math.PI*2);g.fill();}
-   for(let i=0;i<4;i++){g.fillStyle=['#ff6fa8','#ffe14d','#ffffff','#ff9a3c'][i];g.beginPath();g.arc(20+i*30,30+(i%2)*60,6,0,Math.PI*2);g.fill();}}
-  else if(area===1){g.fillStyle='#e8c38a';g.fillRect(0,0,128,128);g.fillStyle='#d58a4e';g.fillRect(0,40,128,14);g.fillRect(0,96,128,8);g.fillStyle='#c4733d';g.fillRect(0,0,6,128);g.fillRect(64,0,6,128);
-   g.fillStyle='#36c9d6';for(const x of[18,82])g.fillRect(x,64,26,22);g.fillStyle='#fff3c9';for(const x of[26,90])g.fillRect(x,70,10,10);}
-  else{g.fillStyle='#2b2266';g.fillRect(0,0,128,128);g.strokeStyle='#5ff3ff';g.lineWidth=5;g.beginPath();g.moveTo(0,100);g.lineTo(40,60);g.lineTo(64,80);g.lineTo(128,20);g.stroke();g.strokeStyle='#c47dff';g.lineWidth=4;g.beginPath();g.moveTo(0,30);g.lineTo(50,10);g.lineTo(90,50);g.lineTo(128,40);g.stroke();
-   g.fillStyle='#3d3290';g.fillRect(0,0,128,6);g.fillRect(62,0,4,128);}
-  texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(TILE/2.2,1.8);}
- else texture=new T.Texture();
- wallTextures.set(area,texture);return texture;
-}
-function wallMaterial(area){const key='wall'+area;if(materials.has(key))return materials.get(key);const m=new T.MeshStandardMaterial({map:wallTexture(area),roughness:.85,emissive:area===2?'#3a2f8a':'#000000',emissiveIntensity:area===2?.4:0});m.userData.surface=area===2?'glass':area===0?'foliage':'stone';m.name='runner-wall-'+area;materials.set(key,m);return m;}
-const WALLS={
- 0(tile,kit,low){const g=new T.Group(),wall=wallMaterial(0);for(const side of[-1,1]){g.add(mesh(geo('wall0',()=>new T.BoxGeometry(.7,3.4,TILE)),wall,side*3.15,1.7,TILE/2));
-   for(let z=1;z<TILE;z+=2.4)g.add(mesh(geo('hedgetop',()=>new T.IcosahedronGeometry(.6,0)),mat(kit.leafLight||kit.leaf,{flat:true}),side*3.15,3.4,z));
-   for(let z=3;z<TILE;z+=6)g.add(mesh(geo('flowerlamp',()=>new T.SphereGeometry(.2,10,8)),mat('#ffe066',{emissive:'#ffb800',glow:1.2,rough:.3}),side*2.78,1.6,z));
-   if(!low)for(let z=2;z<TILE;z+=4.8){const big=(z/4.8|0)%2;g.add(mesh(geo('btrunk',()=>new T.CylinderGeometry(.22,.32,4.5,7).translate(0,2.25,0)),mat(kit.bark),side*(5.2+big*1.6),0,z));g.add(mesh(geo('bcrown'+big,()=>new T.IcosahedronGeometry(1.7+big*.5,0)),mat(big?kit.leaf:(kit.leafLight||kit.leaf),{flat:true}),side*(5.2+big*1.6),4.8+big*.6,z));}}return g;},
- 1(tile,kit,low){const g=new T.Group(),wall=wallMaterial(1);for(const side of[-1,1]){g.add(mesh(geo('wall1',()=>new T.BoxGeometry(.8,3.6,TILE)),wall,side*3.2,1.8,TILE/2));
-   for(let z=0;z<TILE;z+=6){g.add(mesh(geo('sandpillar',()=>new T.CylinderGeometry(.42,.5,4.2,8).translate(0,2.1,0)),mat('#f1dcae',{flat:true}),side*3.25,0,z));g.add(mesh(geo('sconce',()=>new T.SphereGeometry(.18,10,8)),mat('#ff9a3c',{emissive:'#ff6a00',glow:1.3}),side*2.85,2.6,z+3));}
-   if(!low)for(let z=1;z<TILE;z+=6){const h=5+((z*7)%3)*1.6;g.add(mesh(geo('mesa'+h,()=>new T.CylinderGeometry(1.3,1.8,h,6).translate(0,h/2,0)),mat(z%12<6?'#d98b4e':'#e9b779',{flat:true}),side*(6+((z*3)%2)*1.8),0,z));}}return g;},
- 2(tile,kit,low){const g=new T.Group(),wall=wallMaterial(2);for(const side of[-1,1]){g.add(mesh(geo('wall2',()=>new T.BoxGeometry(.7,3.2,TILE)),wall,side*3.15,1.6,TILE/2));
-   g.add(mesh(geo('cseam',()=>new T.BoxGeometry(.74,.08,TILE)),mat('#5ff3ff',{basic:true}),side*3.15,3.22,TILE/2));
-   for(let z=1.5;z<TILE;z+=3)g.add(mesh(geo('cspike',()=>new T.ConeGeometry(.28,1.1,5).translate(0,.55,0)),mat(z%2?'#9f7bff':'#62f5ff',{emissive:z%2?'#7a4dff':'#22c8ff',glow:.7,flat:true}),side*3.15,3.2,z));
-   if(!low)for(let z=2;z<TILE;z+=4){const h=4+((z*5)%4)*1.3;g.add(mesh(geo('spire'+h,()=>new T.ConeGeometry(.9,h,5).translate(0,h/2,0)),mat(z%8<4?'#5b44c9':'#2fb8d8',{emissive:z%8<4?'#3a1f9a':'#0f7f9f',glow:.5,flat:true}),side*(5.4+((z*3)%2)*1.5),0,z));}}return g;},
-};
 // Trial moments (see runner-course RUN_MOMENTS). `data` gives animations the live run (clock, trial state).
 const MOMENTS={
  boulders(o,kit,anim,data){
@@ -256,7 +229,7 @@ function powerTexture(kind){
 }
 const wallCache=new Map();
 // Low graphics keeps the patterned walls and lights but drops the backdrop row, half the arches and most bubbles.
-function wallsFor(area,kit,low){const key=area+(low?':low':'');if(!wallCache.has(key))wallCache.set(key,compact((WALLS[area]||WALLS[0])(0,kit,low)));return wallCache.get(key);}
+function wallsFor(area,kit,low){const key=area+(low?':low':'');if(!wallCache.has(key))wallCache.set(key,compact(wallTile(area,{kit,low,mat,geo,mesh})));return wallCache.get(key);}
 let lowDetail=false;
 export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
  lowDetail=low;
@@ -265,17 +238,20 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
  const at=(object,s,lateral,y=0)=>{object.position.set(-lateral,y,s);root.add(object);return object;};
  const laneMats=LANE_COLORS.map(color=>{const map=laneTexture(color).clone();map.needsUpdate=true;map.repeat.set(1,TILE/2.4);return Object.assign(new T.MeshBasicMaterial({map,color:'#ffffff',transparent:true,opacity:.62,depthWrite:false,toneMapped:false}),{userData:{surface:'effect'}});});
  const floor=mat(area===2?'#2a2357':area===1?'#cfae78':'#5c7a3a');
- const tiles=[],arches=[];
+ const tiles=[],arches=[];const chase=[0,1].map(()=>Object.assign(new T.MeshBasicMaterial({color:neon,transparent:true,opacity:.9,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}),{userData:{surface:'effect'}}));const chaseDot=geo('chasedot',()=>new T.CircleGeometry(.09,10).rotateX(-Math.PI/2));
  for(let z=-TILE,i=0;z<run.length+2;z+=TILE,i++){
   const tile=new T.Group();
   tile.add(mesh(geo('floor',()=>new T.PlaneGeometry(5.9,TILE).rotateX(-Math.PI/2).translate(0,0,TILE/2)),floor,0,.06,0));
   LANES.forEach((x,k)=>{const lane=mesh(geo('lane',()=>new T.PlaneGeometry(1.32,TILE).rotateX(-Math.PI/2).translate(0,0,TILE/2)),laneMats[k],-x,.075,0);lane.renderOrder=1;tile.add(lane);});
   for(const x of[LANES[0]-.73,(LANES[0]+LANES[1])/2,(LANES[1]+LANES[2])/2,LANES[2]+.73]){const edge=mesh(geo('edge',()=>new T.PlaneGeometry(.07,TILE).rotateX(-Math.PI/2).translate(0,0,TILE/2)),mat(neon,{basic:true,additive:true,opacity:.9}),-x,.085,0);edge.renderOrder=2;tile.add(edge);}
+  for(const x of[LANES[0]-.73,LANES[2]+.73])for(let z=0;z<TILE;z+=1.5){const dot=mesh(chaseDot,chase[(z/1.5|0)%2],-x,.09,z);dot.renderOrder=2;tile.add(dot);}
   tile.add(wallsFor(area,kit,low).clone());
   if(!low||i%2===0){const arch=mesh(geo('arch',()=>new T.TorusGeometry(2.75,.07,6,40,Math.PI)),mat(i%2?LANE_COLORS[(i>>1)%3]:neon,{basic:true,additive:true,opacity:.85}).clone(),0,0,TILE/2);tile.add(arch);arches.push({arch,i});}
   at(tile,z,0);tiles.push({object:tile,from:z,to:z+TILE});
  }
  anim.push(t=>{for(const{arch,i}of arches)if(arch.parent.visible)arch.material.opacity=.35+.6*Math.max(0,Math.sin(t*5-i*.9));});
+ // The edge lights swap faster as the run speeds up, so the lane edges seem to stream toward the creature.
+ anim.push(t=>{const r=data.runner,speed=data.live&&r?r.speed:3,phase=Math.sin((data.chaseClock=(data.chaseClock||0)+(t-(data.chaseT??t))*speed*1.2))>0;data.chaseT=t;chase[0].opacity=phase?.95:.25;chase[1].opacity=phase?.25:.95;});
  const hurdle=hurdleHeight(creatureHeight)/.5,data={section,pools:[],runner:null,live:false};
  for(const o of run.obstacles){
   const span=laneSpan(o.lanes),width=+(span.max-span.min-.1).toFixed(2),center=(span.max+span.min)/2,moving=anim.length;let g;
@@ -287,8 +263,11 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
   if(anim.length===moving&&o.type!=='barrier')g=compact(g);g.name=o.id;at(g,o.s,center,o.type==='hole'||o.type==='swamp'?.09:0);items.push({object:g,from:o.s-o.depth,to:o.s+o.depth,id:o.id,style:o.style});
  }
  // Coins: one instanced mesh for the whole run; collected and out-of-view coins are scaled away.
- const coins=new T.InstancedMesh(geo('runcoin',()=>new T.CylinderGeometry(.22,.22,.05,18).rotateZ(Math.PI/2)),mat('#ffcc3a',{emissive:'#c98a00',glow:.55,rough:.3}),Math.max(1,run.coins.length));
- const rims=new T.InstancedMesh(geo('runcoinrim',()=>new T.TorusGeometry(.22,.035,6,20).rotateY(Math.PI/2)),mat('#b8730f',{rough:.4}),Math.max(1,run.coins.length));
+ // A minted coin: raised rim on both faces, warm metallic gold; a star glint flashes as its face turns to the camera.
+ const coinMat=materials.get('coin-gold')||(()=>{const m=new T.MeshStandardMaterial({color:'#ffd24a',emissive:'#c88400',emissiveIntensity:.55,metalness:.45,roughness:.26});m.userData.surface='stone';m.name='runner-coin';materials.set('coin-gold',m);return m;})();
+ const coins=new T.InstancedMesh(geo('runcoin2',()=>new T.LatheGeometry([[0,.022],[.165,.022],[.19,.036],[.222,.03],[.228,0],[.222,-.03],[.19,-.036],[.165,-.022],[0,-.022]].map(([x,y])=>new T.Vector2(x,y)),22).rotateZ(Math.PI/2)),coinMat,Math.max(1,run.coins.length));
+ const glints=new T.InstancedMesh(geo('coinglint',()=>{const sh=new T.Shape();for(let k=0;k<8;k++){const a=k*Math.PI/4,r=k%2?.045:.2;sh[k?'lineTo':'moveTo'](Math.sin(a)*r,Math.cos(a)*r);}return new T.ShapeGeometry(sh).rotateY(Math.PI);}),mat('#fffbe6',{basic:true,additive:true,opacity:.95}),Math.max(1,run.coins.length));glints.frustumCulled=false;glints.renderOrder=3;root.add(glints);
+ const rims=new T.InstancedMesh(geo('runcoinrim',()=>new T.TorusGeometry(.22,.035,6,20).rotateY(Math.PI/2)),mat('#e8a21e',{emissive:'#a86a00',glow:.35,rough:.35}),Math.max(1,run.coins.length));
  coins.name='runner-coins';coins.frustumCulled=rims.frustumCulled=false;root.add(coins,rims);
  const tokens=[];
  for(const t of run.word?.tokens||[]){const sprite=new T.Sprite(new T.SpriteMaterial({map:letterTexture(t.letter,run.word.language),transparent:true,depthWrite:false}));sprite.scale.set(.9,.9,1);sprite.name=t.id;sprite.raycast=()=>{};/* decoration: never picked */at(sprite,t.s,LANES[t.lane],1);tokens.push({object:sprite,from:t.s,to:t.s,id:t.id});}
@@ -298,7 +277,9 @@ export function makeRunnerScenery(section,{creatureHeight=.65,low=false}={}){
  if(run.chest){const arch=chestArch();at(arch,run.chest.s,0,0);root.add(arch);data.chestPart={id:run.chest.id,from:run.chest.s,to:run.chest.s,object:arch};}
  if(data.guardianParts){const gp=data.guardianParts;root.add(gp.fig.boss,gp.band,...gp.warn,...gp.lobs,...gp.streaks,...gp.waves);for(const m of[gp.band,...gp.lobs,...gp.streaks,...gp.waves])m.visible=false;}
  // userData is the very object the animations close over, so they see the live run each frame.
- Object.assign(data,{tiles,items,tokens,coins,rims,powers,runnerAnim:anim});root.userData=data;return root;
+ // A far layer of big silhouettes (parallax) and dust puffs from the creature's feet.
+ const far=makeFarLayer(area,{mat,geo,mesh,low});root.add(far);const dust=low?null:makeDust(area);if(dust)root.add(dust);
+ Object.assign(data,{tiles,items,tokens,coins,rims,glints,powers,runnerAnim:anim,far,dust});root.userData=data;return root;
 }
 // The reward chest on the track: a golden arch across all three lanes with the chest glowing on top.
 // Running under it opens the chest (runner-control.js), so the run never stops for it.
@@ -330,7 +311,7 @@ function updateGuardianParts(gp,runner,time){
  for(let i=l;i<gp.lobs.length;i++)gp.lobs[i].visible=false;for(let i=r;i<gp.streaks.length;i++)gp.streaks[i].visible=false;
  gp.waves.forEach((m,i)=>{const w=st?.waves[i];m.visible=!!w;if(w){m.position.set(0,.18,w.s);m.children.forEach((c,lane)=>{c.visible=w.gap!==lane;});}});
 }
-export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={}){
+export function updateRunnerScenery(root,{time=0,runner=null,collected=null,grounded=true}={}){
  const data=root?.userData,section=data?.section,run=section?.run;if(!run)return;
  const live=runner?.running&&runner.section?.id===section.id,s=live?runner.s:run.length,origin=live?runner.origin():run.from-(run.length-run.real);
  const p=localPoint(section,origin,0);root.position.set(p.x,0,p.z);root.rotation.y=Math.atan2(section.forward.x,section.forward.z);
@@ -347,7 +328,12 @@ export function updateRunnerScenery(root,{time=0,runner=null,collected=null}={})
  for(const item of data.items){item.object.visible=show(item);if(!item.object.visible)continue;item.base??=item.object.position.y;if(knocked?.has(item.id)&&item.style==='stream'){if(!item.settled){item.settled=true;item.object.traverse(m=>{if(m.material){m.material=m.material.clone();m.material.color?.set('#9a8a66');if(m.material.emissive)m.material.emissiveIntensity=0;}});}}
   else if(knocked?.has(item.id)&&!item.moment&&item.style!=='stream'){item.object.rotation.x=Math.min(1.45,item.object.rotation.x+.12);item.sink=Math.max(-.8,(item.sink||0)-.015);}item.object.position.y=item.base+(item.sink||0)+rise(item.from)*2.5;}
  for(const token of data.tokens){token.object.visible=show(token)&&!taken?.has(token.id);if(token.object.visible)token.object.position.y=1+Math.sin(time*3+token.from)*.07;}
- run.coins.forEach((c,i)=>{const visible=c.s>=behind&&c.s<=ahead&&!taken?.has(c.id)&&!collected?.has?.(c.id);dummy.position.set(-c.lateral,c.y,c.s);dummy.rotation.set(0,time*3+i*.4,0);dummy.scale.setScalar(visible?1:0);dummy.updateMatrix();data.coins.setMatrixAt(i,dummy.matrix);data.rims.setMatrixAt(i,dummy.matrix);});
+ run.coins.forEach((c,i)=>{const visible=c.s>=behind&&c.s<=ahead&&!taken?.has(c.id)&&!collected?.has?.(c.id);dummy.position.set(-c.lateral,c.y,c.s);dummy.rotation.set(0,time*3+i*.4,0);dummy.scale.setScalar(visible?1:0);dummy.updateMatrix();data.coins.setMatrixAt(i,dummy.matrix);data.rims.setMatrixAt(i,dummy.matrix);
+  // The glint: brightest when the coin's face turns to the camera, with a small twinkle of its own.
+  const face=Math.abs(Math.sin(time*3+i*.4)),flash=visible?face**18*(1+.3*Math.sin(time*11+i)):0;dummy.rotation.set(0,0,time*2+i);dummy.position.z-=.06;dummy.position.y+=.05;dummy.scale.setScalar(Math.max(.0001,flash*1.05));dummy.updateMatrix();if(data.glints)data.glints.setMatrixAt(i,dummy.matrix);});
+ if(data.glints)data.glints.instanceMatrix.needsUpdate=true;
  data.coins.instanceMatrix.needsUpdate=data.rims.instanceMatrix.needsUpdate=true;
+ if(data.far)updateFarLayer(data.far,live?runner.s:run.length);
+ if(data.dust){const dt=Math.min(.1,Math.max(0,time-(data.dustT??time)));data.dustT=time;updateDust(data.dust,{s:live?runner.s:-99,lat:live?runner.lat:0,speed:live?runner.speed:0,grounded:live&&grounded,dt});}
  for(const step of data.runnerAnim)step(time);
 }

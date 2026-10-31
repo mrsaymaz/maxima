@@ -251,3 +251,60 @@ body.playing:not(.in-task) .play-status .status-goal{grid-column:2}
 @media(max-width:759px) and (min-height:760px) and (orientation:portrait){
  body.opening .launch-shell{inset-block-start:calc(clamp(64px,100dvh - 590px,34vh) + var(--safe-top,0px))}
 }
+
+/* ===== 0.60 polish ===== */
+/* Top badge: the hearts sit beside the Form in the first row, so the goal line under it gets the full width. */
+body.playing:not(.in-task) .play-status{grid-template-columns:auto minmax(0,auto) auto auto!important;max-width:calc(100% - 150px - var(--safe-left,0px) - var(--safe-right,0px))}
+body.playing:not(.in-task) .play-status .status-text{grid-column:2;grid-row:1}
+body.playing:not(.in-task) .play-status .status-lives{grid-column:3;grid-row:1;justify-self:start;align-self:center}
+body.playing:not(.in-task) .play-status>b.status-coins{grid-column:4;grid-row:1}
+body.playing:not(.in-task) .play-status .rush-chip{grid-column:4;grid-row:1}
+body.playing:not(.in-task) .play-status .status-goal{grid-column:2/5!important;grid-row:2}
+body.playing:not(.in-task) .play-status .status-goal small{overflow:visible;text-overflow:clip}
+.status-lives .heart{width:14px;height:14px}
+
+/* One game font: titles in the game's display face (the logo wordmark keeps its own style). */
+body .modal:not(.lesson-browser) h2,body .controls-tutorial h2,body .trail-result h2,body .milestone-toast>strong,body .camp-head strong,
+body .onboard-title h1,body .wardrobe h3,body .trail-shop h3,body .run-stats b,body .evolve-ready,body .evo-finish h1,body .evo-caption,
+body .shrine-head b,body .guardian-status h2,body .battle-result h3,body .task-complete h3{font-family:MaximaDisplay,system-ui,sans-serif!important;font-weight:400!important;letter-spacing:.4px}
+body .modal:not(.lesson-browser) h2{color:#ffeec4;text-shadow:0 2px 0 #0b241f}
+body .mechanism-hud strong{font-family:MaximaRound,system-ui,sans-serif!important;font-weight:900!important}
+body .modal:not(.lesson-browser){border:2px solid #e9c97a8c;box-shadow:0 18px 50px #00000080,inset 0 1px 0 #ffffff26}
+body .modal:not(.lesson-browser) p,body .modal:not(.lesson-browser) .journal-card,body .ulti-banner,body .shrine-tag{font-family:MaximaRound,system-ui,sans-serif}
+
+/* Arena names fit on the smallest phones. */
+@media (max-width:380px){body .launch-arena .arena-caption strong{font-size:clamp(9px,3.1vw,12px);letter-spacing:-.2px;white-space:nowrap}body .launch-arena .arena-caption small{font-size:8px}}
+.status-lives .lives-count{display:none}
+/* Narrow phones: a compact heart-and-count chip on the goal line keeps "Form n" and the coins readable. */
+@media (max-width:399px){
+ body.playing:not(.in-task) .play-status{grid-template-columns:auto minmax(0,1fr) auto!important}
+ body.playing:not(.in-task) .play-status>b.status-coins,body.playing:not(.in-task) .play-status .rush-chip{grid-column:3}
+ body.playing:not(.in-task) .play-status .status-goal{grid-column:2!important}
+ body.playing:not(.in-task) .play-status .status-lives{grid-column:3;grid-row:2;justify-self:end;gap:1px;align-items:center;font:900 11px/1 system-ui,sans-serif;color:#ffd0d6}
+ body.playing:not(.in-task) .play-status .status-lives .heart:not(:first-child){display:none}
+ body.playing:not(.in-task) .play-status .status-lives .lives-count{display:inline}
+}
+
+/* Lives: a red flash and a heart cracking in two when one is lost; a heart flying to the badge when one is won. */
+.life-flash{position:fixed;inset:0;z-index:25;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,#ff1f3dcc 100%);animation:life-flash .65s ease-out forwards}
+@keyframes life-flash{from{opacity:1}to{opacity:0}}
+.heart-crack{position:fixed;left:50%;top:32%;z-index:26;pointer-events:none;width:72px;height:72px;transform:translate(-50%,-50%)}
+.heart-crack .half{position:absolute;inset:0}.heart-crack .heart{width:72px;height:72px;fill:#ff4d64;stroke:#ffe1e5;stroke-width:1.2;filter:drop-shadow(0 4px 10px #0007)}
+.heart-crack .half.l{clip-path:polygon(0 0,52% 0,44% 35%,56% 55%,46% 100%,0 100%);animation:crack-l .95s cubic-bezier(.3,.1,.6,1) forwards}
+.heart-crack .half.r{clip-path:polygon(52% 0,100% 0,100% 100%,46% 100%,56% 55%,44% 35%);animation:crack-r .95s cubic-bezier(.3,.1,.6,1) forwards}
+@keyframes crack-l{0%{transform:scale(.6);opacity:0}20%{transform:scale(1.1);opacity:1}45%{transform:none}100%{transform:translate(-26px,40px) rotate(-28deg);opacity:0}}
+@keyframes crack-r{0%{transform:scale(.6);opacity:0}20%{transform:scale(1.1);opacity:1}45%{transform:none}100%{transform:translate(26px,44px) rotate(30deg);opacity:0}}
+.heart-fly{position:fixed;z-index:26;pointer-events:none;width:44px;height:44px;margin:-22px 0 0 -22px;animation:heart-fly 1.15s cubic-bezier(.5,0,.3,1) forwards}
+.heart-fly .heart{width:44px;height:44px;fill:#ff5a6e;stroke:#ffe1e5;stroke-width:1.2;filter:drop-shadow(0 0 10px #ff8a9a)}
+@keyframes heart-fly{0%{transform:scale(.3);opacity:0}18%{transform:scale(1.35);opacity:1}35%{transform:scale(1)}100%{transform:translate(var(--dx,0),var(--dy,-200px)) scale(.35);opacity:.9}}
+/* The chest: golden rays and a flare at the chest as it opens. */
+.chest-burst{position:fixed;z-index:24;pointer-events:none;width:0;height:0}
+.chest-burst i{position:absolute;left:-130px;top:-130px;width:260px;height:260px;border-radius:50%;background:repeating-conic-gradient(from 0deg,#ffe9a0cc 0 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 70%);mask:radial-gradient(circle,#000 18%,transparent 70%);animation:chest-rays 1.35s ease-out forwards}
+.chest-burst b{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#fffbe6 0,#ffd75acc 35%,transparent 70%);animation:chest-flare 1s ease-out forwards}
+@keyframes chest-rays{0%{transform:scale(.2) rotate(0);opacity:0}20%{opacity:1}100%{transform:scale(1.25) rotate(50deg);opacity:0}}
+@keyframes chest-flare{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
+/* Ulti crystals shimmer gently wherever they stand. */
+.launch-ulti .ulti-icon,.league-row .ulti-icon,.shrine-ulti .ulti-icon,.league-title .ulti-icon{animation:ulti-shimmer 3.2s ease-in-out infinite}
+.launch-team:nth-child(2) .ulti-icon{animation-delay:.8s}.launch-team:nth-child(3) .ulti-icon{animation-delay:1.6s}.launch-team:nth-child(4) .ulti-icon{animation-delay:2.4s}
+@keyframes ulti-shimmer{0%,70%,100%{filter:drop-shadow(0 0 3px #5fe3ff88) brightness(1)}80%{filter:drop-shadow(0 0 8px #bff8ff) brightness(1.45)}}
+@media(prefers-reduced-motion:reduce){.life-flash,.heart-crack .half,.heart-fly,.chest-burst i,.chest-burst b{animation-duration:.01s}.ulti-icon{animation:none!important}}

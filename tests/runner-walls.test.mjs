@@ -1,0 +1,12 @@
+import{test}from'node:test';import assert from'node:assert/strict';import*as T from'../dist/vendor/three.module.min.js';
+import{wallTile,makeFarLayer,updateFarLayer,makeDust,updateDust,PARALLAX,FAR_SPAN,TILE}from'../dist/runner-walls.js';
+const geos=new Map(),mats=new Map(),geo=(k,m)=>{if(!geos.has(k))geos.set(k,m());return geos.get(k);},mat=c=>{if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c}));return mats.get(c);},mesh=(g,m,x=0,y=0,z=0)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);return o;};
+const tris=o=>{let n=0;o.traverse(m=>{if(m.isMesh){const g=m.geometry;n+=(g.index?g.index.count:g.attributes.position.count)/3;}});return n;};
+test('each area has its own sculpted walls on both sides, within a phone-friendly triangle budget, lighter still on Low',()=>{const looks=new Set();for(const area of[0,1,2]){const full=wallTile(area,{kit:{},low:false,mat,geo,mesh}),low=wallTile(area,{kit:{},low:true,mat,geo,mesh});
+ const xs=[];full.traverse(m=>{if(m.isMesh)xs.push(m.position.x);});assert.ok(xs.some(x=>x<-2.5)&&xs.some(x=>x>2.5),'both sides');assert.ok(tris(full)<4500,`area ${area}: ${tris(full)} triangles per ${TILE} m`);assert.ok(tris(low)<tris(full)*.85,`Low is lighter (${tris(low)} vs ${tris(full)})`);
+ const colours=new Set();full.traverse(m=>{if(m.isMesh)colours.add(m.material.color.getHexString());});looks.add([...colours].sort().join());}
+ assert.equal(looks.size,3,'three different looks');});
+test('the far layer drifts at a third of the track speed and wraps around the creature',()=>{const far=makeFarLayer(0,{mat,geo,mesh});const items=far.userData.items;updateFarLayer(far,100);const a=items.map(i=>i.piece.position.z-100);updateFarLayer(far,110);const b=items.map(i=>i.piece.position.z-110);
+ const moved=a.map((v,i)=>v-b[i]).filter(d=>Math.abs(d)<FAR_SPAN/2);assert.ok(moved.every(d=>Math.abs(d-10*PARALLAX)<1e-6),'relative drift = parallax × track');for(const v of b)assert.ok(v>=-18&&v<FAR_SPAN-18,'within the window');});
+test('dust puffs rise from the feet only when the creature runs on the ground, and fade',()=>{const d=makeDust(1);const live=()=>d.userData.puffs.filter(p=>p.p.visible).length;updateDust(d,{s:10,lat:0,speed:2,grounded:true,dt:.1});assert.equal(live(),0,'not when slow');updateDust(d,{s:10,lat:0,speed:9,grounded:false,dt:.1});assert.equal(live(),0,'not in the air');
+ for(let i=0;i<5;i++)updateDust(d,{s:10+i,lat:1.4,speed:9,grounded:true,dt:.08});assert.ok(live()>=3);for(let i=0;i<10;i++)updateDust(d,{s:20,lat:0,speed:0,grounded:false,dt:.1});assert.equal(live(),0,'faded');});
