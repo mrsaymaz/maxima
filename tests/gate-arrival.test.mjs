@@ -41,3 +41,8 @@ test('rival groups are one larger, take turns attacking and can be cleared by ca
   let most=0,t=0;for(;t<180&&nav.combat.remaining;t+=dt){const target=nav.combat.current;if(target){const heading=Math.atan2(target.x-nav.player.x,target.z-nav.player.z);nav.heading=heading;nav.requestRanged();}nav.step(dt);most=Math.max(most,nav.combat.attackers());}
   assert.equal(nav.combat.remaining,0,`cleared in ${t.toFixed(0)} s`);assert.ok(most<=limit,`at most ${limit} attacking at once (${most})`);}
 });
+
+test('a tapped rival is the one the cast aims at, even when another rival is nearer',()=>{
+ const index=indexWith(true,1),{nav,log}=journeyAt(index,{area:1});runToArrival(nav,log);const group=[...nav.combat.group].sort((a,b)=>dist(nav.player,a)-dist(nav.player,b)),near=group[0],far=group.at(-1);assert.notEqual(near,far);
+ assert.ok(nav.requestRanged(far));const heading=nav.combat.attack.heading,want=Math.atan2(far.x-nav.player.x,far.z-nav.player.z);assert.ok(Math.abs(Math.atan2(Math.sin(heading-want),Math.cos(heading-want)))<.05,'aimed at the tapped rival');
+});

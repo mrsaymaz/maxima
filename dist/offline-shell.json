@@ -1,5 +1,5 @@
 {
- "hash": "295a647e0b41",
+ "hash": "362a9faae81f",
  "files": [
   "./",
   "index.html",
@@ -32,6 +32,8 @@
   "contact-shade.js",
   "continuous-mechanism.js",
   "control-layout.js",
+  "controls-tutorial.js",
+  "controls.css",
   "core.js",
   "corridor-app.js",
   "corridor-geometry.js",
@@ -62,6 +64,7 @@
   "flow-transitions.js",
   "game-audio.js",
   "game-feel.js",
+  "gesture-controls.js",
   "guardian-attacks.js",
   "guardian-combat.js",
   "guardian-figure.js",

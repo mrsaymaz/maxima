@@ -7,8 +7,9 @@ test('answer feedback is shorter and smaller than major rewards at every quality
  for(const effects of['low','medium','full']){const step=feedbackStyle('step',effects,false),reward=feedbackStyle('reward',effects,false);assert.ok(step.count<reward.count);assert.ok(step.duration<reward.duration);assert.ok(step.spread<reward.spread);assert.equal(step.ring,false);assert.equal(feedbackStyle('step',effects,true).count,0);assert.equal(feedbackStyle('reward',effects,true).shake,0);}
  const q=new Juice();q.setLevel('low');q.hitstop(500);assert.ok(q.freeze<=.025);q.land(8);q.shake(20);for(let i=0;i<120;i++){q.step(1/60);assert.ok(Math.abs(q.squash)<=.025);assert.ok(Math.abs(q.offset.x)<.08);}assert.ok(Math.abs(q.squash)<.001);
 });
-test('both thumb groups and the context action are disjoint and stay inside supported phone/tablet safe rectangles',()=>{
- for(const[w,h]of[[320,568],[350,700],[390,844],[430,932],[644,360],[768,1024],[1024,768]]){const p=controlLayout(w,h),rects=['stick','jump','attack','context'].map(k=>({...p[k],name:k}));for(const r of rects){assert.ok(r.x>=p.edge&&r.x+r.size<=w-p.edge,`${w}: ${r.name} bounds`);assert.ok(r.size>=44);assert.ok(r.bottom>=10);}
+test('both thumb groups and the context action are disjoint and stay inside supported phone/tablet safe rectangles, with the joystick on either side',()=>{
+ assert.ok(controlLayout(390,844).stick.x>195,'the joystick sits on the right by default');assert.ok(controlLayout(390,844,{stickLeft:true}).stick.x<195,'left-handed puts it on the left');
+ for(const stickLeft of[false,true])for(const[w,h]of[[320,568],[350,700],[390,844],[430,932],[644,360],[768,1024],[1024,768]]){const p=controlLayout(w,h,{stickLeft}),rects=['stick','jump','attack','context'].map(k=>({...p[k],name:k}));for(const r of rects){assert.ok(r.x>=p.edge&&r.x+r.size<=w-p.edge,`${w}: ${r.name} bounds`);assert.ok(r.size>=44);assert.ok(r.bottom>=10);}
   for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){const a=rects[i],b=rects[j],x=Math.min(a.x+a.size,b.x+b.size)-Math.max(a.x,b.x),y=Math.min(a.bottom+a.size,b.bottom+b.size)-Math.max(a.bottom,b.bottom);assert.ok(x<=-12||y<=-12,`${w}: ${a.name}/${b.name} separation`);}}
 });
 test('quiet hints rest after reading time; active hazard guidance never times out or loses its text',()=>{

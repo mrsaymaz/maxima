@@ -1,0 +1,36 @@
+/* Gesture controls (gesture-controls.js): swipe up to jump and tap to cast anywhere, so the Jump and Cast
+   buttons are hidden unless a player turns them back on (body.show-buttons). The joystick side follows
+   control-layout.js: right by default, left with body.left-hand. */
+body:not(.show-buttons) .play-dock .jump-button,body:not(.show-buttons) .play-dock .attack-button{display:none!important}
+body.playing:not(.show-buttons) .guardian-keyboard{display:none}
+
+/* The one-time gesture hint and the controls tutorial. */
+.gesture-hint{position:fixed;left:50%;bottom:calc(var(--play-dock,104px) + 26px + var(--safe-bottom,0px));transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:14px;background:#0d2c27e8;border:1px solid #f2dfa680;color:#fff6dc;font:700 14px/1.25 system-ui,sans-serif;box-shadow:0 8px 24px #03151266;pointer-events:none;max-width:calc(100% - 32px);animation:gesture-hint-in .35s ease-out}
+.gesture-hint .hand{font-size:24px;animation:gesture-swipe 1.4s ease-in-out infinite}
+@keyframes gesture-hint-in{from{opacity:0;transform:translate(-50%,10px)}}
+@keyframes gesture-swipe{0%,100%{transform:translateY(4px)}50%{transform:translateY(-8px)}}
+.controls-tutorial{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 20px calc(24px + var(--safe-bottom,0px));background:#07201cd9;color:#fff6dc;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.controls-tutorial h2{font:700 24px/1.2 Georgia,serif;margin:0}
+.controls-tutorial p{margin:0;max-width:30ch;font:600 16px/1.35 system-ui,sans-serif;color:#e8efdf}
+.controls-tutorial .tutorial-step{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:#e9cf94}
+.controls-tutorial .tutorial-pad{position:relative;width:min(300px,80vw);height:190px;border:2px dashed #f2dfa680;border-radius:22px;display:grid;place-items:center;background:#0f342d}
+.controls-tutorial .tutorial-pad.done{border-color:#8ee4b3;background:#16463a}
+.controls-tutorial .tutorial-hand{font-size:44px;transition:transform .2s}
+.controls-tutorial .tutorial-hand.up{animation:tutorial-up 1.3s ease-in-out infinite}
+.controls-tutorial .tutorial-hand.side{animation:tutorial-side 1.6s ease-in-out infinite}
+.controls-tutorial .tutorial-hand.down{animation:tutorial-down 1.3s ease-in-out infinite}
+.controls-tutorial .tutorial-hand.tap{animation:tutorial-tap 1s ease-in-out infinite}
+.controls-tutorial .tutorial-stick{position:absolute;bottom:14px;width:70px;height:70px;border-radius:50%;border:2px solid #f2e9c7aa;background:#102e2890;display:grid;place-items:center}
+.controls-tutorial .tutorial-stick i{width:30px;height:30px;border-radius:50%;background:#efe3bccc;animation:tutorial-stick 1.8s ease-in-out infinite}
+.controls-tutorial .tutorial-stick.right{right:14px}.controls-tutorial .tutorial-stick.left{left:14px}
+.controls-tutorial .tutorial-actions{display:flex;gap:10px}
+.controls-tutorial .tutorial-actions button{min-height:44px;padding:10px 18px;border-radius:12px;border:1px solid #f2dfa6aa;background:#173d33;color:#fff6dc;font:700 15px system-ui,sans-serif}
+.controls-tutorial .tutorial-actions button.primary-action{background:linear-gradient(110deg,#f0d59b,#d5ad66);color:#25382e}
+.controls-tutorial .tutorial-dots{display:flex;gap:6px}.controls-tutorial .tutorial-dots i{width:9px;height:9px;border-radius:50%;background:#f2dfa640}.controls-tutorial .tutorial-dots i.on{background:#e9cf94}
+@keyframes tutorial-up{0%,100%{transform:translateY(30px);opacity:.5}60%{transform:translateY(-30px);opacity:1}}
+@keyframes tutorial-down{0%,100%{transform:translateY(-30px);opacity:.5}60%{transform:translateY(30px);opacity:1}}
+@keyframes tutorial-side{0%,100%{transform:translateX(-45px)}50%{transform:translateX(45px)}}
+@keyframes tutorial-tap{0%,100%{transform:scale(1)}50%{transform:scale(.8)}}
+@keyframes tutorial-stick{0%,100%{transform:translate(0,0)}25%{transform:translate(0,-14px)}50%{transform:translate(14px,0)}75%{transform:translate(0,14px)}}
+@media(prefers-reduced-motion:reduce){.gesture-hint .hand,.controls-tutorial .tutorial-hand,.controls-tutorial .tutorial-stick i{animation:none}}
+.controls-menu .wide{margin-top:8px}
