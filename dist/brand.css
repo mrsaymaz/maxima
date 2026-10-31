@@ -1,0 +1,11 @@
+/* solMaxima brand (scripts/build-brand.mjs): the gold crystal X with its orbiting sol.
+   The sol revolves on the loading screen and the home screen; in play the mark stays still. */
+.brand>img.brand-mark{display:block;width:40px;height:40px;flex:0 0 auto;filter:drop-shadow(0 2px 4px #0009)}
+.brand .brand-sol{font-style:italic;font-weight:600;color:#f5c04a;letter-spacing:0;margin-right:2px;text-transform:none;font-family:Georgia,serif}
+@media(prefers-reduced-motion:no-preference){body.opening .brand>img.brand-mark{content:url(logo-animated.svg);width:54px;height:54px;margin:-7px}}
+@media(max-width:759px){.brand>img.brand-mark{width:34px;height:34px}}
+body.playing .topbar .brand>img.brand-mark{width:36px;height:36px;margin:auto}
+#load-note .load-logo{display:block;width:132px;height:132px;filter:drop-shadow(0 6px 16px #000a)}
+#load-note .load-wordmark{display:block;font:700 34px/1 Georgia,'Times New Roman',serif;letter-spacing:4px;color:#fff0cf;text-shadow:0 2px 0 #6b4a1c,0 0 18px #f5c04a44}
+#load-note .load-wordmark i{font:italic 600 26px Georgia,serif;letter-spacing:0;color:#f5c04a;margin-right:2px;text-shadow:0 0 12px #f5c04a88}
+@media(prefers-reduced-motion:reduce){#load-note .load-logo{content:url(logo-mark.svg)}}

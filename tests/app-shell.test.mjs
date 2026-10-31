@@ -13,7 +13,7 @@ test('offline shell list and hash are current, and the worker carries the hash',
  for(const f of['./','index.html','manifest.webmanifest','corridor-app.js','app-shell.js','data/lesson-catalog.json','vendor/three.module.min.js'])assert.ok(files.includes(f),f);
  assert.ok(!files.includes('sw.js'),'the worker never caches itself');for(const f of files)if(f!=='./')assert.ok(fs.existsSync(path.join(dist,f)),f);
 });
-test('manifest makes Maxima installable full screen with real icons',()=>{
+test('manifest makes solMaxima installable full screen with real icons',()=>{
  const m=JSON.parse(read('manifest.webmanifest')),html=read('index.html');
  assert.equal(m.display,'fullscreen');assert.equal(m.start_url,'./');assert.ok(m.icons.some(i=>i.purpose==='maskable'));
  for(const i of m.icons){const png=fs.readFileSync(path.join(dist,i.src));assert.equal(png.readUInt32BE(16),Number(i.sizes.split('x')[0]),i.src);}
@@ -40,4 +40,9 @@ test('a new build offers a reload only when it replaces a running one, never on 
  try{let offers=0;assert.equal(watchUpdates(()=>offers++),true);listeners.controllerchange();assert.equal(offers,0,'first install');listeners.controllerchange();assert.equal(offers,1,'a later build');
   sw.controller={};let again=0;watchUpdates(()=>again++);listeners.controllerchange();assert.equal(again,1,'page already controlled');}
  finally{Object.defineProperty(globalThis,'navigator',{value:before,configurable:true});}
+});
+test('the game is named solMaxima, with the gold crystal X logo on the loading screen, the top bar and the icons',()=>{
+ const m=JSON.parse(read('manifest.webmanifest')),html=read('index.html');assert.equal(m.short_name,'solMaxima');assert.match(m.name,/^solMaxima/);assert.match(html,/<title>solMaxima/);assert.match(html,/apple-mobile-web-app-title" content="solMaxima"/);
+ assert.match(html,/class="load-logo" src="logo-animated.svg"/);assert.match(html,/class="brand-mark" src="logo-mark.svg"/);assert.match(html,/BY MR. SAYMAZ/);
+ const animated=read('logo-animated.svg'),still=read('logo-mark.svg');assert.match(animated,/animateMotion/);assert.equal((animated.match(/<animateMotion/g)||[]).length,2,'the sol is drawn behind and in front of the X on one path');assert.doesNotMatch(still,/animate/,'the still mark never moves');
 });

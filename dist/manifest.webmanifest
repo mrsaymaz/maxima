@@ -1,19 +1,41 @@
 {
- "name": "Maxima · English creature expedition",
- "short_name": "Maxima",
+ "name": "solMaxima · English creature expedition",
+ "short_name": "solMaxima",
  "description": "Race along coin trails as your elemental creature, solve English checkpoints and evolve.",
  "id": "./",
  "start_url": "./",
  "scope": "./",
  "display": "fullscreen",
- "display_override": ["fullscreen", "standalone"],
+ "display_override": [
+  "fullscreen",
+  "standalone"
+ ],
  "orientation": "any",
  "background_color": "#0b2b2d",
  "theme_color": "#102d31",
- "categories": ["education", "games", "kids"],
+ "categories": [
+  "education",
+  "games",
+  "kids"
+ ],
  "icons": [
-  {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-  {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-  {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
  ]
 }

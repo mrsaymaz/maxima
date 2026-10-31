@@ -1,5 +1,5 @@
 {
- "hash": "425b9b8f1bcb",
+ "hash": "ae7add8423fc",
  "files": [
   "./",
   "index.html",
@@ -17,6 +17,7 @@
   "asset-network.js",
   "asset-resources.js",
   "body-motion.js",
+  "brand.css",
   "brick-style.js",
   "brick-world.js",
   "camera-ground.js",
