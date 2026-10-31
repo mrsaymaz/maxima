@@ -21,6 +21,8 @@ export class RunnerControl{
  origin(){return this.realS()-this.s;}
  engage(nav){
   const section=nav.section,run=section?.run;
+  // Arriving: the controller still places the creature while it skids to a stop.
+  if(this.arrival)return this.arrival.section===section;
   // A rival only stops the run once its fight has started; an unbeaten rival waiting in the clearing does not.
   const fighting=!!nav.combat?.blocking?.active;
   let on=false;
@@ -42,7 +44,24 @@ export class RunnerControl{
  finish(section,nav){
   if(this.done.has(section.id))return;this.done.add(section.id);this.progress.delete(section.id);this.sliding=0;this.running=false;this.power={};this.burst=0;
   this.closeWord(section);
+  if(nav&&!section.run.finale)this.beginArrival(section,nav);
   this.events.finish?.(section);nav&&(nav.passiveCarry=false);
+ }
+ // The arrival: the creature skids to a stop, either at the gate (its task then opens) or, at a guarded gate,
+ // a few metres short of the rivals, where the fight takes over.
+ beginArrival(section,nav){
+  const run=section.run,from=this.realS(),rivals=nav.combat?[...nav.combat.enemies.values()].filter(r=>r.section.index===section.index&&r.phase!=='defeated').map(r=>r.spec):[],guarded=!!run.rival&&rivals.length>0;
+  const to=guarded?Math.max(from+.5,Math.min(run.to+2.5,Math.min(...rivals.map(r=>r.s))-3.2)):Math.max(from+.5,section.length-.2),speed=Math.max(4,this.speed);
+  this.arrival={section,guarded,s:from,to,lat:this.lat,toLat:guarded?this.lat:0,speed,decel:speed*speed/(2*(to-from)),skid:false};
+ }
+ arrive(nav,dt){
+  const a=this.arrival,left=a.to-a.s;this.clock+=dt;
+  // Decelerate so the creature comes to rest exactly at the end: v² = 2·decel·remaining.
+  a.speed=Math.min(a.speed,Math.sqrt(2*a.decel*Math.max(0,left)));a.s+=Math.min(left,Math.max(a.speed,.8)*dt);a.lat+=(a.toLat-a.lat)*Math.min(1,dt*6);
+  if(!a.skid){a.skid=true;this.events.skid?.(a.section,a);}
+  const p=localPoint(a.section,a.s,a.lat);nav.player={x:p.x,z:p.z};nav.heading=this.forwardYaw;nav.moving=left>.05;
+  if(a.to-a.s<=.02){this.arrival=null;nav.moving=false;this.events.arrive?.(a.section,a);}
+  return true;
  }
  move(kind){this.lastMove={t:this.clock,kind,lane:this.lane};}
  shift(direction){if(!this.running)return false;const next=Math.max(0,Math.min(2,this.lane+direction));if(next===this.lane)return false;this.move('lane');this.lane=next;this.events.lane?.(direction);return true;}
@@ -63,6 +82,7 @@ export class RunnerControl{
  surface(){return runSurface(this.section.run,this.s,this.lat,this.knocked);}
  // One simulation step: speed builds toward the sprint, the track advances, the creature steers into its lane.
  advance(nav,dt){
+  if(this.arrival)return this.arrive(nav,dt);
   const section=this.section,run=section.run;this.clock+=dt;
   for(const k of['sliding','stun','mire','burst','burstCooldown'])this[k]=Math.max(0,this[k]-dt);
   for(const k of['magnet','double','dash'])if(this.power[k])this.power[k]=Math.max(0,this.power[k]-dt);
@@ -74,6 +94,8 @@ export class RunnerControl{
   if(nav.grounded&&this.surface()===null&&(dash||this.power.shield)){const hole=this.holeHere();if(hole){this.knocked.add(hole.id);if(!dash)this.useShield(hole);}}
   if(this.wasGrounded&&!nav.grounded&&nav.vy>0)this.move('jump');this.wasGrounded=nav.grounded;
   const p=localPoint(section,this.realS(),this.lat);nav.player={x:p.x,z:p.z};nav.heading=this.forwardYaw;nav.moving=true;
+  // The final real metres begin: the gate (and any rivals guarding it) come into view.
+  if(before<run.length-run.real&&this.s>=run.length-run.real)this.events.approach?.(section,{guarded:!!run.rival&&!!nav.combat?.group?.some(r=>r.phase!=='defeated')});
   this.progress.set(section.id,this.s);this.checkPerfect(before);
   if(this.s>=run.length)this.finish(section,nav);
  }
@@ -157,6 +179,7 @@ export class RunnerControl{
  // Hurdles need a jump, bars a slide; crystals need Cast; thorns need the open lane; boulders a lane change.
  // The obstacle is knocked aside, so a student who has not yet learned the move still reaches the gate.
  collide(nav){
+  if(this.arrival)return null;
   const run=this.section.run,feet=nav.y-(this.surface()??0),hurdle=hurdleHeight(nav.height||.65),lane=this.laneNow();
   for(const o of run.obstacles){
    const span=laneSpan(o.lanes);

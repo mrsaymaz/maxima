@@ -1,12 +1,15 @@
 import{RUNNER}from'./runner-mode.js';
 
 // Runner sections (runner mode). Between gates the creature runs on its own in three lanes along a long moving
-// track; the last CLEARING metres before each gate stay free movement, so tasks and fights keep their feel.
+// track. Gates guarded by rivals keep a CLEARING of free movement for the fight; other runs end GATE_RUNUP metres
+// before the gate, where the creature skids to a stop and the gate's task opens.
 // A run is measured in track metres (`s` below), RUN_SCALE times the real stretch it covers: most of the run
 // slides the track under the creature, and its final real metres lead into the gate clearing
 // (see runner-control.js). Everything here is deterministic per section, so retries and reloads rebuild it.
 // RUN_FROM sits past the short rise at each stretch's start, so the moving track lies on flat valley ground.
-export const LANES=[-1.45,0,1.45],LANE_HALF=.74,CLEARING=14,RUN_FROM=8,RUN_LEAD=16,RUN_SCALE=10;
+export const LANES=[-1.45,0,1.45],LANE_HALF=.74,CLEARING=14,RUN_FROM=8,RUN_LEAD=16,RUN_SCALE=10,GATE_RUNUP=3;
+// Gates guarded by rivals keep a clearing for the fight; every other run goes right up to its gate and skids to a stop.
+export const gateRival=s=>s.adventure===2?!!s.rival:(s.baseKind??s.kind)==='coins'&&[0,2,4].includes(s.chapter);
 const rngFor=text=>{let h=2166136261;for(const c of String(text)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return()=>{h=Math.imul(h^(h>>>15),2246822507)^Math.imul(h^(h>>>13),3266489909);return((h^=h>>>16)>>>0)/4294967296;};};
 const pick=(r,list)=>list[Math.floor(r()*list.length)%list.length];
 
@@ -163,8 +166,8 @@ export function finaleRun(section,mode='relaxed'){
 }
 export function runFor(section,e,mode='relaxed',enabled=RUNNER){
  if(!enabled||!section||section.length<CLEARING+12)return null;
- const r=rngFor(section.id+':'+mode),real=section.length-CLEARING-RUN_FROM,length=Math.round(real*RUN_SCALE),n=section.index%4,hard=mode==='challenge',{start,top}=speedRange(mode,section.chapter);
- const run={from:RUN_FROM,to:section.length-CLEARING,clearFrom:section.length-CLEARING,real,length,start,top,obstacles:[],coins:[],word:null};
+ const clearing=gateRival(section)?CLEARING:GATE_RUNUP,r=rngFor(section.id+':'+mode),real=section.length-clearing-RUN_FROM,length=Math.round(real*RUN_SCALE),n=section.index%4,hard=mode==='challenge',{start,top}=speedRange(mode,section.chapter);
+ const run={from:RUN_FROM,to:section.length-clearing,clearFrom:section.length-clearing,rival:clearing===CLEARING,real,length,start,top,obstacles:[],coins:[],word:null};
  const reaction=hard?1.2:1.6,tutorial=section.chapter===0&&section.index===0,wordAt=n===2?length*.3:Infinity;let s=Math.max(18,start*2.4),k=0,lastFree=1;
  const offset=(section.chapter+(e?.area||0)+(e?.serial||0))%6,kinds=MOMENT_SLOTS[n].map(i=>RUN_MOMENTS[(i+offset)%6]),momentAt=kinds.map((_,i)=>length*(kinds.length===1?(n===2?.75:.55):[.38,.72][i]));
  const sightingLevel=n===3&&SIGHTINGS[section.chapter]?section.chapter:0,sightingAt=sightingLevel?length*.5:Infinity;if(sightingLevel){momentAt[0]=length*.12;momentAt[1]=length*.3;}

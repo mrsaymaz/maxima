@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';
 import{RUNNER,TRAIL_STRETCH,trailWarp,stretchZ}from'../dist/runner-mode.js';
 import{CHAPTER_LENGTH,chapterPath,END}from'../dist/trail-layout.js';
-import{runFor,setRunnerWords,runSurface,LANES,CLEARING,RUN_SCALE,laneSpan,speedAt,speedRange,hurdleHeight}from'../dist/runner-course.js';import{FORM_HEIGHTS}from'../dist/world-layout.js';import{jumpTuning}from'../dist/jump-tuning.js';
+import{gateRival,GATE_RUNUP,runFor,setRunnerWords,runSurface,LANES,CLEARING,RUN_SCALE,laneSpan,speedAt,speedRange,hurdleHeight}from'../dist/runner-course.js';import{FORM_HEIGHTS}from'../dist/world-layout.js';import{jumpTuning}from'../dist/jump-tuning.js';
 import{RunnerControl}from'../dist/runner-control.js';
 import{sectionFor,localPoint,courseCoordinates}from'../dist/traversal-layout.js';
 
@@ -24,7 +24,7 @@ test('runs are ten times their stretch, speed up toward the gate, stay inside th
  setRunnerWords([{id:'w1',en:'rule',tr:'kural'},{id:'w2',en:'science club',tr:'fen kulübü'},{id:'w3',en:'whistle',tr:'düdük'}]);
  for(const mode of['relaxed','challenge'])for(let index=0;index<20;index++){
   const s=withRun(index,mode),again=withRun(index,mode),run=s.run;assert.deepEqual(run,again.run);
-  assert.ok(Math.abs(run.to-(s.length-CLEARING))<1e-9,'the last metres before the gate stay free');assert.equal(run.length,Math.round(run.real*RUN_SCALE));
+  assert.ok(Math.abs(run.to-(s.length-(gateRival(s)?CLEARING:GATE_RUNUP)))<1e-9,'a guarded gate keeps its clearing, the others run right up to the gate');assert.equal(run.length,Math.round(run.real*RUN_SCALE));
   assert.ok(speedAt(run,run.length*.9)>speedAt(run,run.length*.2)+3,'faster and faster toward the gate');
   for(const o of run.obstacles){assert.ok(o.s>0&&o.s<run.length);if(o.type==='hole')assert.ok(o.lanes.length<3,'holes never close every lane');}
   // Reaction time between beats (a trial moment counts as one beat: its own pieces are deliberately close).
