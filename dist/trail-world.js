@@ -157,7 +157,7 @@ export class TrailWorld extends World{
  veilFixed(grow,visible,gatesVisible=visible){for(const entry of this.travelScenery?.values()||[]){const f=entry.fixed??=entry.scenery?.getObjectByName?.('fixed-scenery');if(!f)continue;f.userData.baseY??=f.scale.y;f.scale.y=f.userData.baseY*Math.max(.001,grow);f.visible=visible;}
   // Task gates already passed (the one just opened stands right behind the creature, between it and the camera,
   // for the whole slide) step aside too; only the gate this run leads to stays in view.
-  const target=activeNode(this.nav.state)?.id;for(const host of this.continuous?.values()||[])if(host.root&&host.node?.id!==target)host.root.visible=gatesVisible;}
+  const target=this.nav?.state?activeNode(this.nav.state)?.id:null;for(const host of this.continuous?.values()||[])if(host.root&&host.node?.id!==target)host.root.visible=gatesVisible;}
  updateTrackVeil(){
   const r=this.nav.runner,run=r?.running&&r.section?.run,veil=!!run&&r.s<run.length-run.real-1,dt=Math.min(.05,this.trackVeilClock?(this.time-this.trackVeilClock):0);this.trackVeilClock=this.time;
   // The veil eases in and out (plants sink into the ground and grow back) instead of vanishing at once, and the
