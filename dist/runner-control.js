@@ -1,6 +1,6 @@
 import{courseCoordinates,localPoint}from'./traversal-layout.js';
 import{LANES,LANE_HALF,RUN_LEAD,laneSpan,speedAt,runSurface,hurdleHeight,finaleRun,GUARDIAN_ENTER,GUARDIAN_LEAVE,CHASE_WAVES}from'./runner-course.js';
-import{activeNode,approachPoint}from'./trail-layout.js';
+import{activeNode,approachPoint}from'./trail-layout.js';import{gateCount,chapterCount,shortPath}from'./path-shape.js';
 
 // Drives the creature through a runner section on a moving track. Progress is measured in track metres (`s`,
 // up to run.length). While s is below run.length - run.real the creature holds its place in the valley and the
@@ -166,9 +166,9 @@ export class RunnerControl{
  }
  // The final chase: a run from just past the last gate to the guardian's arena at the end of the trail.
  finale(e,mode){
-  if(!e||e.index<20||e.battle||!e.choices?.[4])return null;const key=e.id+':'+mode;if(this.finaleKey===key)return this.finaleSection;
-  const node=activeNode({...e,index:19}),exit=activeNode(e),from={x:node.x,z:node.z},to=approachPoint(exit),dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz),forward={x:dx/len,z:dz/len},start={x:from.x+forward.x*2.5,z:from.z+forward.z*2.5},length=len-2.5;
-  const section={id:`${e.id}:travel:finale`,index:20,chapter:4,side:e.choices[4],area:e.area,kind:'coins',start,end:to,length,forward,right:{x:-forward.z,z:forward.x},platforms:[],plants:[],coins:[],enemies:[],enemy:null,trial:null,finale:true};
+  const gates=gateCount(e),last=chapterCount(e)-1;if(!e||e.index<gates||e.battle||!e.choices?.[last])return null;const key=e.id+':'+mode;if(this.finaleKey===key)return this.finaleSection;
+  const node=activeNode({...e,index:gates-1}),exit=activeNode(e),from={x:node.x,z:node.z},to=approachPoint(exit),dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz),forward={x:dx/len,z:dz/len},start={x:from.x+forward.x*2.5,z:from.z+forward.z*2.5},length=len-2.5;
+  const section={id:`${e.id}:travel:finale`,index:gates,chapter:last,side:e.choices[last],short:shortPath(e),area:e.area,kind:'coins',start,end:to,length,forward,right:{x:-forward.z,z:forward.x},platforms:[],plants:[],coins:[],enemies:[],enemy:null,trial:null,finale:true};
   section.run=finaleRun(section,mode);this.finaleKey=key;this.finaleSection=section;return section;
  }
  thornUp(o,lane,clock=this.clock){return((clock/o.period+o.phase+THORN_LANES[lane])%1)<THORN_UP;}

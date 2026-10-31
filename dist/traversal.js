@@ -1,3 +1,4 @@
+import{shortPath}from'./path-shape.js';
 import{stretchZ}from'./runner-mode.js';
 import{allJourneyMaps}from'./partners.js';
 import{validTrials}from'./path-trials.js';
@@ -7,7 +8,7 @@ import{CHAPTER_LENGTH,START,activeNode,approachPoint}from'./trail-layout.js';
 export const TRAILS=[{id:'air',name:'Silver wind',cost:0,color:'#d6f4df'},{id:'mint',name:'Emerald leaves',cost:35,color:'#70edb5'},{id:'amber',name:'Golden sparks',cost:55,color:'#f4cc73'},{id:'violet',name:'Violet stars',cost:75,color:'#c1a1f0'}];
 export function freshWallet(){return{balance:0,total:0,owned:['air'],equipped:'air'};}
 export function travelState(e){return e.travel??={collected:[],completed:[],earned:0,retries:0,safe:{...START,y:0,heading:Math.PI}};}
-export function collectCoin(save,e,coin){const travel=travelState(e);if(travel.collected.includes(coin.id))return 0;save.wallet??=freshWallet();const value=save.mode==='challenge'?2:1;travel.collected.push(coin.id);travel.earned+=value;save.wallet.balance+=value;save.wallet.total+=value;return value;}
+export function collectCoin(save,e,coin){const travel=travelState(e);if(travel.collected.includes(coin.id))return 0;save.wallet??=freshWallet();const value=save.mode==='challenge'&&!shortPath(e)?2:1;travel.collected.push(coin.id);travel.earned+=value;save.wallet.balance+=value;save.wallet.total+=value;return value;}
 export function equipTrail(save,id){const trail=TRAILS.find(t=>t.id===id);if(!trail)return false;const wallet=save.wallet??=freshWallet();if(!wallet.owned.includes(id)){if(wallet.balance<trail.cost)return false;wallet.balance-=trail.cost;wallet.owned.push(id);}wallet.equipped=id;return true;}
 const oldStops=[9,2,-6,-14,-27,-40,-53,-62],newStops=[9,2,-9,-28,-58,-88,-118,-130];
 export function remapOldPosition(p){if(!p)return p;const chapter=Math.max(0,Math.min(4,Math.floor((2-p.z)/64))),local=p.z+chapter*64;let mapped=local;for(let i=1;i<oldStops.length;i++)if(local<=oldStops[i-1]&&local>=oldStops[i]){const t=(oldStops[i-1]-local)/(oldStops[i-1]-oldStops[i]);mapped=newStops[i-1]+(newStops[i]-newStops[i-1])*t;break;}if(local< -62)mapped=-130+(local+62);return{...p,z:mapped-chapter*CHAPTER_LENGTH};}

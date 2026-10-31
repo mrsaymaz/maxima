@@ -1,3 +1,4 @@
+import{perChapter,chapterOf}from'./path-shape.js';
 import{stretchZ}from'./runner-mode.js';
 // The channel keeps its shape; runner mode only moves it along with the stretched route.
 const AQUEDUCT_Z=stretchZ(-165);
@@ -6,13 +7,13 @@ import{makeAqueductChannel}from'./aqueduct-channel.js';import{makeSpringVisitor}
 const clamp=v=>Math.max(0,Math.min(1,v));
 // Answers remain the only source of restoration. No parallel save or reward.
 export function aqueductProgress(e,completed=e?.completed||[]){
- const records=completed.filter(c=>Math.floor(c.index/4)===1);
+ const records=completed.filter(c=>chapterOf(e,c.index)===1);
  if(e&&orderFor(e,1).includes('sentence')){
   if(records.some(c=>c.type==='sentence'))return 1;
-  const t=e.active;if(t?.type==='sentence'&&t.nodeId===`${e.id}:${e.index}`&&Math.floor(e.index/4)===1)return taskFraction(t);
+  const t=e.active;if(t?.type==='sentence'&&t.nodeId===`${e.id}:${e.index}`&&chapterOf(e)===1)return taskFraction(t);
   return 0;
  }
- return clamp(records.length/4);
+ return clamp(records.length/perChapter(e));
 }
 export function makeAqueductStory({area=0,baseY=0}={}){
  const root=new T.Group();root.name='aqueduct-living-encounter';root.position.y=baseY;

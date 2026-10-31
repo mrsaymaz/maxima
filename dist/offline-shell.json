@@ -1,5 +1,5 @@
 {
- "hash": "3a1fcbfd2440",
+ "hash": "caf4bedf9358",
  "files": [
   "./",
   "index.html",
@@ -101,6 +101,7 @@
   "path-detail.js",
   "path-enemy-props.js",
   "path-growth.js",
+  "path-shape.js",
   "path-trial-props.js",
   "path-trials-layout.js",
   "path-trials.js",
@@ -130,6 +131,10 @@
   "scenery-art.js",
   "scenery-plan.js",
   "solids.js",
+  "special-fx.js",
+  "special-icons.js",
+  "specials-ui.js",
+  "specials.js",
   "spring-visitor.js",
   "style.css",
   "surface-materials.js",

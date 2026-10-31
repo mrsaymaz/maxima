@@ -1,4 +1,4 @@
-import{RUNNER}from'./runner-mode.js';
+import{RUNNER}from'./runner-mode.js';import{perChapter,shortPath}from'./path-shape.js';
 
 // Runner sections (runner mode). Between gates the creature runs on its own in three lanes along a long moving
 // track. Gates guarded by rivals keep a CLEARING of free movement for the fight; other runs end GATE_RUNUP metres
@@ -67,6 +67,19 @@ function beat(section,r,mode,run,s,k,lastFree,tutorial){
 // Trial moments: the six old trials, rebuilt for lanes. One or two per run, rotating so that every chapter
 // (seven moments over its four runs) shows all six. Each returns its obstacles, coins and the track it uses.
 export const RUN_MOMENTS=['boulders','wind','stones','crystal','thorns','ledge'];
+// Six-gate areas show two moments per run (four per chapter, rotating through all six over the area).
+const SHORT_MOMENT_SLOTS=[[0,1],[2,3]];
+// Six-gate areas carry about 360 collectable coins in all: about 42 on an average run, about 30 on the final chase,
+// plus chests, rivals and word bonuses. Whole rows are kept so coins still lead into the open lane.
+export const COINS_PER_RUN=50,CHASE_COINS=30;
+export function thinCoins(run,target){
+ const sorted=run.coins.slice().sort((a,b)=>a.s-b.s),rows=[];
+ for(const c of sorted){const row=rows.at(-1);if(row&&Math.abs(row.at(-1).lateral-c.lateral)<.2&&c.s-row.at(-1).s<3.2&&!!row[0].arc===!!c.arc)row.push(c);else rows.push([c]);}
+ if(sorted.length<=target)return run;
+ // Keep a row whenever the kept count falls behind an even share along the run.
+ const keep=new Set();let seen=0,kept=0;
+ for(const row of rows){seen+=row.length;if(kept<target*seen/sorted.length){row.forEach(c=>keep.add(c));kept+=row.length;}}
+ run.coins=run.coins.filter(c=>keep.has(c));return run;}
 const MOMENT_SLOTS=[[0],[1,2],[3],[4,5]];
 function moment(kind,section,r,run,s,hard){
  const v=speedAt(run,s),id=`${section.id}:moment:${kind}:${Math.round(s)}`,obstacles=[],coins=[],coin=(k,cs,lane,y=.58)=>coins.push({id:`${id}:coin:${k}`,s:cs,lateral:LANES[lane],y});
@@ -167,16 +180,18 @@ export function finaleRun(section,mode='relaxed'){
  run.obstacles.push({id:`${section.id}:guardian:finale`,type:'guardian',level:4,area,finale:true,start:6,end:length-real-4,s:(length-real)/2,depth:length-real-10,duration:999,warn:hard?.8:1.15,attacks,lanes:[0,1,2]});
  for(let k=0;k*24+30<length-30;k++){const lane=k%3===1?1:(k%2?0:2);for(let i=0;i<4;i++)run.coins.push({id:`${section.id}:chase-coin:${k}:${i}`,s:30+k*24+i*2.2,lateral:LANES[lane],y:.58});}
  run.powerups.push({id:`${section.id}:power:shield:chase`,kind:'shield',s:length*.18,lane:1},{id:`${section.id}:power:magnet:chase`,kind:'magnet',s:length*.5,lane:0},{id:`${section.id}:power:dash:chase`,kind:'dash',s:length*.78,lane:2});
+ if(section.short)thinCoins(run,CHASE_COINS);
  placeChest(run,`${section.id}:chest`);
  return run;
 }
 export function runFor(section,e,mode='relaxed',enabled=RUNNER){
  if(!enabled||!section||section.length<CLEARING+12)return null;
- const clearing=gateRival(section)?CLEARING:GATE_RUNUP,r=rngFor(section.id+':'+mode),real=section.length-clearing-RUN_FROM,length=Math.round(real*RUN_SCALE),n=section.index%4,hard=mode==='challenge',{start,top}=speedRange(mode,section.chapter);
+ const clearing=gateRival(section)?CLEARING:GATE_RUNUP,r=rngFor(section.id+':'+mode),real=section.length-clearing-RUN_FROM,length=Math.round(real*RUN_SCALE),short=shortPath(e),n=section.index%perChapter(e),hard=mode==='challenge',{start,top}=speedRange(mode,section.chapter);
  const run={from:RUN_FROM,to:section.length-clearing,clearFrom:section.length-clearing,rival:clearing===CLEARING,real,length,start,top,obstacles:[],coins:[],word:null};
- const reaction=hard?1.2:1.6,tutorial=section.chapter===0&&section.index===0,wordAt=n===2?length*.3:Infinity;let s=Math.max(18,start*2.4),k=0,lastFree=1;
- const offset=(section.chapter+(e?.area||0)+(e?.serial||0))%6,kinds=MOMENT_SLOTS[n].map(i=>RUN_MOMENTS[(i+offset)%6]),momentAt=kinds.map((_,i)=>length*(kinds.length===1?(n===2?.75:.55):[.38,.72][i]));
- const sightingLevel=n===3&&SIGHTINGS[section.chapter]?section.chapter:0,sightingAt=sightingLevel?length*.5:Infinity;if(sightingLevel){momentAt[0]=length*.12;momentAt[1]=length*.3;}
+ const reaction=hard?1.2:1.6,tutorial=section.chapter===0&&section.index===0,wordAt=n===(short?1:2)?length*.3:Infinity;let s=Math.max(18,start*2.4),k=0,lastFree=1;
+ const offset=(section.chapter*(short?4:1)+(e?.area||0)+(e?.serial||0))%6,kinds=(short?SHORT_MOMENT_SLOTS:MOMENT_SLOTS)[n].map(i=>RUN_MOMENTS[(i+offset)%6]),momentAt=kinds.map((_,i)=>length*(kinds.length===1?(n===2?.75:.55):[.38,.72][i]));
+ // Sightings: classic areas on the last run of chapters 2–4; six-gate areas on the first runs of chapters 2 and 3.
+ const sightingLevel=short?(n===0&&section.chapter>=1?section.chapter+1:0):n===3&&SIGHTINGS[section.chapter]?section.chapter:0,sightingAt=sightingLevel?length*.5:Infinity;if(sightingLevel){momentAt[0]=length*.12;momentAt[1]=length*.3;}
  const powers=Array.from({length:length>350?3:2},(_,i)=>({at:length*(.22+i*(length>350?.27:.36)),kind:POWERUPS[(section.index+i+section.chapter)%4]}));run.moments=kinds;run.powerups=[];
  while(s<length-12){
   // A power-up whose spot fell inside a moment or sighting waits just before the next one.
@@ -193,7 +208,8 @@ export function runFor(section,e,mode='relaxed',enabled=RUNNER){
   if(powers.length&&s>=powers[0].at&&b.type!=='barrier'){const p=powers.shift();run.powerups.push({id:`${section.id}:power:${p.kind}:${k}`,kind:p.kind,s:s-spacing*.4,lane:b.free});}
   lastFree=b.free;s+=spacing;k++;
  }
- if(section.index%4===0&&section.index>0)placeChest(run,`${section.id}:chest`);
+ if(n===0&&section.index>0)placeChest(run,`${section.id}:chest`);
+ if(short)thinCoins(run,Math.round(COINS_PER_RUN*run.length/490));
  return run;
 }
 // Lane span covered by an obstacle, in lateral metres.

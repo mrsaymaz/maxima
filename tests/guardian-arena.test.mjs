@@ -1,9 +1,9 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{freshGuardian,GuardianCombat,validGuardian,guardianQuestion,guardianPhase,inGuardianDanger,attackDuration,BOSS,ARENA,WARDS}from'../dist/guardian-combat.js';
+import{freshGuardian,GuardianCombat,validGuardian,guardianQuestion,guardianPhase,inGuardianDanger,attackDuration,BOSS,ARENA,WARDS,TOUGH_WARDS,guardianWards,guardianSeals}from'../dist/guardian-combat.js';
 import{AREA_PATTERNS,ATTACK_KINDS,attackShapes,bodyRadius,segmentDistance,cageWall,CAGE,JUMP_CLEAR}from'../dist/guardian-attacks.js';
 const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units,u=units[0];
 const dt=.016,dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
-const create=(area,mode='relaxed',body)=>{const b=freshGuardian(u,'arena-'+area+mode);const events=[];return{b,events,c:new GuardianCombat(b,{area,mode,bodyProfile:body,event:(k,d)=>events.push([k,d])})};};
+const create=(area,mode='relaxed',body,tough=false)=>{const b=freshGuardian(u,'arena-'+area+mode,{tough});const events=[];return{b,events,c:new GuardianCombat(b,{area,mode,bodyProfile:body,event:(k,d)=>events.push([k,d])})};};
 
 // How far a body is from touching a shape (negative = touching).
 function clearance(s,q,r){if(s.type==='circle')return dist(q,s)-s.r-r;if(s.type==='strip')return segmentDistance(q,s.a,s.b)-s.w-r;if(s.type==='ring')return Math.abs(dist(q,s)-s.r)-s.w-r;return 9;}
@@ -28,8 +28,8 @@ function bot(c,b,mode,r){
   if(cost<bestCost-1e-9){bestCost=cost;best=d;}}
  return best;
 }
-function fight(area,mode,body={halfWidth:.35,halfDepth:.35}){
- const{b,c,events}=create(area,mode,body),r=bodyRadius(body);let t=0;const kinds=new Set();
+function fight(area,mode,body={halfWidth:.35,halfDepth:.35},tough=false){
+ const{b,c,events}=create(area,mode,body,tough),r=bodyRadius(body);let t=0;const kinds=new Set();
  while(b.phase!=='victory'&&t<400){const input=bot(c,b,mode,r);if(['windup','strike'].includes(b.phase))kinds.add(b.kind);c.step(dt,input);t+=dt;assert.ok(validGuardian(b),`invalid save at ${b.phase} ${b.kind}`);}
  return{b,events,kinds,t};
 }
@@ -52,3 +52,13 @@ test('jumps clear low attacks only: gale wall and storm chain yes, roots and pri
 test('the crystal cage blocks its wall and lets the creature out through the glowing gap',()=>{const{b,c}=create(2);b.bossHp=50;b.kind='cage';b.phase='windup';b.timer=0;b.player={x:0,z:6,y:0,vy:0};c.target();const wall=()=>cageWall(b);b.timer=.6;const w=wall();assert.ok(w);const away={x:-Math.sin(w.gap),z:-Math.cos(w.gap)};for(let i=0;i<80;i++)c.step(dt,away);assert.ok(dist(b.player,w)<CAGE.radius,'wall holds');b.player={x:w.x,z:w.z,y:0,vy:0};b.timer=.6;for(let i=0;i<80;i++)c.step(dt,{x:Math.sin(w.gap),z:Math.cos(w.gap)});assert.ok(dist(b.player,w)>CAGE.radius+.3,'gap lets it out');});
 
 test('thorn bushes from seed pods stay for a while, hurt on touch and are cleared by a cast',()=>{const{b,c,events}=create(0);b.kind='seeds';b.phase='strike';b.timer=.49;b.player={x:6,z:8,y:0,vy:0};b.targets=[{x:0,z:6}];c.step(dt);assert.equal(b.hazards.length,1);b.phase='recovery';b.timer=0;b.player={x:0,z:9,y:0,vy:0};c.cooldown=0;assert.ok(c.attack());for(let i=0;i<60;i++)c.step(dt);assert.equal(b.hazards.length,0);assert.ok(events.some(e=>e[0]==='clear'));b.hazards=[{x:0,z:9,ttl:5}];b.player={x:0,z:9.4,y:0,vy:0};b.invulnerable=0;c.step(dt);assert.ok(events.some(e=>e[0]==='hurt'));});
+
+// Six-gate areas: the stronger guardian.
+for(const mode of['relaxed','challenge'])test(`the six-gate guardian (${mode}) is far more resilient: four wards, small hits, about twice as long, yet a careful student still wins without specials`,()=>{for(const area of[0,1,2]){const normal=fight(area,mode),{b,events,t}=fight(area,mode,undefined,true);
+ assert.equal(b.phase,'victory',`area ${area} stalled at ${b.bossHp}%`);assert.equal(events.filter(e=>e[0]==='ward').length,4,'four wards');const hits=events.filter(e=>e[0]==='boss-hit').length;assert.ok(hits>=19,`${hits} hits needed`);assert.ok(t>normal.t*1.6,`${t.toFixed(0)} s against ${normal.t.toFixed(0)} s`);}});
+test('the six-gate guardian stops at 80, 60, 40 and 20 percent for English wards, and a knock-out lets it recover to the last broken ward',()=>{const{b,c,events}=create(0,'relaxed',undefined,true);assert.deepEqual(TOUGH_WARDS,[80,60,40,20]);assert.equal(b.wards.length,4);assert.ok(validGuardian(b));
+ for(const ward of TOUGH_WARDS){b.phase='recovery';b.timer=0;c.coreClosed=false;b.bossHp=ward+2;c.hitBoss();assert.equal(b.bossHp,ward);assert.equal(b.phase,'ward');assert.ok(validGuardian(b));if(ward===40)break;c.answer(guardianQuestion(b).q.answer);}
+ c.answer(guardianQuestion(b).q.answer);b.phase='recovery';b.timer=0;c.coreClosed=false;b.stagger=false;c.hitBoss();assert.equal(b.bossHp,37,'a hit takes 3%');b.stagger=true;c.coreClosed=false;c.hitBoss();assert.equal(b.bossHp,31,'a critical takes 6%');
+ for(let i=0;i<4;i++){b.invulnerable=0;c.hurt();}assert.equal(b.retries,1,'four hits knock the creature out in Relaxed');assert.equal(b.bossHp,40,'the guardian recovers to the last ward broken');assert.ok(validGuardian(b));
+ const plain=create(0).b;assert.ok(!plain.tough&&plain.wards.length===2,'classic paths keep the two-ward guardian');b.wards.pop();assert.ok(!validGuardian(b),'a tough guardian needs all four wards');});
+test('all 44 units provide four ward questions for the six-gate guardian, none repeating the seals',()=>{for(const unit of units){const b=freshGuardian(unit,'w',{tough:true});assert.equal(b.wards.length,4,unit.id);const seals=new Set(b.seals.map(q=>q.id));assert.ok(b.wards.every(q=>!seals.has(q.id)),unit.id);assert.equal(new Set(b.wards.map(q=>q.id)).size,4,unit.id);assert.ok(validGuardian(b),unit.id);}});

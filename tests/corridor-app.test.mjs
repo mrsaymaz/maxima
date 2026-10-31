@@ -1,3 +1,5 @@
+// These tests cover the classic 20-gate layout that saved expeditions keep; six-gate areas set MAXIMA_PATH=six per test.
+process.env.MAXIMA_PATH??='classic';
 import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
 import{RuntimeLifecycle}from'../dist/runtime-lifecycle.js';
 import{STORE}from'../dist/expedition.js';
@@ -131,7 +133,7 @@ test('a failed creature load during lesson selection restores the prior lesson a
 });
 
 test('the journal opens on compact tabs that keep every earlier entry, and remembers the last tab',async()=>{const a=await app(),h=a.hooks;await h.enter();h.closeModal();const html=()=>a.elements.get('#modal-layer').innerHTML;
- await click(h,'journal');assert.match(html(),/journal-tabs/);for(const label of['Journey','Words','Rewards','Settings'])assert.ok(html().includes(label));assert.match(html(),/activities on this path/);assert.match(html(),/journal-formats/);
+ await click(h,'journal');assert.match(html(),/journal-tabs/);for(const label of['Journey','Words','Rewards','Settings'])assert.ok(html().includes(label));assert.match(html(),/gates on this path/);assert.match(html(),/journal-formats/);
  await click(h,'journal-tab',{tab:'words'});assert.match(html(),/Open the Wordex/);assert.match(html(),/accepted steps/);
  await click(h,'journal-tab',{tab:'rewards'});assert.match(html(),/Wardrobe/);assert.match(html(),/coins/);
  await click(h,'journal-tab',{tab:'settings'});for(const action of['controls','graphics','music','export','import','restart'])assert.ok(html().includes(`data-do="${action}"`),action);
@@ -158,3 +160,28 @@ test('the week ends on the final chase: its chest opens on the chase track and t
  h.nav().runner.power.dash=999;for(let i=0;i<60*150&&h.nav().runner.running;i++){h.nav().runner.power.dash=999;h.nav().step(.016);}assert.ok(!h.nav().runner.running,'the chase reaches the arena');
  // The finish event calls endRoute after a short pause; the harness has no timers, so call it as the game does.
  await h.endRoute();assert.ok(h.state().battle,'the guardian fight starts at the end of the chase');});
+// Six-gate areas (pathVersion 3): what new expeditions use.
+async function sixGateApp(){process.env.MAXIMA_PATH='six';try{return await app();}finally{process.env.MAXIMA_PATH='classic';}}
+async function playSixGates(a,onGate=()=>{}){const h=a.hooks;const{localPoint}=await import('../dist/traversal-layout.js');let first=true;
+ for(let k=0;k<6;k++){let t=0;if(first){const s=h.nav().section;h.nav().player=localPoint(s,s.run.from-1,0);first=false;}while(!h.nav().runner.running&&t<4){h.nav().step(.016);t+=.016;}
+  const run=h.nav().runner.section?.run;onGate('run',k,run);const c=run?.chest;if(c){h.nav().runner.s=c.s-1;for(let i=0;i<40;i++)h.nav().step(.016);h.summary()&&(h.summary().at=0);h.frame();}
+  h.nav().runner.s=h.nav().runner.section.run.length-1;t=0;let rivals=0;while(!h.task()&&t<30){h.nav().step(.016);t+=.016;for(const r of h.nav().combat?.group||[])if(r.phase!=='defeated'){rivals++;r.hp=0;r.phase='defeated';h.state().travel.encounters[r.id]={hp:0,defeated:true};}if(!h.task()&&!h.nav().runner.running&&!h.nav().runner.arrival&&!h.nav().combat?.remaining){const n=activeNode(h.state());if(n){reachNode(h,n);h.interact(n.id);}}}
+  onGate('gate',k,rivals);assert.ok(h.task(),`gate ${k+1} opens`);const parts=[];let guard=0;while(h.task()&&!h.task().complete&&guard++<160){parts.push(h.task().part);inputCorrect(h);}assert.deepEqual([...new Set(parts)],[1,2],'each gate task comes in two sets of the same kind');
+  await h.returnTrail();if(h.state().pendingEvolution)await h.finishEvolution();onGate('done',k);}}
+test('a six-gate area: Forms at gates 2, 4 and 6, rivals at those gates, chests and guardian sightings on runs 3 and 5, then the chase and the guardian',async()=>{if(!RUNNER)return;const a=await sixGateApp(),h=a.hooks;await h.enter();h.closeModal();
+ assert.equal(h.state().pathVersion,3);const levels=[],rivals=[],sightings=[],chests=[],coins={track:0,rivals:0};
+ await playSixGates(a,(what,k,x)=>{if(what==='run'){sightings.push(x.obstacles.some(o=>o.type==='guardian'));chests.push(!!x.chest);coins.track+=x.coins.length;}if(what==='gate'){rivals.push(x>0);coins.rivals+=5*x;}if(what==='done')levels.push(h.journey().level);});
+ assert.deepEqual(levels,[0,1,1,2,2,3],'a Form at gates 2, 4 and 6');assert.deepEqual(rivals,[false,true,false,true,false,true],'rival groups guard gates 2, 4 and 6');
+ assert.deepEqual(chests,[false,false,true,false,true,false],'chests on runs 3 and 5');assert.deepEqual(sightings,[false,false,true,false,true,false],'the guardian is sighted on runs 3 and 5');
+ assert.equal(h.state().index,6);let t=0;while(!h.nav().runner.running&&t<4){h.nav().step(.016);t+=.016;}const run=h.nav().runner.section?.run;assert.ok(run?.finale&&run.chest,'the final chase, with the third chest');
+ coins.chase=run.coins.length;const total=coins.track+coins.chase+coins.rivals+3*14+3*3;assert.ok(total>=345&&total<=400,`about 360 coins in a whole area (${total})`);
+ h.nav().runner.s=run.chest.s-1;for(let i=0;i<40;i++)h.nav().step(.016);h.summary()&&(h.summary().at=0);h.frame();assert.deepEqual(h.state().chests,[0,1,2]);
+ h.nav().runner.power.dash=999;for(let i=0;i<60*150&&h.nav().runner.running;i++){h.nav().runner.power.dash=999;h.nav().step(.016);}assert.ok(!h.nav().runner.running);await h.endRoute();assert.ok(!h.state().battle,'the shrine comes first');const html=()=>a.elements.get('#modal-layer').innerHTML;assert.match(html(),/Elemental Shrine/);
+ // Buying a special at the shrine, then into the arena: the fight is the tougher six-gate guardian, and the special works once.
+ const team=h.save().partner||'hufflepuff',{specialsFor}=await import('../dist/specials.js'),first=specialsFor(team)[0];h.save().wallet.balance=Math.max(h.save().wallet.balance,first.price);const before=h.save().wallet.balance;
+ await click(h,'buy-special',{id:first.id});assert.equal(h.save().wallet.balance,before-first.price);assert.deepEqual(h.state().specials,[first.id]);assert.match(html(),/Ready ✓/);
+ await click(h,'enter-arena');const b=h.state().battle;assert.ok(b?.tough,'the guardian fight starts');assert.equal(b.wards.length,4);assert.deepEqual(b.specials,[first.id]);assert.match(a.elements.get('#ui').innerHTML,/special-bar/);
+ b.phase='windup';b.timer=0;await click(h,'use-special',{id:first.id});assert.ok(h.world().guardianStage.combat.channel,'the special plays');for(let i=0;i<200;i++)h.world().guardianStage.combat.step(.016,{x:0,z:0});assert.deepEqual(b.specialsUsed,[first.id]);assert.ok(b.bossHp<100);
+ await click(h,'use-special',{id:first.id});assert.ok(!h.world().guardianStage.combat.channel,'one use only');});
+test('closing the shrine without buying still leads into the arena',async()=>{if(!RUNNER)return;const a=await sixGateApp(),h=a.hooks;await h.enter();h.closeModal();const e=h.state();e.index=6;e.chests=[0,1,2];e.phase='end';h.journey().level=3;for(const t of[0,1,2,3,4,5])e.completed.push({id:`${e.id}:${t}`,type:e.order?.[t]||'translation'});
+ const{guardianReady}=await import('../dist/expedition.js');assert.ok(guardianReady(h.journey(),e),'set up at the arena');await h.endRoute();assert.match(a.elements.get('#modal-layer').innerHTML,/Elemental Shrine/);await click(h,'close-modal');assert.ok(h.state().battle?.tough);assert.equal(h.state().battle.specials,undefined);});

@@ -1,3 +1,4 @@
+import{perChapter as _per,chapterOf as _chapterOf}from'./path-shape.js';
 import{RUNNER}from'./runner-mode.js';
 import{runPlan}from'./path-trials-layout.js';
 const TRIALS={boulders:'boulder passage',moving:'moving platforms',thorns:'thorn gaps',wind:'wind shelters',crystals:'crystal barrier',bonus:'optional gold ledges'},RIVALS={ram:'Rumblebud',seed:'Brambleguard',spore:'Mistcap'};
@@ -11,4 +12,4 @@ const RUN_LOOKS=['logs, mushrooms, vines and swamps','tumbleweeds, lanterns, cha
 export function routePreview(e,chapter,side){const p=runPlan(e,chapter,side);
  if(RUNNER)return{trial:null,rival:p.rival,sequence:['run','run','word run','run'],text:`Four runs past ${RUN_LOOKS[e.area]||RUN_LOOKS[0]} · a word run · ${RIVALS[p.rival]} at a gate`};const names={quiet:'quiet approach',trial:TRIALS[p.trial],rival:RIVALS[p.rival],traverse:{rocks:'rock crossing',plants:'plant gaps',steps:'terrace climb'}[p.kinds[p.sequence?.indexOf('traverse')]]};return{trial:p.trial,rival:p.rival,sequence:p.sequence?.slice(),text:p.sequence?p.sequence.slice(1).map(k=>names[k]).join(' → '):`${TRIALS[p.trial]} · ${RIVALS[p.rival]}`};}
 export function forkHint(e,chapter){return e.pacingVersion>=1?`Left: ${TRIALS[runPlan(e,chapter,'left').trial]} · Right: ${TRIALS[runPlan(e,chapter,'right').trial]}`:'Choose a path with the arrows or joystick.';}
-export function sceneBeat(e,chapter){const s=SCENES[e.area]?.[chapter]||SCENES[0][0],restored=(e.completed||[]).filter(r=>Math.floor(r.index/4)===chapter).length;return{title:s[0],restored,text:restored===4?s[2]:s[1],discovered:(e.travel?.collected||[]).some(id=>id===`${e.id}:travel:${chapter*4}:discovery:0`)};}
+export function sceneBeat(e,chapter){const s=SCENES[e.area]?.[chapter]||SCENES[0][0],restored=(e.completed||[]).filter(r=>_chapterOf(e,r.index)===chapter).length;return{title:s[0],restored,text:restored===_per(e)?s[2]:s[1],discovered:(e.travel?.collected||[]).some(id=>id===`${e.id}:travel:${chapter*_per(e)}:discovery:0`)};}

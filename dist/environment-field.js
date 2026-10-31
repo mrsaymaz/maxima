@@ -1,3 +1,4 @@
+import{perChapter,chapterOf}from'./path-shape.js';
 import{stretchZ}from'./runner-mode.js';
 import{sceneryPlan}from'./scenery-plan.js';import{sceneryGeometry,authorScenery}from'./scenery-art.js';
 import{ARENA_LOOKS}from'./arena-palette.js';
@@ -79,7 +80,7 @@ export function makeEnvironmentField(e){
   if(round){const lip=new T.Mesh(new T.TorusGeometry(1.27,.10,4,20),materials.masonry);lip.rotation.x=-Math.PI/2;lip.scale.set(basin.width,basin.depth,1);pedestal.add(lip);}else{for(const n of[-1,1]){put('box','masonry',x,h+height-.03,z+n*basin.depth*1.25,basin.width*2.5+.12,.14,.12,0,{feature:'basin-coping'});put('box','masonry',x+n*basin.width*1.25,h+height-.03,z,.12,.14,basin.depth*2.5+.12,0,{feature:'basin-coping'});}}
   const spill=new T.Mesh(new T.PlaneGeometry(.40,height-.15),materials.water);spill.position.set(-sign*basin.width*1.26,-height*.5,0);spill.rotation.y=-sign*Math.PI/2;pedestal.add(spill);
   const foam=new T.Mesh(new T.TorusGeometry(.9,.018,3,18),materials.foam);foam.rotation.x=-Math.PI/2;foam.position.y=.035;foam.scale.set(basin.width,basin.depth,1);pedestal.add(foam);
-  const target=(e.completed||[]).filter(r=>Math.floor(r.index/4)===c).length/4;chapters.push({chapter:c,water,spill,foam,fill:target,target,baseScale:water.scale.clone(),foamScale:foam.scale.clone(),basin:{...basin}});
+  const target=(e.completed||[]).filter(r=>chapterOf(e,r.index)===c).length/perChapter(e);chapters.push({chapter:c,water,spill,foam,fill:target,target,baseScale:water.scale.clone(),foamScale:foam.scale.clone(),basin:{...basin}});
  }
  let triangles=0;
  for(const b of batches.values()){const g=new T.BufferGeometry();for(const [name,array,size]of [['position',b.p,3],['normal',b.n,3],['color',b.color,3],['uv',b.uv,2],['environmentFlex',b.flex,1]])g.setAttribute(name,new T.Float32BufferAttribute(array,size));g.computeBoundingBox();g.computeBoundingSphere();const mesh=new T.Mesh(g,materials[b.role]);mesh.name='environment-'+b.role+'-'+b.c+(b.detail?'-detail':'');mesh.userData={detail:b.detail,environmentRole:b.role};mesh.castShadow=['bark','masonry','timber'].includes(b.role);mesh.receiveShadow=true;chunks.get(b.c).add(mesh);triangles+=b.p.length/9;}
@@ -96,5 +97,5 @@ export function updateEnvironmentField(root,{player=START,dt=0,completed=[],pres
  s.story?.update(step,{expedition,completed,player,active,reduced,threat});
  const flow=s.materials.water.userData.environmentFlow;flow.texture.offset.set((s.clock*flow.speedX)%1,(s.clock*flow.speedY)%1);
  for(const g of s.chunks){g.visible=Math.abs(player.z-g.userData.centerZ)<(preset==='low'?91:125)||Number.isFinite(g.userData.focusZ)&&Math.abs(player.z-g.userData.focusZ)<(preset==='low'?110:140);for(const m of g.children)if(m.userData.detail)m.visible=preset!=='low'&&strength<.65;}
- for(const c of s.chapters){c.target=completed.filter(r=>Math.floor(r.index/4)===c.chapter).length/4;c.fill+=(c.target-c.fill)*(reduced?1:1-Math.exp(-step*3));const fill=Math.max(.02,c.fill);c.water.scale.copy(c.baseScale).multiplyScalar(.45+fill*.55);c.spill.visible=c.fill>.24;c.spill.scale.y=.2+fill*.8;c.foam.visible=preset!=='low'&&c.fill>.05&&strength<.7;c.foam.scale.copy(c.foamScale).multiplyScalar(.65+fill*.35);}
+ for(const c of s.chapters){c.target=completed.filter(r=>chapterOf(expedition,r.index)===c.chapter).length/perChapter(expedition);c.fill+=(c.target-c.fill)*(reduced?1:1-Math.exp(-step*3));const fill=Math.max(.02,c.fill);c.water.scale.copy(c.baseScale).multiplyScalar(.45+fill*.55);c.spill.visible=c.fill>.24;c.spill.scale.y=.2+fill*.8;c.foam.visible=preset!=='low'&&c.fill>.05&&strength<.7;c.foam.scale.copy(c.foamScale).multiplyScalar(.65+fill*.35);}
 }

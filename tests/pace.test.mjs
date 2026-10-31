@@ -3,8 +3,12 @@ import{freshJourney,freshExpedition,autoBranch,shuffleGates,orderFor,TASK_TYPES}
 import{sectionFor}from'../dist/traversal-layout.js';
 import{CHEST_CLEAR}from'../dist/runner-course.js';
 
-test('every new expedition shuffles its gate order, and its five chapters still cover all twenty formats',()=>{
- const j=freshJourney(),orders=new Set();for(let i=0;i<12;i++){const e=freshExpedition(j,'g5u1',0);assert.ok(shuffleGates(j,e));assert.equal(e.varietyVersion,1);assert.equal(shuffleGates(j,e),false,'only once');e.choices.fill('left');const all=[0,1,2,3,4].flatMap(c=>orderFor(e,c));assert.deepEqual([...all].sort(),[...TASK_TYPES].sort());orders.add(all.join());}
+test('a new expedition becomes a six-gate area with six different, shuffled formats',()=>{
+ const j=freshJourney(),orders=new Set();for(let i=0;i<12;i++){const e=freshExpedition(j,'g5u1',0);assert.ok(shuffleGates(j,e));assert.equal(e.pathVersion,3);assert.equal(shuffleGates(j,e),false,'only once');e.choices.fill('left');const six=[0,1,2].flatMap(c=>orderFor(e,c));assert.equal(six.length,6);assert.equal(new Set(six).size,6);assert.ok(six.every(t=>TASK_TYPES.includes(t)));orders.add(six.join());}
+ assert.ok(orders.size>8,`varied orders (${orders.size} of 12)`);
+});
+test('[classic paths] a shuffled 20-gate expedition still covers all twenty formats in its five chapters',()=>{
+ const j=freshJourney(),orders=new Set();for(let i=0;i<12;i++){const e=freshExpedition(j,'g5u1',0);assert.ok(shuffleGates(j,e,{six:false}));assert.ok(!e.pathVersion);assert.equal(e.varietyVersion,1);assert.equal(shuffleGates(j,e,{six:false}),false,'only once');e.choices.fill('left');const all=[0,1,2,3,4].flatMap(c=>orderFor(e,c));assert.deepEqual([...all].sort(),[...TASK_TYPES].sort());orders.add(all.join());}
  assert.ok(orders.size>8,`varied orders (${orders.size} of 12)`);
 });
 test('there is no fork stop: each chapter picks its path side when it begins, the same way after a reload, and both sides appear',()=>{

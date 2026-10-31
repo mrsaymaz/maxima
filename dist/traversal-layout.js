@@ -1,3 +1,4 @@
+import{gateCount,perChapter,chapterOf}from'./path-shape.js';
 import{runFor,runSurface}from'./runner-course.js';
 import{configureTrial,movingPose,runPlan}from'./path-trials-layout.js';
 import{scenicRiseFor,scenicRise,scenicSurface}from'./expedition-composition.js';
@@ -5,8 +6,8 @@ import{chapterPath,nodesFor,approachPoint}from'./trail-layout.js';
 export const TRAVERSAL_KINDS=['coins','rocks','plants','steps'];
 export function localPoint(section,s,lateral=0){return{x:section.start.x+section.forward.x*s+section.right.x*lateral,z:section.start.z+section.forward.z*s+section.right.z*lateral};}
 export function courseCoordinates(section,p){const x=p.x-section.start.x,z=p.z-section.start.z;return{s:x*section.forward.x+z*section.forward.z,lateral:x*section.right.x+z*section.right.z};}
-export function sectionFor(e,index,mode='relaxed',side=e.choices[Math.floor(index/4)]){
- if(index<0||index>=20||!side)return null;const chapter=Math.floor(index/4),n=index%4,path=chapterPath(chapter,side),node=nodesFor(e,chapter,side)[n],end=approachPoint(node),previous=path[n+1];let start={...previous};if(n>0){const dx=end.x-start.x,dz=end.z-start.z,len=Math.hypot(dx,dz);start={x:start.x+dx/len*2.5,z:start.z+dz/len*2.5};}
+export function sectionFor(e,index,mode='relaxed',side=e.choices[chapterOf(e,index)]){
+ if(index<0||index>=gateCount(e)||!side)return null;const chapter=chapterOf(e,index),n=index%perChapter(e),path=chapterPath(chapter,side),node=nodesFor(e,chapter,side)[n],end=approachPoint(node),previous=path[n+1];let start={...previous};if(n>0){const dx=end.x-start.x,dz=end.z-start.z,len=Math.hypot(dx,dz);start={x:start.x+dx/len*2.5,z:start.z+dz/len*2.5};}
  const dx=end.x-start.x,dz=end.z-start.z,length=Math.hypot(dx,dz),forward={x:dx/length,z:dz/length},right={x:-forward.z,z:forward.x},plan=e.adventureVersion===2?runPlan(e,chapter,side):null,kind=plan?plan.kinds[n]:TRAVERSAL_KINDS[(index+e.area)%4],section={id:`${e.id}:travel:${index}`,index,chapter,side,kind,area:e.area,adventure:e.adventureVersion,rival:plan?n===plan.rivalAt:undefined,rivalKind:plan?.rival,start,end,length,forward,right,yaw:Math.atan2(right.z,right.x),platforms:[],plants:[],coins:[]};
  const savedEnemy=e.travel?.encounters?.[section.id+':rival'];section.enemyKind=savedEnemy?(savedEnemy.kind||'ram'):null;
  if(kind==='rocks'){
@@ -23,7 +24,7 @@ export function sectionFor(e,index,mode='relaxed',side=e.choices[Math.floor(inde
  const run=runFor(section,e,mode);if(run){Object.assign(section,{baseKind:section.kind,kind:'coins',run,trial:null,pool:undefined,platforms:[],plants:[],scenicRise:null,coins:[]});}
  for(const coin of section.coins){const h=approachHeight(section,coin.s);coin.y+=h;if(coin.rushJump)coin.minFootY+=h;}return section;
 }
-export function sectionsFor(e,mode='relaxed'){const all=[];for(let i=0;i<20;i++){const s=sectionFor(e,i,mode);if(s)all.push(s);}return all;}
+export function sectionsFor(e,mode='relaxed'){const all=[];for(let i=0;i<gateCount(e);i++){const s=sectionFor(e,i,mode);if(s)all.push(s);}return all;}
 export function plantPhase(plant,time){const phase=((time+plant.phase)%plant.period+plant.period)%plant.period;return phase<plant.active?'active':phase>plant.period-plant.warning?'warning':'rest';}
 export function approachHeight(section,s){if(section.scenicRise)return scenicRise(section,s);if(section.trial||section.index%3!==0||s<.4||s>3.8)return 0;const t=(s-.4)/3.4*12,i=Math.min(11,Math.floor(t)),f=t-i,h=k=>Math.sin(Math.PI*k/12)**2*(.22+section.area*.10);return h(i)*(1-f)+h(i+1)*f;}
 export function surfaceOnCourse(course,p,radius=.24,crumble=null,time=0){

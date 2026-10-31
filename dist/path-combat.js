@@ -15,7 +15,7 @@ export function enemyFor(section,mode='relaxed'){
 }
 export function enemiesFor(section,mode='relaxed',state=null){
  const leader=enemyFor(section,mode);if(!leader)return[];const travel=state?travelState(state):null,rosters=travel?(travel.encounterRosters??={}):null;let count=rosters?.[section.id];
- if(!count){const old=travel?.encounters?.[leader.id];count=state?.adventureVersion===0||old?.defeated?1:section.adventure===2?2+Math.min(1,section.area)+(mode==='challenge'?1:0):2+section.area+(mode==='challenge'?1:0);if(rosters)rosters[section.id]=count;}
+ if(!count){const old=travel?.encounters?.[leader.id];count=state?.adventureVersion===0||old?.defeated?1:section.adventure===2?2+Math.min(1,section.area)+(mode==='challenge'?1:0)+(state?.pathVersion===3&&section.chapter===2?1:0):2+section.area+(mode==='challenge'?1:0);if(rosters)rosters[section.id]=count;}
  return Array.from({length:count},(_,ordinal)=>{const s=Math.min(section.length-4,leader.s+ordinal*1.35),lateral=ordinal?(ordinal%2?-1:1)*1.25:0;return{...leader,id:ordinal?section.id+':reinforcement:'+ordinal+':rival':leader.id,ordinal,groupSize:count,s,...localPoint(section,s,lateral)};});
 }
 export function enemyRewardIds(r){const key=r.spec.ordinal?r.id+':reward':r.section.id+':rival-reward';return Array.from({length:5},(_,i)=>i?key+':'+i:key);}
