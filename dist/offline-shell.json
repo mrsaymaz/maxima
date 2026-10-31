@@ -1,5 +1,5 @@
 {
- "hash": "f3507263e4aa",
+ "hash": "74e07646e5d3",
  "files": [
   "./",
   "index.html",
@@ -80,6 +80,7 @@
   "launch-ui.js",
   "launch.css",
   "lesson-topics.js",
+  "lives-ui.js",
   "loading-ui.js",
   "loading.css",
   "locomotion.js",

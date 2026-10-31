@@ -154,7 +154,10 @@ export class TrailWorld extends World{
  // While the track slides under the creature, the valley's own plants, grass and props near the path would stand
  // still and give the treadmill away, so they step aside; the moving walls and backdrop take their place. They
  // return for the run's final real metres. (Cliffs, landmarks and the gate ahead stay as distant anchors.)
- veilFixed(grow,visible){for(const entry of this.travelScenery?.values()||[]){const f=entry.fixed??=entry.scenery?.getObjectByName?.('fixed-scenery');if(!f)continue;f.userData.baseY??=f.scale.y;f.scale.y=f.userData.baseY*Math.max(.001,grow);f.visible=visible;}}
+ veilFixed(grow,visible,gatesVisible=visible){for(const entry of this.travelScenery?.values()||[]){const f=entry.fixed??=entry.scenery?.getObjectByName?.('fixed-scenery');if(!f)continue;f.userData.baseY??=f.scale.y;f.scale.y=f.userData.baseY*Math.max(.001,grow);f.visible=visible;}
+  // Task gates already passed (the one just opened stands right behind the creature, between it and the camera,
+  // for the whole slide) step aside too; only the gate this run leads to stays in view.
+  const target=activeNode(this.nav.state)?.id;for(const host of this.continuous?.values()||[])if(host.root&&host.node?.id!==target)host.root.visible=gatesVisible;}
  updateTrackVeil(){
   const r=this.nav.runner,run=r?.running&&r.section?.run,veil=!!run&&r.s<run.length-run.real-1,dt=Math.min(.05,this.trackVeilClock?(this.time-this.trackVeilClock):0);this.trackVeilClock=this.time;
   // The veil eases in and out (plants sink into the ground and grow back) instead of vanishing at once, and the
@@ -167,7 +170,7 @@ export class TrailWorld extends World{
   // Each run's fixed ground pieces (approach ramps, stone pads, rock lumps) stand at real positions too, so they would
   // ride along under the creature's feet while the track slides. They step aside with the plants; checked every frame
   // because a run's scenery (the final chase's, for one) can be built after the veil began.
-  this.veilFixed(grow,a<.999);
+  this.veilFixed(grow,a<.999,!veil);
   this.scene.fog.near=this.fogBase.near+(22-this.fogBase.near)*k;this.scene.fog.far=this.fogBase.far+(82-this.fogBase.far)*k;
   if(!veil&&a<=0){this.veilFixed(1,true);for(const[o,was,y]of this.trackVeil){o.visible=was;o.scale.y=y;}for(const c of this.environmentField?.children||[])if(c.name.startsWith('environment-cluster'))c.scale.y=1;this.scene.fog.near=this.fogBase.near;this.scene.fog.far=this.fogBase.far;this.trackVeil=null;}
  }

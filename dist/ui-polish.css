@@ -164,3 +164,17 @@ body.in-shrine .play-dock,body.in-shrine #runner-progress,body.in-shrine .traver
 @keyframes enter-pulse{50%{box-shadow:0 8px 24px #061e2b66,0 0 0 6px #f2c87333}}
 @media(prefers-reduced-motion:reduce){.shrine-tag,.shrine-head,.shrine-enter,.shrine-tag.ready button{animation:none}}
 .shrine-head{padding:10px 16px 9px;border-radius:18px;background:radial-gradient(ellipse at 50% 0%,#1d4a40ee,#0c2d27e0);border:1px solid #f2c87366;box-shadow:0 8px 24px #03151266}
+
+/* Lives (0.57): hearts in the top badge; a lost heart cracks and flashes, a won heart pops in. */
+body.playing:not(.in-task) .play-status .status-lives{grid-column:3;grid-row:2;justify-self:end;display:flex;gap:2px}
+body.playing:not(.in-task) .play-status .status-goal{grid-column:2}
+.status-lives .heart,.lives-big .heart{width:16px;height:16px;fill:#ffffff22;stroke:#ffd9d9aa;stroke-width:1.5}
+.status-lives .heart.full,.lives-big .heart.full{fill:#ff5a6e;stroke:#ffd0d6}
+.status-lives.life-lost{animation:life-lost .6s ease-out}
+.status-lives.life-gained .heart.full:last-of-type{animation:life-gain .7s cubic-bezier(.2,1.6,.4,1)}
+@keyframes life-lost{0%,100%{translate:0}20%{translate:-3px 0;filter:drop-shadow(0 0 6px #ff3a4f)}40%{translate:3px 0}60%{translate:-2px 0}}
+@keyframes life-gain{from{scale:2.2;filter:drop-shadow(0 0 8px #ff8a9a)}}
+.out-of-lives{display:grid;gap:10px;text-align:center}.out-of-lives p{margin:0}
+.lives-big{display:flex;justify-content:center;gap:8px}.lives-big .heart{width:40px;height:40px}
+@media(prefers-reduced-motion:reduce){.status-lives.life-lost,.status-lives.life-gained .heart{animation:none}}
+.arena-lives{display:inline-flex;gap:2px;margin-right:8px;vertical-align:-3px}.arena-lives .heart{width:15px;height:15px;fill:#ffffff22;stroke:#ffd9d9aa;stroke-width:1.5}.arena-lives .heart.full{fill:#ff5a6e;stroke:#ffd0d6}
