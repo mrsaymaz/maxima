@@ -1,18 +1,20 @@
 # solMaxima · by Mr. Saymaz
 
-Version 0.57.0 · Lives, and a clear view on every run
+Version 0.58.0 · Ulti points
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `solMaxima-v0.57.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `solMaxima-v0.58.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.58.0:** completed areas earn **Ulti points** for the student's grade and team pool in the English League (League id `solmaxima`). `config.js` sets the League endpoint. See `docs/ULTI_INTEGRATION.md` for the Apps Script line, and `docs/RELEASE-v0.58.0.md`.
 
 **0.57.0:** three lives per area. A bump, a fall or a hit on the path, or a knock-out in the guardian arena, costs one. Completed word runs give one back, up to five. With none left the area restarts, taking back that attempt's coins and Forms but keeping English progress. Gates already passed no longer block the view during runs. See `docs/RELEASE-v0.57.0.md`.
 

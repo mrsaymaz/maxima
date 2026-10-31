@@ -1,5 +1,5 @@
 {
- "hash": "848fb6e1176c",
+ "hash": "1f4553b06d3a",
  "files": [
   "./",
   "index.html",
@@ -30,6 +30,7 @@
   "combat-awareness.js",
   "combat-expression.js",
   "combat-presentation.js",
+  "config.js",
   "contact-shade.js",
   "continuous-mechanism.js",
   "control-layout.js",
@@ -79,6 +80,7 @@
   "language-feedback.js",
   "launch-ui.js",
   "launch.css",
+  "league.js",
   "lesson-topics.js",
   "lives-ui.js",
   "loading-ui.js",
@@ -157,6 +159,7 @@
   "traversal.js",
   "ui-icons.js",
   "ui-polish.css",
+  "ulti-icon.js",
   "valley-banks.js",
   "valley-terrain.js",
   "visual-hierarchy.js",

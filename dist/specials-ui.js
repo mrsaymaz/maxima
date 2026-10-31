@@ -17,9 +17,9 @@ export const specialKey=b=>[(b?.specials||[]).join(),(b?.specialsUsed||[]).join(
 // The shrine on the path: a title chip with the coins, one tag under each pedestal (placed by the app on screen),
 // and the way into the arena. A tag shows the special, its damage at this Level and a Buy button with its price;
 // when the coins are short it says how many more are needed, so the goal stays in sight.
-export function shrineOverlay({team,element,balance=0,level=0,owned=[]}){
+export function shrineOverlay({team,element,balance=0,level=0,owned=[],ulti=null}){
  const tags=specialsFor(team).map((s,i)=>{const have=owned.includes(s.id),need=Math.max(0,s.price-balance);
   return `<div class="shrine-tag tier-${s.tier}${have?' owned':need?' short':' ready'}" data-slot="${i}" data-element="${esc(element.toLowerCase())}"><span class="shrine-tag-icon">${specialIcon(s.id)}</span><b>${esc(s.name)}</b><small>${specialDamage(s,level)}% damage${s.bind?' · binds':''}</small>
   <button type="button" data-do="buy-special" data-id="${s.id}"${have||need?' disabled':''} aria-label="${have?esc(s.name)+' ready':'Buy '+esc(s.name)+' for '+s.price+' coins'}">${have?'Ready ✓':`<span class="buy-word">Buy</span>${COIN}${s.price}`}</button>${have?'':need?`<em>${need} more coins</em>`:''}</div>`;}).join('');
- return `<div class="shrine-head"><b>Elemental Shrine</b><span class="shrine-coins">${COIN}${balance}</span><small>Each special works once in the guardian fight · it cannot break the English wards</small></div><div class="shrine-tags">${tags}</div><button type="button" class="shrine-enter" data-do="enter-arena">Enter the arena →</button>`;
+ return `<div class="shrine-head"><b>Elemental Shrine</b><span class="shrine-coins">${COIN}${balance}</span><small>Each special works once in the guardian fight · it cannot break the English wards</small>${ulti?`<span class="shrine-ulti">${ulti.icon}Win: +${ulti.points} Ulti for Grade ${ulti.grade} ${esc(ulti.team)}</span>`:''}</div><div class="shrine-tags">${tags}</div><button type="button" class="shrine-enter" data-do="enter-arena">Enter the arena →</button>`;
 }
