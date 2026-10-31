@@ -1,11 +1,13 @@
 import{FORM_HEIGHTS}from'./world-layout.js';
 const clamp=x=>Math.max(0,Math.min(1,x));export const ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 export const EVOLUTION_DURATION=13;
+// Each creature evolves against a backdrop that contrasts with its element: Hufflepuff (air) on blue, Gryffindor (fire)
+// on green, Slytherin (nature) on scarlet and Ravenclaw (water) on gold.
 const BASE_SCORES={
- air:{sparkEnd:.9,gatherEnd:2.3,transform:4.4,swap:4.95,veilIn:3.8,veilPeak:4.7,veilOut:5.18,veilEnd:5.85,clear:6.2,orbitStart:1.0,orbitEnd:6.0,lift:.44,startYaw:Math.PI,endYaw:Math.PI*2+.22,pitch:-.035,roll:.035,background:'#102b32',floor:'#16343a',name:'Spiral Ascension'},
- fire:{sparkEnd:.65,gatherEnd:2.8,transform:4.1,swap:4.58,veilIn:3.85,veilPeak:4.32,veilOut:4.82,veilEnd:5.5,clear:6.05,orbitStart:1.7,orbitEnd:5.8,lift:.08,startYaw:Math.PI-.25,endYaw:.18,pitch:.04,roll:0,background:'#291b25',floor:'#35252b',name:'Ember Ignition'},
- nature:{sparkEnd:1.15,gatherEnd:3.0,transform:4.45,swap:5.12,veilIn:4.25,veilPeak:4.88,veilOut:5.35,veilEnd:5.9,clear:6.35,orbitStart:1.85,orbitEnd:6.15,lift:0,startYaw:Math.PI+.12,endYaw:.28,pitch:.012,roll:.008,background:'#142b24',floor:'#223b2b',name:'Verdant Awakening'},
- water:{sparkEnd:1.0,gatherEnd:2.4,transform:4.25,swap:4.8,veilIn:3.9,veilPeak:4.55,veilOut:5.03,veilEnd:5.72,clear:6.15,orbitStart:.85,orbitEnd:5.95,lift:.20,startYaw:Math.PI+.2,endYaw:.16,pitch:-.018,roll:-.02,background:'#14263e',floor:'#19374b',name:'Tidal Emergence'}
+ air:{sparkEnd:.9,gatherEnd:2.3,transform:4.4,swap:4.95,veilIn:3.8,veilPeak:4.7,veilOut:5.18,veilEnd:5.85,clear:6.2,orbitStart:1.0,orbitEnd:6.0,lift:.44,startYaw:Math.PI,endYaw:Math.PI*2+.22,pitch:-.035,roll:.035,background:'#1d5d9c',floor:'#123f6e',sky:{top:'#7cc8f5',horizon:'#174b86',glow:'#d9f1ff'},name:'Spiral Ascension'},
+ fire:{sparkEnd:.65,gatherEnd:2.8,transform:4.1,swap:4.58,veilIn:3.85,veilPeak:4.32,veilOut:4.82,veilEnd:5.5,clear:6.05,orbitStart:1.7,orbitEnd:5.8,lift:.08,startYaw:Math.PI-.25,endYaw:.18,pitch:.04,roll:0,background:'#1d7a52',floor:'#145a3c',sky:{top:'#7fdcaa',horizon:'#0f4a33',glow:'#e1ffd9'},name:'Ember Ignition'},
+ nature:{sparkEnd:1.15,gatherEnd:3.0,transform:4.45,swap:5.12,veilIn:4.25,veilPeak:4.88,veilOut:5.35,veilEnd:5.9,clear:6.35,orbitStart:1.85,orbitEnd:6.15,lift:0,startYaw:Math.PI+.12,endYaw:.28,pitch:.012,roll:.008,background:'#9c1f2e',floor:'#6d1424',sky:{top:'#ff7a6e',horizon:'#5c0d1b',glow:'#ffe0d0'},name:'Verdant Awakening'},
+ water:{sparkEnd:1.0,gatherEnd:2.4,transform:4.25,swap:4.8,veilIn:3.9,veilPeak:4.55,veilOut:5.03,veilEnd:5.72,clear:6.15,orbitStart:.85,orbitEnd:5.95,lift:.20,startYaw:Math.PI+.2,endYaw:.16,pitch:-.018,roll:-.02,background:'#b47820',floor:'#7a4c12',sky:{top:'#ffd877',horizon:'#7a4a10',glow:'#fff4cf'},name:'Tidal Emergence'}
 };
 const TIMED=['sparkEnd','gatherEnd','transform','swap','veilIn','veilPeak','veilOut','veilEnd','clear','orbitStart','orbitEnd'];
 export const EVOLUTION_SCORES=Object.fromEntries(Object.entries(BASE_SCORES).map(([element,p])=>[element,{...p,...Object.fromEntries(TIMED.map(k=>[k,p[k]*EVOLUTION_DURATION/8])),endYaw:Math.PI*4+(element==='nature'?.28:element==='air'?.22:.18)}]));

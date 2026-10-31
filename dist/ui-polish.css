@@ -67,3 +67,16 @@ body.in-task.task-help-ready .mechanism-tools .help-later{animation:help-in .4s 
 /* A short dash flash when the creature is carried to the start of the next run between chapters. */
 body.run-dash::after{content:'';position:fixed;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,#fff6dc00 30%,#fff6dccc 100%);animation:run-dash .6s ease-out forwards}
 @keyframes run-dash{from{opacity:1}to{opacity:0}}
+
+/* Evolution: the screen edges glow in the same contrasting colour as the 3D backdrop
+   (Hufflepuff blue, Gryffindor green, Slytherin scarlet, Ravenclaw gold). */
+.evo-cinematic{--evo-edge:#0c3a6ecc}
+.evo-cinematic[data-element="fire"]{--evo-edge:#0b4a32cc}
+.evo-cinematic[data-element="nature"]{--evo-edge:#5a0c1acc}
+.evo-cinematic[data-element="water"]{--evo-edge:#6e420ecc}
+.evo-cinematic::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 46%,var(--evo-edge) 100%)}
+.evo-cinematic .evo-top{z-index:1}
+/* The evolution always fills the whole screen, whichever screen it starts from (home preview included). */
+body.cinematic #world{inset:0!important;top:0!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:100dvh!important}
+/* A neutral shade (not the old navy) keeps the caption readable without tinting the evolution colours. */
+body.cinematic .vignette{background:linear-gradient(0deg,#0000005c,transparent 26%,transparent 82%,#00000040)}
