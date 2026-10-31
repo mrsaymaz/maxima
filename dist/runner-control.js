@@ -21,8 +21,10 @@ export class RunnerControl{
  origin(){return this.realS()-this.s;}
  engage(nav){
   const section=nav.section,run=section?.run;
-  // Arriving: the controller still places the creature while it skids to a stop.
-  if(this.arrival)return this.arrival.section===section;
+  // Arriving: the controller still places the creature while it skids to a stop. An arrival cut short (the gate's
+  // task opened first and the journey moved on) is dropped, so the next stretch's run can start.
+  if(this.arrival&&this.arrival.section!==section)this.arrival=null;
+  if(this.arrival)return true;
   // A rival only stops the run once its fight has started; an unbeaten rival waiting in the clearing does not.
   const fighting=!!nav.combat?.blocking?.active;
   let on=false;

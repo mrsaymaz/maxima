@@ -70,7 +70,7 @@ export class PathCombat{
  attackers(){return this.group.filter(r=>ATTACKING.includes(r.phase)).length;}
  step(dt){const n=this.nav;this.attackStep(dt);
   // Rivals hold their attacks while the creature is still running or skidding in, and for a breath after it stops.
-  this.grace=n.runner?.running||n.runner?.arrival?1.2:Math.max(0,(this.grace||0)-dt);this.projectileStep(dt);
+  const arriving=n.runner?.arrival&&n.runner.arrival.section?.index===n.state.index;this.grace=n.runner?.running||arriving?1.2:Math.max(0,(this.grace||0)-dt);this.projectileStep(dt);
   for(const r of this.enemies.values()){r.flash=Math.max(0,r.flash-dt);r.guardAge=(r.guardAge??9)+dt;r.timer+=dt;if(r.phase==='defeated')continue;if(r.section.index!==n.state.index)continue;const near=enemyCanSee(n,r);r.active=near;if(!near){if(r.phase!=='watch')this.resetEnemy(r);continue;}
    if(r.phase==='watch'){const home=distance(r,r.spec),step=Math.min(home,2.2*dt);r.returning=home>.05;if(home>.05){r.heading=Math.atan2(r.spec.x-r.x,r.spec.z-r.z);r.x+=(r.spec.x-r.x)/home*step;r.z+=(r.spec.z-r.z)/home*step;}else{r.heading=Math.atan2(n.player.x-r.x,n.player.z-r.z);if(r.timer>.65&&!this.grace&&this.attackers()<(n.mode==='challenge'?2:1))this.prepare(r);}}
    else if(['seedwindup','seedstrike'].includes(r.phase))this.seedStep(r);

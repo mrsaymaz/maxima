@@ -46,3 +46,15 @@ test('a tapped rival is the one the cast aims at, even when another rival is nea
  const index=indexWith(true,1),{nav,log}=journeyAt(index,{area:1});runToArrival(nav,log);const group=[...nav.combat.group].sort((a,b)=>dist(nav.player,a)-dist(nav.player,b)),near=group[0],far=group.at(-1);assert.notEqual(near,far);
  assert.ok(nav.requestRanged(far));const heading=nav.combat.attack.heading,want=Math.atan2(far.x-nav.player.x,far.z-nav.player.z);assert.ok(Math.abs(Math.atan2(Math.sin(heading-want),Math.cos(heading-want)))<.05,'aimed at the tapped rival');
 });
+
+test('rivals start attacking soon after the creature has stopped in front of them',()=>{
+ for(const mode of['relaxed','challenge']){const index=indexWith(true),{nav,log}=journeyAt(index,{mode});runToArrival(nav,log);let first=null;nav.invincible=99;
+  for(let t=0;t<6&&first===null;t+=dt){nav.step(dt);nav.invincible=99;if(nav.combat.attackers()>0)first=t;}assert.ok(first!==null&&first<3.5,`${mode}: first attack after ${first} s`);}
+});
+
+test('a skid cut short (the gate opened first) never blocks the next run or the rivals there',()=>{
+ const index=indexWith(false),{nav,section,log}=journeyAt(index);for(let t=0;t<240&&!nav.runner.arrival;t+=dt)nav.step(dt);assert.ok(nav.runner.arrival,'skidding');
+ // The journey moves on to the next stretch before the skid has finished.
+ nav.state.index++;nav.state.completed.push({index:index,id:'x',type:'x'});const next=nav.section;assert.notEqual(next,section);nav.player=localPoint(next,next.run.from-1,0);nav.cancelJump();
+ for(let i=0;i<30;i++)nav.step(dt);assert.equal(nav.runner.arrival,null,'the stale skid is dropped');assert.equal(nav.runner.running,true,'the next run starts');
+});
