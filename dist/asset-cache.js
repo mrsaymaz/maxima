@@ -1,5 +1,15 @@
 import * as T from './vendor/three.module.min.js';
 import {GLTFLoader} from './vendor/loaders/GLTFLoader.js';
+import {KTX2Loader} from './vendor/loaders/KTX2Loader.js';
+import {MeshoptDecoder} from './vendor/libs/meshopt_decoder.module.js';
+// Compressed creature models (0.66.0): meshopt geometry and KTX2 (Basis ETC1S) textures. The KTX2 loader needs the
+// renderer to pick a GPU format (ASTC, ETC2, BC7…); until it is set up, the game loads the source models instead.
+let ktx2=null;
+// Before the main renderer exists (the opening screen fetches the first creature early), a throwaway WebGL context
+// on the same GPU reports which compressed formats to transcode to; it is released straight away.
+function probeRenderer(doc=globalThis.document){const canvas=doc?.createElement?.('canvas'),gl=canvas?.getContext?.('webgl2')||canvas?.getContext?.('webgl');if(!gl)return null;const found=new Map();const ext=name=>{if(!found.has(name))found.set(name,gl.getExtension(name));return found.get(name);};return{extensions:{has:name=>!!ext(name),get:name=>ext(name)},release(){gl.getExtension('WEBGL_lose_context')?.loseContext();}};}
+export function configureModelDecoders(renderer,{transcoderPath='vendor/libs/basis/'}={}){if(ktx2)return true;const probe=renderer?null:probeRenderer();if(!renderer&&!probe)return false;try{ktx2=new KTX2Loader().setTranscoderPath(transcoderPath).detectSupport(renderer||probe);}catch{ktx2=null;}finally{probe?.release();}return !!ktx2;}
+export const compressedModelsReady=()=>!!ktx2;
 import {cloneForm,attachLease,disposeResources} from './asset-resources.js';
 export class AssetCache{
  constructor({load,clone=x=>x,dispose=()=>{},limit=2}){this.load=load;this.clone=clone;this.disposedTemplates=0;this.releases=0;this.dispose=value=>{this.disposedTemplates++;dispose(value);};this.limit=limit;this.entries=new Map();this.serial=0;this.hits=0;this.misses=0;this.evictions=0;this.closed=false;}
@@ -28,7 +38,7 @@ export async function loadGLTF(url,{signal,timeout=20000,retries=1}={}){
    const finish=(error,value)=>{if(settled){if(value)disposeResources(value.scene,{closeImages:true});return;}settled=true;clearTimeout(timer);signal?.removeEventListener('abort',abort);error?reject(error):resolve(value);};
    abort=()=>{manager.abort();finish(new DOMException('Loading cancelled','AbortError'));};signal?.addEventListener('abort',abort,{once:true});
    timer=setTimeout(()=>{manager.abort();const error=new Error('Creature loading timed out. Please retry.');error.transient=true;finish(error);},timeout);
-   new GLTFLoader(manager).loadAsync(url).then(value=>finish(null,value),error=>finish(error));
+   const loader=new GLTFLoader(manager).setMeshoptDecoder(MeshoptDecoder);if(ktx2)loader.setKTX2Loader(ktx2);loader.loadAsync(url).then(value=>finish(null,value),error=>finish(error));
   });}catch(error){if(signal?.aborted||attempt>=retries||error.response?.status===404)throw error;}
   finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
  }

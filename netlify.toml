@@ -7,6 +7,12 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
+# Compressed creature models carry a content hash in their names (scripts/build-web-creatures.mjs).
+[[headers]]
+  for = "/assets/creatures-web/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # The service worker and its shell list must always be revalidated so new builds reach players.
 [[headers]]
   for = "/sw.js"

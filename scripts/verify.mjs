@@ -23,6 +23,7 @@ console.log('Static runtime verified: enclosed branching corridors, world-mounte
 const catalog=JSON.parse(readFileSync('dist/data/lesson-catalog.json'));for(const u of expeditionData.units){const split=JSON.parse(readFileSync(`dist/data/lessons/${u.id}.json`));if(JSON.stringify(split)!==JSON.stringify(u))throw Error('Stale split lesson '+u.id);}if(catalog.units.length!==44)throw Error('Missing lesson catalogue entries');
 
 // Offline app shell: every listed file exists, nothing in the shell is missing, and sw.js carries the current hash.
+{const{CREATURE_WEB}=await import('../dist/creature-web-assets.js');const missing=Object.values(CREATURE_WEB).filter(f=>!existsSync('dist/'+f));if(Object.keys(CREATURE_WEB).length!==44||missing.length)throw Error('Compressed creature models are missing or stale. Run npm run creatures:web: '+missing.join(', '));}
 {const{shellFiles,shellHash}=await import('./build-offline.mjs');const listed=JSON.parse(readFileSync('dist/offline-shell.json')),expected=shellFiles();
  if(JSON.stringify(listed.files)!==JSON.stringify(expected))throw Error('Stale dist/offline-shell.json: run npm run offline');
  for(const f of expected)if(f!=='./'&&!existsSync('dist/'+f))throw Error('Offline shell file missing: '+f);

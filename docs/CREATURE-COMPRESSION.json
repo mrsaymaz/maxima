@@ -1,0 +1,272 @@
+{
+ "texture": 1024,
+ "etc1sQuality": 255,
+ "sourceBytes": 77312213,
+ "runtimeBytes": 19910684,
+ "forms": [
+  {
+   "key": "gryffindor-0",
+   "source": "assets/creatures/gryffindor-0.glb",
+   "sourceBytes": 1145784,
+   "bytes": 332860
+  },
+  {
+   "key": "gryffindor-1",
+   "source": "assets/creatures/gryffindor-1.glb",
+   "sourceBytes": 1110232,
+   "bytes": 329996
+  },
+  {
+   "key": "gryffindor-2",
+   "source": "assets/creatures/gryffindor-2.glb",
+   "sourceBytes": 1872796,
+   "bytes": 485784
+  },
+  {
+   "key": "gryffindor-3",
+   "source": "assets/creatures/gryffindor-3.glb",
+   "sourceBytes": 1137700,
+   "bytes": 336384
+  },
+  {
+   "key": "gryffindor-4",
+   "source": "assets/creatures/gryffindor-4.glb",
+   "sourceBytes": 1719224,
+   "bytes": 442900
+  },
+  {
+   "key": "gryffindor-5",
+   "source": "assets/creatures/gryffindor-5.glb",
+   "sourceBytes": 1203900,
+   "bytes": 360708
+  },
+  {
+   "key": "gryffindor-6",
+   "source": "assets/creatures/gryffindor-6.glb",
+   "sourceBytes": 1976892,
+   "bytes": 525940
+  },
+  {
+   "key": "gryffindor-7",
+   "source": "assets/creatures/gryffindor-7.glb",
+   "sourceBytes": 1948592,
+   "bytes": 518680
+  },
+  {
+   "key": "gryffindor-8",
+   "source": "assets/creatures/gryffindor-8.glb",
+   "sourceBytes": 1445852,
+   "bytes": 420188
+  },
+  {
+   "key": "gryffindor-9",
+   "source": "assets/creatures/gryffindor-9.glb",
+   "sourceBytes": 2021176,
+   "bytes": 519560
+  },
+  {
+   "key": "gryffindor-10",
+   "source": "assets/creatures/gryffindor-10.glb",
+   "sourceBytes": 2002848,
+   "bytes": 522940
+  },
+  {
+   "key": "hufflepuff-0",
+   "source": "assets/creatures/hufflepuff-0.glb",
+   "sourceBytes": 1314792,
+   "bytes": 368024
+  },
+  {
+   "key": "hufflepuff-1",
+   "source": "assets/creatures/hufflepuff-1.glb",
+   "sourceBytes": 988096,
+   "bytes": 286740
+  },
+  {
+   "key": "hufflepuff-2",
+   "source": "assets/creatures/hufflepuff-2.glb",
+   "sourceBytes": 1611748,
+   "bytes": 480248
+  },
+  {
+   "key": "hufflepuff-3",
+   "source": "assets/creatures/hufflepuff-3.glb",
+   "sourceBytes": 1009492,
+   "bytes": 316688
+  },
+  {
+   "key": "hufflepuff-4",
+   "source": "assets/creatures/hufflepuff-4.glb",
+   "sourceBytes": 1638476,
+   "bytes": 466532
+  },
+  {
+   "key": "hufflepuff-5",
+   "source": "assets/creatures/hufflepuff-5.glb",
+   "sourceBytes": 1748312,
+   "bytes": 490032
+  },
+  {
+   "key": "hufflepuff-6",
+   "source": "assets/creatures/hufflepuff-6.glb",
+   "sourceBytes": 1894720,
+   "bytes": 532620
+  },
+  {
+   "key": "hufflepuff-7",
+   "source": "assets/creatures/hufflepuff-7.glb",
+   "sourceBytes": 1854584,
+   "bytes": 525596
+  },
+  {
+   "key": "hufflepuff-8",
+   "source": "assets/creatures/hufflepuff-8.glb",
+   "sourceBytes": 1825180,
+   "bytes": 495640
+  },
+  {
+   "key": "hufflepuff-9",
+   "source": "assets/creatures/hufflepuff-9.glb",
+   "sourceBytes": 1872888,
+   "bytes": 524764
+  },
+  {
+   "key": "hufflepuff-10",
+   "source": "assets/creatures/hufflepuff-10.glb",
+   "sourceBytes": 1876844,
+   "bytes": 523176
+  },
+  {
+   "key": "ravenclaw-0",
+   "source": "assets/rigs/ravenclaw-0.gltf",
+   "sourceBytes": 2064202,
+   "bytes": 457080
+  },
+  {
+   "key": "ravenclaw-1",
+   "source": "assets/rigs/ravenclaw-1.gltf",
+   "sourceBytes": 1516482,
+   "bytes": 380872
+  },
+  {
+   "key": "ravenclaw-2",
+   "source": "assets/rigs/ravenclaw-2.gltf",
+   "sourceBytes": 2167368,
+   "bytes": 493356
+  },
+  {
+   "key": "ravenclaw-3",
+   "source": "assets/rigs/ravenclaw-3.gltf",
+   "sourceBytes": 2150568,
+   "bytes": 490480
+  },
+  {
+   "key": "ravenclaw-4",
+   "source": "assets/rigs/ravenclaw-4.gltf",
+   "sourceBytes": 2278677,
+   "bytes": 515696
+  },
+  {
+   "key": "ravenclaw-5",
+   "source": "assets/rigs/ravenclaw-5.gltf",
+   "sourceBytes": 2366547,
+   "bytes": 519596
+  },
+  {
+   "key": "ravenclaw-6",
+   "source": "assets/rigs/ravenclaw-6.gltf",
+   "sourceBytes": 2232526,
+   "bytes": 506760
+  },
+  {
+   "key": "ravenclaw-7",
+   "source": "assets/rigs/ravenclaw-7.gltf",
+   "sourceBytes": 2377183,
+   "bytes": 522976
+  },
+  {
+   "key": "ravenclaw-8",
+   "source": "assets/rigs/ravenclaw-8.gltf",
+   "sourceBytes": 2295376,
+   "bytes": 507744
+  },
+  {
+   "key": "ravenclaw-9",
+   "source": "assets/creatures/ravenclaw-9.glb",
+   "sourceBytes": 2079204,
+   "bytes": 521068
+  },
+  {
+   "key": "ravenclaw-10",
+   "source": "assets/creatures/ravenclaw-10.glb",
+   "sourceBytes": 2350828,
+   "bytes": 554476
+  },
+  {
+   "key": "slytherin-0",
+   "source": "assets/rigs/slytherin-0.gltf",
+   "sourceBytes": 1040420,
+   "bytes": 266952
+  },
+  {
+   "key": "slytherin-1",
+   "source": "assets/rigs/slytherin-1.gltf",
+   "sourceBytes": 1142260,
+   "bytes": 313152
+  },
+  {
+   "key": "slytherin-2",
+   "source": "assets/rigs/slytherin-2.gltf",
+   "sourceBytes": 1538336,
+   "bytes": 398256
+  },
+  {
+   "key": "slytherin-3",
+   "source": "assets/rigs/slytherin-3.gltf",
+   "sourceBytes": 1704494,
+   "bytes": 436604
+  },
+  {
+   "key": "slytherin-4",
+   "source": "assets/rigs/slytherin-4.gltf",
+   "sourceBytes": 1563309,
+   "bytes": 401628
+  },
+  {
+   "key": "slytherin-5",
+   "source": "assets/rigs/slytherin-5.gltf",
+   "sourceBytes": 1799231,
+   "bytes": 447852
+  },
+  {
+   "key": "slytherin-6",
+   "source": "assets/rigs/slytherin-6.gltf",
+   "sourceBytes": 1837070,
+   "bytes": 454444
+  },
+  {
+   "key": "slytherin-7",
+   "source": "assets/rigs/slytherin-7.gltf",
+   "sourceBytes": 1927201,
+   "bytes": 477928
+  },
+  {
+   "key": "slytherin-8",
+   "source": "assets/rigs/slytherin-8.gltf",
+   "sourceBytes": 1819378,
+   "bytes": 455340
+  },
+  {
+   "key": "slytherin-9",
+   "source": "assets/rigs/slytherin-9.gltf",
+   "sourceBytes": 1994209,
+   "bytes": 493736
+  },
+  {
+   "key": "slytherin-10",
+   "source": "assets/creatures/slytherin-10.glb",
+   "sourceBytes": 1847216,
+   "bytes": 488688
+  }
+ ]
+}
