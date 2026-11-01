@@ -1,5 +1,5 @@
 {
- "hash": "792df414ffcf",
+ "hash": "c73068bb7220",
  "files": [
   "./",
   "index.html",
@@ -165,6 +165,7 @@
   "trail-props.js",
   "trail-tasks.js",
   "trail-world.js",
+  "translate-guard.js",
   "traversal-layout.js",
   "traversal-props.js",
   "traversal.js",

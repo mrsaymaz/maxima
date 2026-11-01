@@ -2,6 +2,10 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.72.0 · Keeping the English in English
+
+Pages tell browsers not to translate them (translate="no", notranslate). If a tool translates the page anyway, the game pauses behind a bilingual notice from Mr. Saymaz with steps for each browser, answers do not count, and the save counts the incident. Text cannot be selected during play, so the long-press "Translate" never appears, and the right-click menu is off. See [release notes](docs/releases/RELEASE-v0.72.0.md).
+
 ## 0.71.0 · Hold to boost
 
 On runs, boosting is a hold anywhere on the track: the creature runs faster while you hold and burns fuel, sliding the held finger steers, and letting go stops. A boost meter replaces the button. Taps still cast (instantly near a crystal wall), Shift and the mouse button can be held too, and the controls tutorial teaches the hold. See [release notes](docs/releases/RELEASE-v0.71.0.md).

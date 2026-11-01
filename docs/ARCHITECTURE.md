@@ -47,6 +47,7 @@ Sizes are the readable line counts in `src/`.
 | `launch-ui.js`, `camp-ui.js`, `ui-icons.js`, `lives-ui.js`, `loading-ui.js` | Markup for the opening screen, camp, Wordex, wardrobe, summaries, icons, hearts and loading. |
 | `guide.js` | Mr. Saymaz: poses, opening-screen line, pop-ins during play. |
 | `story.js`, `story-scene.js`, `story-art.js` | The Sol Crystal story: scenes at two reading levels with Turkish; the cut-scene player (typewriter, read aloud by `storyVoice`); the generated vector art (landscapes, guardians, crystal, particles). |
+| `translate-guard.js` | Stops browser translation: detection (canary, Google/Microsoft traces, page language) and the bilingual notice; the app pauses play and refuses answers while it is active. |
 | `spelling-variants.js` | British and American spellings accepted as equal (word runs, misspelled-word task). |
 | `controls-tutorial.js`, `danger-lessons.js`, `creature-sketch.js` | Controls tutorial and first-time danger lessons with the simplified creature. |
 | `gesture-controls.js`, `touch-stick.js`, `control-layout.js`, `runner-input.js`, `creature-controls.js` | Touch gestures, joystick, safe-area layout, keys. |

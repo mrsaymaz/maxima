@@ -32,6 +32,7 @@ import { loadingNotice, clearLoading, recoveryNotice } from './loading-ui.js';
 import { LanguageCoach, languageFeedbackMarkup, guidancePlan, questionFocus } from './language-feedback.js';
 import { englishVoice, spokenRequest, storyVoice } from './voice-preference.js';
 import { playScene } from './story-scene.js';
+import { installTranslateGuard, translateNoticeMarkup } from './translate-guard.js';
 import { STORY_SCENES, STORY_ORDER, sceneSeen, markSeen, introScene, guardianScene, winScenes, reaction } from './story.js';
 import { acceptedLines, pieceLine, revealMarkup, revealTime } from './task-voice.js';
 import { otherSpellings } from './spelling-variants.js';
@@ -1355,7 +1356,8 @@ function frame() {
     runSummary(p);
     return;
   }
-  world.paused = screen !== 'play' || !!task || modal || resultCard || locked || tutorialOpen || lessonOpen || storyOpen;
+  world.paused =
+    screen !== 'play' || !!task || modal || resultCard || locked || tutorialOpen || lessonOpen || storyOpen || translationActive;
   if (screen !== 'play' || task || modal || resultCard) return;
   const e = state(),
     chapter = chapterOf(e),
@@ -1802,6 +1804,8 @@ function showSpeech() {
   renderTask();
 }
 function submit(action) {
+  // While the page is machine-translated, answers do not count (translate-guard.js).
+  if (translationActive) return;
   if (!task || locked) return;
   const t = task,
     j = journey(),
@@ -2594,6 +2598,53 @@ const STUMBLE_TIPS = {
   thorns: 'Run where the thorns are down.',
 };
 const stumbleTip = type => STUMBLE_TIPS[type] || 'Jump the hurdles: ↑ or swipe up.';
+// Browser translation (translate-guard.js): while a page translation is active the game pauses behind a notice in
+// English and Turkish, answers do not count, and the save keeps a count for the teacher.
+let translationActive = false,
+  translateGuard = null;
+function startTranslateGuard() {
+  if (translateGuard || typeof document === 'undefined' || typeof document.body?.appendChild !== 'function') return;
+  // Desktop right-click menus offer "Translate to …": no context menu while playing (inputs keep theirs).
+  document.addEventListener('contextmenu', e => {
+    if (document.body.classList.contains('playing') && !e.target?.closest?.('input, textarea')) e.preventDefault();
+  });
+  translateGuard = installTranslateGuard({
+    onChange: (active, reasons) => {
+      translationActive = active;
+      let el = document.getElementById('translate-block');
+      if (active) {
+        save.integrity ??= { translate: 0 };
+        save.integrity.translate = (save.integrity.translate || 0) + 1;
+        save.integrity.lastTranslate = { at: Date.now(), reasons };
+        persist();
+        stopStorySpeech();
+        voice.stop();
+        if (world) {
+          world.paused = true;
+          world.setInput?.(0, 0);
+        }
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'translate-block';
+          el.addEventListener('click', e => {
+            if (!e.target.closest?.('[data-translate="check"]')) return;
+            if (translateGuard?.check().length) {
+              el.classList.remove('shake');
+              void el.offsetWidth;
+              el.classList.add('shake');
+            }
+          });
+          document.body.appendChild(el);
+        }
+        el.innerHTML = translateNoticeMarkup(guideFigure('think', { cls: 'translate-figure' }));
+      } else {
+        el?.remove();
+        if (world && screen === 'play' && !task && !modal && !resultCard) world.paused = false;
+        toast('Thank you! Back to English.');
+      }
+    },
+  });
+}
 // Hold to boost (0.71): a fuel meter where the Boost button was. It fills with coins, drains while held, and glows
 // while boosting. The first time the tank is half full on a run, a hint teaches the hold.
 let boostMeterEl = null,
@@ -3959,6 +4010,7 @@ async function boot() {
         act,
       };
     if (world.renderer) applyGraphics(world, graphics, typeof devicePixelRatio === 'number' ? devicePixelRatio : 1);
+    startTranslateGuard();
     await world.loadForm(journey().level);
     await home();
     performanceMonitor.markReady();
