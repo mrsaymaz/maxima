@@ -63,13 +63,13 @@ test('all44 lessons in both modes earn Forms1–10 across three complete arenas 
 
 test('growth display distinguishes task milestones from boss-only forms and counts within the active arena',()=>{
  const s=freshSave(),j=s.journeys.g5u1=freshJourney(),e=expedition(j,'g5u1',0);
- assert.match(growthBar(pathGrowthState(j)),/Form 1 in 5 English checkpoints/);
+ assert.match(growthBar(pathGrowthState(j)),/Level 1 in 5 English checkpoints/);
  for(let i=0;i<15;i++){checkpoint(j,e);delete e.pendingEvolution;if(e.index%4===0)finishRun(j,e);}
- assert.equal(j.level,3);assert.match(growthBar(pathGrowthState(j)),/Complete 5 more English checkpoints, then defeat the boss for Form 4/);
+ assert.equal(j.level,3);assert.match(growthBar(pathGrowthState(j)),/Complete 5 more English checkpoints, then defeat the boss for Level 4/);
  for(let i=15;i<20;i++){checkpoint(j,e);if(e.index%4===0)finishRun(j,e);}
- assert.match(growthBar(pathGrowthState(j)),/Defeat the arena boss to reach Form 4/);
+ assert.match(growthBar(pathGrowthState(j)),/Defeat the arena boss to reach Level 4/);
  e.battle=freshGuardian(units[0],'display');Object.assign(e.battle,{phase:'victory',bossHp:0,finishStep:3});winGuardian(j,e);
- assert.match(growthBar(pathGrowthState(j)),/Form 5 in 5 English checkpoints/);
+ assert.match(growthBar(pathGrowthState(j)),/Level 5 in 5 English checkpoints/);
  const next=expedition(j,'g5u1',1);assert.equal(next.index,0);assert.equal(j.pathSteps,20);
 });
 

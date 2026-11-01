@@ -7,7 +7,7 @@ export const ARENA_GROWTH=[
  {start:4,boss:8,milestones:[[5,5],[10,6],[15,7]]},
  {start:8,boss:10,milestones:[[10,9]]}
 ];
-// Six-gate areas (path-shape.js) earn their Forms at gates 2, 4 and 6 (Stormglass: gate 3); the boss still gives the last.
+// Six-gate areas (path-shape.js) earn their Levels at gates 2, 4 and 6 (Stormglass: gate 3); the boss still gives the last.
 export const SHORT_GROWTH=[
  {start:0,boss:4,milestones:[[2,1],[4,2],[6,3]]},
  {start:4,boss:8,milestones:[[2,5],[4,6],[6,7]]},

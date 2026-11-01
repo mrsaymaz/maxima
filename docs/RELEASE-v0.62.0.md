@@ -19,7 +19,7 @@ Every evolution now plays as a five-beat sequence (about 13 seconds; Skip still 
    - shards flying out, some straight past the camera;
    - shockwaves racing across the floor and up through the air;
    - a camera shake.
-5. **Reveal.** The new form lands among rising sparks and confetti in the element's colours. The camera comes in a little lower, and a gold **FORM N AWAKENED** banner punches in ("FORM 10 LEGEND" for the final form). The final hold of the new form is always clear: every effect finishes before it.
+5. **Reveal.** The new form lands among rising sparks and confetti in the element's colours. The camera comes in a little lower, and a gold **FORM N AWAKENED** banner punches in ("FORM 10 LEGEND" for the final form; shown as "LvL N" since 0.63.0). The final hold of the new form is always clear: every effect finishes before it.
 
 The captions follow the beats: "A rune circle wakes.", the team's own gather line, "A chrysalis forms…" and "It breaks open!".
 
