@@ -3,7 +3,7 @@
 // played once still opens on weak or no school Wi-Fi. Code is fetched network-first so updates arrive promptly;
 // media is served from the cache at once and refreshed in the background (the HTTP cache keeps that cheap), so
 // replaced art reaches players on their next visit. SHELL_HASH changes with every build.
-const SHELL_HASH = '881134ca6457';
+const SHELL_HASH = 'd49e084b779b';
 const SHELL = `maxima-shell-${SHELL_HASH}`,
   MEDIA = 'maxima-media-v1',
   DATA = 'maxima-data-v1';

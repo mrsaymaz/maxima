@@ -104,6 +104,9 @@ import {
   unlocked,
   ready,
   guardianReady,
+  fightReady,
+  canReplay,
+  startReplay,
   freshExpedition,
   expedition,
   currentType,
@@ -897,8 +900,10 @@ function setupContext() {
     unitNumber: units.filter(x => x.grade === u.grade).findIndex(x => x.id === u.id) + 1,
     lessonKind: u.grade < 7 && u.curriculum?.kind !== 'enrichment' ? 'THEME' : 'UNIT',
     grade: u.grade,
-    guardian: guardianReady(j, e) ? AREAS[e.area].guardian : null,
+    guardian: fightReady(j, e) ? AREAS[e.area].guardian : null,
     completed: j.completed,
+    replaying: !!e.replay && e.phase !== 'closed',
+    replayable: canReplay(j, save.area),
     nextArea: e.phase === 'closed' && save.area < unlocked(j) ? save.area + 1 : null,
     nextAreaTitle: AREAS[Math.min(2, save.area + 1)].name,
     resume: !!(e.index || e.active || e.checkpoint || e.battle || e.choices.some(Boolean)),
@@ -922,6 +927,7 @@ function setupContext() {
       selected: i === save.area,
       locked: i > unlocked(j),
       completed: j.guardians.includes(i),
+      replaying: !!j.expeditions?.[i]?.replay && j.expeditions[i].phase !== 'closed',
       progress: j.expeditions?.[i]?.index || 0,
       gates: j.expeditions?.[i] ? gateCount(j.expeditions[i]) : 6,
     })),
@@ -1154,7 +1160,7 @@ async function enter({ reuseForm = false } = {}) {
     showBattle();
     return;
   }
-  if (guardianReady(journey(), state()) && state().index === gateCount(state()) && !chestPending(state())) {
+  if (fightReady(journey(), state()) && state().index === gateCount(state()) && !chestPending(state())) {
     if (!showShrine()) showBattle();
     return;
   }
@@ -2240,7 +2246,8 @@ function sixGateSave() {
 // Lives (0.57): three per area. A bump on a run, a fall or a hit from a rival or the chasing guardian costs one; a
 // completed word run gives one back (up to five). With none left the area starts again from its first gate: the
 // coins collected and the Forms earned on that attempt are taken back, while English progress (mastery, Wordex) stays.
-// Ulti points (0.58): the English League (league.js). A completed area (guardian won) earns Ulti for the student's grade
+// Ulti points (0.58): the English League (league.js). A completed area (guardian won, first time or in a practice
+// replay) earns Ulti for the student's grade
 // and team pool; the League sets the points, how long they last and the daily limits. A ticket is asked for when an area
 // is played, renewed early in the area if it has aged, and claimed on the guardian win.
 const league = createLeague({
@@ -2259,13 +2266,49 @@ const leagueInfo = (e = state()) => ({
   unit: save.selected,
   student: save.student?.id || '',
 });
+// Practice replays (0.74.0, expedition.js startReplay): a won arena starts again from its first gate with a new gate
+// order and new tasks from the same lesson. Coins, English practice and Ulti count (Ulti on the rematch win, within
+// the League's limits); the creature's level and the unlocked arenas do not change. The run ends with a guardian
+// rematch, which can be skipped (then no Ulti).
+async function replayArena(area) {
+  const j = journey();
+  if (![0, 1, 2].includes(area) || !canReplay(j, area) || locked) return false;
+  closeModal();
+  if (!(await ensureStudent())) return false;
+  save.area = area;
+  const e = startReplay(j, save.selected, area);
+  if (!e) return false;
+  shuffleGates(j, e, { six: sixGates });
+  e.lives = START_LIVES;
+  e.coinStart = save.wallet?.total || 0;
+  syncWorld();
+  persist();
+  await enter();
+  toast(`Practice run · ${AREAS[area].name}: new gates, same lesson.`);
+  return true;
+}
+async function rematchWon() {
+  const area = save.area;
+  if (world.guardianStage) {
+    world.setView(false);
+    gameAudio.music?.update?.('explore', 0);
+  }
+  await home();
+  cue('reward');
+  showModal(
+    'Rematch won!',
+    `<div class="replay-done"><div class="guide-note">${guideFigure('cheer')}<p class="guide-bubble">Well done! You beat ${esc(AREAS[area].guardian)} again. Practice makes perfect!</p></div><p>Practice runs keep your coins and your English progress, and a won rematch earns Ulti like any completed area. Your creature's level stays as it is.</p><div class="replay-actions"><button class="secondary" data-do="close-modal">Back to camp</button>${canReplay(journey(), area) ? `<button class="primary-action" data-do="replay" data-area="${area}">Play ${esc(AREAS[area].name)} again</button>` : ''}</div></div>`,
+    { kind: 'replay-modal' },
+  );
+}
 // Where this device's wins count: a named student's own class grade and League team; otherwise the lesson grade and
 // the creature's team.
 const ultiTarget = () =>
   save.student ? { grade: save.student.grade, team: save.student.team } : { grade: unit().grade, team: partner().id };
 function ensureTicket() {
   const e = state();
-  if (!league.enabled || !shortPath(e) || journey().guardians.includes(e.area)) return;
+  // Every completed area earns Ulti, practice replays too (the League's daily limits and minimum time still apply).
+  if (!league.enabled || !shortPath(e) || (journey().guardians.includes(e.area) && !e.replay)) return;
   const info = leagueInfo(e),
     age = league.ticketAge(e.id);
   if (age === null) league.start(info).catch(() => {});
@@ -2439,8 +2482,12 @@ async function outOfLives() {
       save.wallet.balance = Math.max(0, save.wallet.balance - lost);
       save.wallet.total = Math.max(0, save.wallet.total - lost);
     }
-    j.level = pathLevel(0, area, SHORT.gates);
-    const fresh = (j.expeditions[area] = freshExpedition(j, save.selected, area));
+    // A practice replay restarts as a replay: the creature keeps its level.
+    const replay = !!e.replay && j.guardians.includes(area);
+    if (!replay) j.level = pathLevel(0, area, SHORT.gates);
+    const fresh = replay
+      ? startReplay(j, save.selected, area)
+      : (j.expeditions[area] = freshExpedition(j, save.selected, area));
     shuffleGates(j, fresh, { six: true });
     fresh.lives = START_LIVES;
     fresh.coinStart = save.wallet?.total || 0;
@@ -2990,6 +3037,7 @@ function shrineHtml() {
     p = partner(),
     pts = league.enabled ? arenaPoints(league.snapshot(unit().grade).settings, save.mode, e.area) : null;
   return shrineOverlay({
+    rematch: !!e.replay,
     team: p.id,
     element: p.element,
     balance: save.wallet?.balance || 0,
@@ -3012,7 +3060,7 @@ function shrineForward(e) {
 function showShrine() {
   if (shrineOpen) return true;
   const e = state();
-  if (!shortPath(e) || e.battle || !guardianReady(journey(), e)) return false;
+  if (!shortPath(e) || e.battle || !fightReady(journey(), e)) return false;
   screen = 'play';
   task = null;
   resultCard = false;
@@ -3086,7 +3134,7 @@ function useSpecial(id) {
 // Every new six-gate guardian fight is reached through the shrine on the path; Enter the arena skips it.
 function showBattle({ skipShrine = false } = {}) {
   const e = state();
-  if (!guardianReady(journey(), e)) return false;
+  if (!fightReady(journey(), e)) return false;
   if (!skipShrine && !e.battle && showShrine()) return true;
   // The guardian's introduction plays before its first fight.
   if (!e.battle && storyPending([guardianScene(save.area)])) {
@@ -3183,6 +3231,10 @@ function guardianFrame() {
     if (winGuardian(journey(), state())) {
       persist();
       if (b.tough) claimUlti(won.id, info);
+      if (won.replay) {
+        void rematchWon();
+        return;
+      }
       const p = state().pendingEvolution;
       // Mr. Saymaz celebrates (and, after the last arena, the finale plays) before the evolution.
       afterStory(
@@ -3242,7 +3294,7 @@ function guardianAnswer(index, step) {
 }
 function showLegacyBattle() {
   const route = state();
-  if (!guardianReady(journey(), route)) return false;
+  if (!fightReady(journey(), route)) return false;
   world.hideMechanism();
   document.body.classList.add('in-task');
   const e = state();
@@ -3310,6 +3362,10 @@ function completeBattleTask() {
   if (b.round === 3) {
     if (winGuardian(journey(), e)) {
       persist();
+      if (e.replay) {
+        void rematchWon();
+        return;
+      }
       const p = e.pendingEvolution;
       afterStory(
         winScenes(save.area),
@@ -3603,6 +3659,19 @@ async function act(event) {
       closeShrine();
       showBattle({ skipShrine: true });
       break;
+    case 'replay':
+      await replayArena(d.area != null ? Number(d.area) : save.area);
+      break;
+    case 'rematch-skip': {
+      const e = state();
+      if (!e.replay || e.phase === 'closed') break;
+      closeShrine();
+      e.phase = 'closed';
+      persist();
+      await home();
+      toast(`Practice run complete · ${AREAS[e.area].name}. Your coins are saved.`);
+      break;
+    }
     case 'use-special':
       useSpecial(d.id);
       break;
@@ -3958,7 +4027,7 @@ async function act(event) {
       newExpedition();
       break;
     case 'guardian':
-      if (!guardianReady(journey(), state())) break;
+      if (!fightReady(journey(), state())) break;
       closeModal();
       if (screen !== 'play' || !document.body.classList.contains('playing')) {
         if (!state().battle && shortPath(state())) {

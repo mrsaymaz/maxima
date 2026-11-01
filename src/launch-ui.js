@@ -33,26 +33,44 @@ const chevron =
 function arenaCard(a, i) {
   const status = a.locked
     ? 'Locked'
-    : a.completed
-      ? 'Completed'
-      : a.progress
-        ? `${a.progress}/${a.gates || 6} gates`
-        : 'Ready to explore';
+    : a.replaying
+      ? `Practice · ${a.progress}/${a.gates || 6} gates`
+      : a.completed
+        ? 'Completed · play again'
+        : a.progress
+          ? `${a.progress}/${a.gates || 6} gates`
+          : 'Ready to explore';
   return `<button type="button" class="launch-arena ${a.selected ? 'is-selected' : ''} ${a.locked ? 'is-locked' : ''} ${a.completed ? 'is-complete' : ''}" data-do="area" data-area="${i}" aria-pressed="${a.selected}" aria-label="${esc(a.name)}, ${esc(status)}${a.locked ? '. Complete the previous guardian to unlock.' : ''}" ${a.locked ? 'disabled aria-disabled="true"' : ''}><img class="arena-scenery" src="assets/menu/arena-${i}.svg" alt=""><span class="arena-shade"></span>${a.locked ? `<span class="arena-lock">${lock}</span>` : ''}<span class="arena-caption"><strong>${esc(a.name)}</strong><small>${a.completed ? icon('check') : ''}${esc(status)}</small></span>${a.selected ? `<span class="arena-selected" aria-hidden="true">${icon('check')}</span>` : ''}</button>`;
 }
 export function launchMarkup(c) {
-  const primary = c.firstLaunch ? 'go' : c.completed ? 'lessons' : c.nextArea != null ? 'next-area' : 'enter',
+  // A practice replay under way (0.74.0) continues first; a won arena offers "Play again" under the main button.
+  const primary = c.firstLaunch
+      ? 'go'
+      : c.replaying
+        ? 'enter'
+        : c.completed
+          ? 'lessons'
+          : c.nextArea != null
+            ? 'next-area'
+            : 'enter',
     label = c.firstLaunch
       ? 'PLAY'
-      : c.completed
-        ? 'Choose a new journey'
-        : c.nextArea != null
-          ? 'Explore ' + c.nextAreaTitle
-          : c.guardian
-            ? 'Challenge guardian'
-            : c.resume
-              ? 'Continue expedition'
-              : 'PLAY';
+      : c.replaying
+        ? c.guardian
+          ? 'Rematch the guardian'
+          : c.resume
+            ? 'Continue practice'
+            : 'Start practice run'
+        : c.completed
+          ? 'Choose a new journey'
+          : c.nextArea != null
+            ? 'Explore ' + c.nextAreaTitle
+            : c.guardian
+              ? 'Challenge guardian'
+              : c.resume
+                ? 'Continue expedition'
+                : 'PLAY';
+  const continuing = c.resume && (c.replaying || (!c.completed && c.nextArea == null));
   return `<div class="launch-shell">${homeGuideMarkup(c)}<section class="launch-panel" aria-label="Expedition setup"><header class="launch-header"><div><span class="launch-kicker">YOUR NEXT ADVENTURE</span><h1>Ready to explore?</h1></div><button type="button" class="launch-wallet" data-do="trails" aria-label="Wardrobe, ${c.coins} coins">${icon('coin')}<b>${c.coins}</b></button></header><div class="launch-body"><section class="launch-arenas" aria-labelledby="arena-label"><div class="launch-section-label"><h2 id="arena-label">ARENA</h2><span>${c.areas.filter(a => !a.locked).length} / 3 unlocked</span></div><div class="launch-arena-grid">${c.areas.map(arenaCard).join('')}</div><p class="arena-unlock-note">${(() => {
     const i = Math.max(
         0,
@@ -70,7 +88,7 @@ export function launchMarkup(c) {
     )
     .join(
       '',
-    )}</div></section><div class="launch-selection"><section class="launch-lesson"><div class="launch-section-label"><h2>LESSON</h2></div><button type="button" class="launch-lesson-button" data-do="lessons" aria-label="Change lesson: Grade ${c.grade}, ${esc(c.unitTitle)}"><span class="launch-grade-number">${c.grade}</span><span class="launch-lesson-copy"><small>GRADE ${c.grade} · ${c.lessonKind || 'UNIT'} ${c.unitNumber || 1}</small><strong>${esc(c.unitTitle)}</strong></span>${chevron}</button></section><section class="launch-pace"><div class="launch-section-label"><h2>PACE</h2></div><div class="launch-mode-switch" role="group" aria-label="Difficulty">${['relaxed', 'challenge'].map(m => `<button type="button" data-do="mode" data-mode="${m}" aria-pressed="${m === c.mode}" class="${m === c.mode ? 'is-selected' : ''}">${m === 'relaxed' ? 'Relaxed' : 'Challenge'}</button>`).join('')}</div></section></div></div><footer class="launch-footer"><button type="button" class="launch-play ${c.resume && !c.completed && c.nextArea == null ? 'is-resume' : ''}" data-do="${primary}"><span>${esc(label)}</span>${play}</button>${c.resume && !c.completed && c.nextArea == null ? `<p class="launch-checkpoint">${icon('check')} Saved checkpoint · ${c.progress || 0}/${c.gates || 6} gates · ${esc(c.areaName)}</p>` : ''}<div class="launch-footer-links"><button type="button" data-do="journal">${icon('book')} Practice journal</button>${c.studentLine || '<span>Team progress saves on this device</span>'}${c.install ? `<button type="button" class="launch-install" data-do="install">${icon('download')} Install</button>` : ''}<button type="button" class="launch-help" data-do="help" aria-label="How to play">${icon('help')}</button></div></footer></section></div>`;
+    )}</div></section><div class="launch-selection"><section class="launch-lesson"><div class="launch-section-label"><h2>LESSON</h2></div><button type="button" class="launch-lesson-button" data-do="lessons" aria-label="Change lesson: Grade ${c.grade}, ${esc(c.unitTitle)}"><span class="launch-grade-number">${c.grade}</span><span class="launch-lesson-copy"><small>GRADE ${c.grade} · ${c.lessonKind || 'UNIT'} ${c.unitNumber || 1}</small><strong>${esc(c.unitTitle)}</strong></span>${chevron}</button></section><section class="launch-pace"><div class="launch-section-label"><h2>PACE</h2></div><div class="launch-mode-switch" role="group" aria-label="Difficulty">${['relaxed', 'challenge'].map(m => `<button type="button" data-do="mode" data-mode="${m}" aria-pressed="${m === c.mode}" class="${m === c.mode ? 'is-selected' : ''}">${m === 'relaxed' ? 'Relaxed' : 'Challenge'}</button>`).join('')}</div></section></div></div><footer class="launch-footer"><button type="button" class="launch-play ${continuing ? 'is-resume' : ''}" data-do="${primary}"><span>${esc(label)}</span>${play}</button>${continuing ? `<p class="launch-checkpoint">${icon('check')} ${c.replaying ? 'Practice run' : 'Saved checkpoint'} · ${c.progress || 0}/${c.gates || 6} gates · ${esc(c.areaName)}</p>` : c.replayable && !c.firstLaunch ? `<button type="button" class="launch-replay" data-do="replay">↻ Play ${esc(c.areaName)} again <small>new gates · same lesson · Ulti for a win</small></button>` : ''}<div class="launch-footer-links"><button type="button" data-do="journal">${icon('book')} Practice journal</button>${c.studentLine || '<span>Team progress saves on this device</span>'}${c.install ? `<button type="button" class="launch-install" data-do="install">${icon('download')} Install</button>` : ''}<button type="button" class="launch-help" data-do="help" aria-label="How to play">${icon('help')}</button></div></footer></section></div>`;
 }
 export function lessonMarkup({ grade, units, journeys, selected, teamName, topics = {} }) {
   return `<div class="lesson-browser-body"><div class="lesson-grade-grid" role="group" aria-label="Choose grade">${[5, 6, 7, 8].map(g => `<button type="button" class="lesson-grade ${g === grade ? 'is-selected' : ''}" data-do="grade" data-grade="${g}" aria-pressed="${g === grade}"><small>GRADE</small><b>${g}</b><span>${{ 5: 'Maarif · A2.1', 6: 'Maarif · A2.2', 7: 'MEB · A2', 8: 'MEB · A2' }[g]}</span></button>`).join('')}</div><p class="lesson-browser-hint">Choose any ${grade < 7 ? 'theme' : 'unit'}. ${teamName ? esc(teamName) + ' · ' : ''}Progress is saved separately for each team and lesson.</p><div class="lesson-browser-list">${units

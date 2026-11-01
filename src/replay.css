@@ -1,0 +1,99 @@
+/* Practice replays (0.74.0): "Play again" on the opening screen, the shrine's skip button and the rematch result. */
+.launch-replay {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px 8px;
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 7px 12px;
+  border: 2px dashed #52658d;
+  border-radius: 16px;
+  background: #fff7dc;
+  color: #1b294f;
+  font:
+    900 14px/1.2 MaximaRound,
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.launch-replay small {
+  color: #52658d;
+  font-size: 11px;
+  font-weight: 800;
+}
+@media (hover: hover) {
+  .launch-replay:hover {
+    border-style: solid;
+    background: #fffdf0;
+  }
+}
+@media (max-width: 599px) {
+  .launch-replay {
+    margin-top: 8px;
+    padding: 5px 10px;
+    font-size: 13px;
+  }
+  .launch-replay small {
+    font-size: 10px;
+  }
+}
+.shrine-rematch {
+  background: #3a2a0dcc;
+  border-color: #ffd16666;
+  color: #ffe9b0;
+}
+.shrine-skip {
+  pointer-events: auto;
+  position: absolute;
+  left: 50%;
+  bottom: calc(86px + var(--safe-bottom, 0px));
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #061e2b99;
+  color: #f4edda;
+  font:
+    700 13px/1.2 system-ui,
+    sans-serif;
+  text-decoration: underline;
+}
+.modal.replay-modal {
+  width: min(520px, 100%);
+}
+.replay-done .guide-note .guide-figure {
+  height: 120px;
+}
+.modal .replay-done .guide-bubble {
+  color: #1b294f;
+  font-weight: 800;
+  opacity: 1;
+}
+.replay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.replay-actions .secondary {
+  min-height: 46px;
+  padding: 6px 14px;
+  border: 2px solid #e7d5ac77;
+  border-radius: 12px;
+  background: transparent;
+  color: #f4edda;
+  font-weight: 800;
+}
+.replay-actions .primary-action {
+  flex: 1;
+  min-height: 46px;
+  border: 3px solid #1b294f;
+  border-radius: 14px;
+  background: linear-gradient(#ffe27a, #f3b93d);
+  box-shadow: 0 4px 0 #0b1d2a;
+  color: #1b294f;
+  font-weight: 900;
+  font-size: 16px;
+}

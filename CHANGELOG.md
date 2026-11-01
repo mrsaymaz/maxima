@@ -2,6 +2,10 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.74.0 · Play it again
+
+A won arena can be played again for practice: "Play Whisperwood again" on the opening screen starts a new route with a fresh gate order and new tasks from the same lesson. Coins and English practice count, the creature keeps its level, and the run ends with a guardian rematch. Winning the rematch completes the area again and earns Ulti like any completed area, within the League's daily limits. The rematch can be skipped. See [release notes](docs/releases/RELEASE-v0.74.0.md).
+
 ## 0.73.0 · Who are you?
 
 With the English League on, PLAY first asks "Who are you?". The list comes from the League's Roster tab. Students see only their grade's classes and, in their class, only their own team's names (a one-class grade skips straight to the names). "Show everyone" lists every grade and team. The choice is kept on the device and shown on the opening screen with a Change button. Each area's ticket carries the Student ID, so the League's Ulti_Log shows the student's class and name, and their wins count for their own class grade and League team. Needs English League v11.7.0. See [release notes](docs/releases/RELEASE-v0.73.0.md).

@@ -4,7 +4,7 @@ Ulti points live only in Mr. Saymaz's English League (the tally system). solMaxi
 
 ## What earns Ulti
 
-A completed area, meaning a won guardian fight at the end of a six-gate area, adds Ulti points to the student's **(grade, team)** pool. For example, Grade 5 Hufflepuff has its own pool, and Grade 7 Slytherin has another.
+A completed area, meaning a won guardian fight at the end of a six-gate area, adds Ulti points to the student's **(grade, team)** pool. This includes practice replays (0.74.0): a won guardian rematch at the end of a replayed arena earns Ulti like the first win. The League's `deviceDailyWins`, `teamDailyCap` and `minSeconds` limit how often this counts. For example, Grade 5 Hufflepuff has its own pool, and Grade 7 Slytherin has another.
 
 - **The team** is the creature's team (`gryffindor`, `hufflepuff`, `slytherin`, `ravenclaw`).
 - **The grade** comes from the selected lesson (unit).
@@ -14,7 +14,8 @@ A completed area, meaning a won guardian fight at the end of a six-gate area, ad
   - not coins;
   - not lives;
   - not a restart after running out of lives;
-  - not a retreat from the arena.
+  - not a retreat from the arena;
+  - not a skipped rematch at the end of a practice replay.
 
 ## The League line
 

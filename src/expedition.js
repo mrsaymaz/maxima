@@ -100,6 +100,31 @@ export const guardianReady = (j, e = j.expeditions?.[unlocked(j)]) =>
       (e.chests || []).includes(chapterCount(e) - 1) &&
       j.level === [3, 7, 9][e.area]
     : ready(j) && gate(j) && !j.completed && !j.guardians.includes(j.level === 2 ? 0 : j.level === 5 ? 1 : 2);
+// Practice replays (0.74.0): a won arena can be played again from its first gate, with a fresh gate order and new
+// tasks from the same lesson. The creature keeps its level (a replay never grows it or lowers it). The run ends with
+// a guardian rematch once the last chest is open; winning it completes the area again and earns Ulti (corridor-app).
+export const rematchReady = (j, e) =>
+  j.progressionVersion === 2 &&
+  !!e &&
+  e.replay === true &&
+  j.guardians.includes(e.area) &&
+  !e.rematchWon &&
+  e.phase !== 'closed' &&
+  e.index === gateCount(e) &&
+  (e.chests || []).includes(chapterCount(e) - 1);
+// The guardian fight is open: the first win in the arena, or a practice rematch.
+export const fightReady = (j, e = j.expeditions?.[unlocked(j)]) => guardianReady(j, e) || rematchReady(j, e);
+// A won arena that can be replayed (and is not mid-replay already).
+export const canReplay = (j, area) =>
+  j.progressionVersion === 2 &&
+  j.guardians.includes(area) &&
+  !(j.expeditions?.[area]?.replay && j.expeditions[area].phase !== 'closed');
+export function startReplay(j, unitId, area) {
+  if (j.progressionVersion !== 2 || !j.guardians.includes(area)) return null;
+  const e = (j.expeditions[area] = freshExpedition(j, unitId, area));
+  e.replay = true;
+  return e;
+}
 export const progress = j => TASK_TYPES.reduce((n, k) => n + Math.min(j.sets[k] || 0, required(j)), 0);
 export const maximum = j => TASK_TYPES.length * required(j);
 export function freshJourney() {
@@ -257,7 +282,7 @@ export function milestone(j, e, type, position = e.position, heading = e.heading
 export function finishExpedition(j, e) {
   if (j.progressionVersion === 2) {
     if (e.index !== gateCount(e) || e.phase !== 'end') return { changed: false };
-    return guardianReady(j, e) ? { changed: true, guardian: true } : { changed: false };
+    return fightReady(j, e) ? { changed: true, guardian: true } : { changed: false };
   }
   if (j.completed || e.index !== gateCount(e) || e.phase !== 'end') return { changed: false };
   if (!ready(j)) return { changed: true, nextExpedition: true };
@@ -295,7 +320,7 @@ export function finishRun(j, e) {
   e.revision++;
   if (j.progressionVersion === 2) {
     if (e.index === gateCount(e)) {
-      if (guardianReady(j, e)) return { changed: true, chapter, guardian: true };
+      if (fightReady(j, e)) return { changed: true, chapter, guardian: true };
       e.phase = 'closed';
       return { changed: true, chapter, weekComplete: true };
     }
@@ -321,6 +346,13 @@ export function advance(j) {
 }
 export function winGuardian(j, e) {
   if (j.progressionVersion === 2) {
+    if (rematchReady(j, e) && guardianDefeated(e.battle)) {
+      e.battle = null;
+      e.rematchWon = true;
+      e.phase = 'closed';
+      j.rematches = (j.rematches || 0) + 1;
+      return true;
+    }
     if (!guardianReady(j, e) || !guardianDefeated(e.battle)) return false;
     j.guardians.push(e.area);
     recordGuardianGrowth(j, e);
@@ -444,6 +476,8 @@ function validJourneys(journeys, units) {
         (e.specials !== undefined && (e.pathVersion !== 3 || !validSpecialList(e.specials))) ||
         (e.lives !== undefined && (e.pathVersion !== 3 || !Number.isInteger(e.lives) || e.lives < 0 || e.lives > 5)) ||
         (e.coinStart !== undefined && (!Number.isInteger(e.coinStart) || e.coinStart < 0)) ||
+        (e.replay !== undefined && (e.replay !== true || !j.guardians.includes(e.area))) ||
+        (e.rematchWon !== undefined && (e.rematchWon !== true || e.replay !== true)) ||
         !Number.isInteger(e.area) ||
         e.area < 0 ||
         e.area > 2 ||
