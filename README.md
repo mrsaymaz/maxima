@@ -1,18 +1,20 @@
 # solMaxima · by Mr. Saymaz
 
-Version 0.61.0 · Rich call-outs, first-letter hint, sharp evolution
+Version 0.62.0 · The Elemental Chrysalis
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `solMaxima-v0.61.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `solMaxima-v0.62.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.62.0:** evolutions play as the Elemental Chrysalis: call, gather, a heartbeating elemental shell, a slow-motion burst, and a reveal with a gold FORM N AWAKENED banner. See `docs/RELEASE-v0.62.0.md`.
 
 **0.61.0:** the centre call-outs use the display font with gradients, outlines and motion. Word runs give the first letter. The evolution screen renders sharp and smooth. See `docs/RELEASE-v0.61.0.md`.
 

@@ -1,5 +1,5 @@
 {
- "hash": "c3693f73bbe4",
+ "hash": "867474bdec3a",
  "files": [
   "./",
   "index.html",
@@ -55,6 +55,7 @@
   "environment-kit.js",
   "environment-materials.js",
   "evolution-audio.js",
+  "evolution-chrysalis.js",
   "evolution-effects.js",
   "evolution-pose.js",
   "evolution-stage.js",
