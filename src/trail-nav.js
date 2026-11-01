@@ -161,6 +161,11 @@ export class TrailNavigator {
     this.jumpBuffer = 0;
     this.jumpAssisted = false;
   }
+  // Hold to boost on runs (finger held anywhere, or Shift held). Off the run, a hold starts the usual burst.
+  holdBoost(on) {
+    if (this.runner?.running || (!on && this.runner?.boosting)) return this.runner.holdBoost(this, on);
+    return on ? this.requestBoost() : false;
+  }
   requestBoost() {
     if (this.runner?.running) return this.runner.boost(this);
     if (

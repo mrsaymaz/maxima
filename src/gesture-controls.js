@@ -78,6 +78,8 @@ export function performGesture(world, kind, context, at = null) {
   } else if (kind === 'tap') {
     const r = context === 'free' && at ? rivalAt(world, at.x, at.y) : null;
     done = !!world.attack?.(r);
+  } else if (kind === 'hold' || kind === 'release') {
+    done = !!world.nav?.holdBoost?.(kind === 'hold');
   } else if (context === 'run' && runner) {
     if (kind === 'left') done = runner.shift(-1);
     if (kind === 'right') done = runner.shift(1);
@@ -85,41 +87,79 @@ export function performGesture(world, kind, context, at = null) {
   }
   return done;
 }
+// Hold to boost (0.71): on a run, a finger held still for HOLD_MS anywhere in the action area boosts until it lifts.
+// While held, sliding it SWIPE pixels steers (left/right changes lane, up jumps, down slides) and re-anchors, so one
+// thumb can boost and steer; a second finger can swipe at the same time. Near a crystal wall, a touch casts as the
+// finger goes down, so "tap your creature" always breaks the wall even if the tap turns into a hold.
+export const HOLD_MS = 260;
 export function installGestures(
   world,
   { win = globalThis.window, doc = globalThis.document, onGesture = () => {} } = {},
 ) {
   if (!win?.addEventListener) return () => {};
   const controller = new AbortController(),
-    options = { capture: true, signal: controller.signal };
-  let start = null;
-  const fire = (kind, at) => {
-    const context = start?.context;
-    if (!context) return;
+    options = { capture: true, signal: controller.signal },
+    fingers = new Map();
+  const fire = (finger, kind, at) => {
+    const context = finger?.context;
+    if (!context) return false;
     const done = performGesture(world, kind, context, at);
     onGesture(kind, context, done);
     win.dispatchEvent?.(new (win.CustomEvent || CustomEvent)('maxima-gesture', { detail: { kind, context, done } }));
+    return done;
+  };
+  const release = finger => {
+    clearTimeout(finger.timer);
+    if (finger.holding) {
+      finger.holding = false;
+      if (![...fingers.values()].some(f => f !== finger && f.holding)) fire(finger, 'release');
+    }
   };
   win.addEventListener(
     'pointerdown',
     e => {
-      if (start || e.button > 0 || e.target?.closest?.(EXCLUDED)) return;
+      if (fingers.has(e.pointerId) || e.button > 0 || e.target?.closest?.(EXCLUDED)) return;
       const context = gestureContext(world, doc);
       if (!context) return;
       // The action area owns this finger: no tap-to-walk on the world underneath.
       e.stopPropagation();
-      start = { x: e.clientX, y: e.clientY, t: e.timeStamp, id: e.pointerId, done: false, context };
+      const finger = { x: e.clientX, y: e.clientY, ax: e.clientX, ay: e.clientY, t: e.timeStamp, id: e.pointerId, done: false, context, holding: false, cast: false };
+      fingers.set(e.pointerId, finger);
+      if (context !== 'run') return;
+      if (world.nav?.runner?.crystalInRange?.()) finger.cast = fire(finger, 'tap', { x: e.clientX, y: e.clientY });
+      finger.timer = setTimeout(() => {
+        if (fingers.get(finger.id) !== finger || finger.done || gestureContext(world, doc) !== 'run') return;
+        finger.holding = true;
+        finger.ax = finger.lx ?? finger.x;
+        finger.ay = finger.ly ?? finger.y;
+        fire(finger, 'hold');
+      }, HOLD_MS);
     },
     options,
   );
   win.addEventListener(
     'pointermove',
     e => {
-      if (!start || start.done || e.pointerId !== start.id) return;
-      const kind = classifyGesture(e.clientX - start.x, e.clientY - start.y, e.timeStamp - start.t);
+      const finger = fingers.get(e.pointerId);
+      if (!finger) return;
+      finger.lx = e.clientX;
+      finger.ly = e.clientY;
+      if (finger.holding) {
+        // Steering while holding: each slide past SWIPE fires once and re-anchors at the finger.
+        const kind = classifyGesture(e.clientX - finger.ax, e.clientY - finger.ay, 0);
+        if (kind && kind !== 'tap') {
+          finger.ax = e.clientX;
+          finger.ay = e.clientY;
+          fire(finger, kind);
+        }
+        return;
+      }
+      if (finger.done) return;
+      const kind = classifyGesture(e.clientX - finger.x, e.clientY - finger.y, e.timeStamp - finger.t);
       if (kind) {
-        start.done = true;
-        fire(kind);
+        finger.done = true;
+        clearTimeout(finger.timer);
+        fire(finger, kind);
       }
     },
     options,
@@ -127,21 +167,31 @@ export function installGestures(
   win.addEventListener(
     'pointerup',
     e => {
-      if (!start || e.pointerId !== start.id) return;
-      if (!start.done) {
-        const kind = classifyGesture(e.clientX - start.x, e.clientY - start.y, e.timeStamp - start.t, true);
-        if (kind) fire(kind, { x: e.clientX, y: e.clientY });
+      const finger = fingers.get(e.pointerId);
+      if (!finger) return;
+      fingers.delete(e.pointerId);
+      const held = finger.holding;
+      release(finger);
+      if (!finger.done && !held && !finger.cast) {
+        const kind = classifyGesture(e.clientX - finger.x, e.clientY - finger.y, e.timeStamp - finger.t, true);
+        if (kind) fire(finger, kind, { x: e.clientX, y: e.clientY });
       }
-      start = null;
     },
     options,
   );
   win.addEventListener(
     'pointercancel',
     e => {
-      if (start && e.pointerId === start.id) start = null;
+      const finger = fingers.get(e.pointerId);
+      if (!finger) return;
+      fingers.delete(e.pointerId);
+      release(finger);
     },
     options,
   );
-  return () => controller.abort();
+  return () => {
+    for (const f of fingers.values()) release(f);
+    fingers.clear();
+    controller.abort();
+  };
 }

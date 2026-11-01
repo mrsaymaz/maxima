@@ -769,6 +769,14 @@ function runnerEvents() {
       cue('lane');
       buzz(HAPTICS.correct);
     },
+    boostEmpty: () => {
+      const now = Date.now();
+      if (now - boostEmptyAt < 4000) return;
+      boostEmptyAt = now;
+      runFlash('Out of boost!', 'swamp');
+      buzz(HAPTICS.wrong);
+      if (!controlPrefs.hints.boostEmpty) gestureHint('boostEmpty', 'Collect coins to fill your boost again.');
+    },
     perfect: o => {
       cue('select');
       runFlash('Perfect!', 'great');
@@ -1271,6 +1279,7 @@ function frame() {
             (r.burst > 0 || r.has('dash') ? 0.5 : 0)
         : 0,
     );
+    boostMeter(live ? r : null);
   }
   runnerTeach();
   if (screen === 'evolution' && evoState?.returnAt && !document.hidden && Date.now() >= evoState.returnAt) {
@@ -1401,7 +1410,7 @@ function frame() {
                 : stretch && !done
                   ? {
                       coins: nav.rushEnabled
-                        ? 'Coin trail · jump for high coins · Boost / Shift'
+                        ? 'Coin trail · jump for high coins · hold to boost'
                         : 'Follow the coin trail',
                       rocks:
                         save.mode === 'relaxed'
@@ -1423,7 +1432,11 @@ function frame() {
   const nearest = nav.jumping || nav.recovery > 0 ? null : nav.nearest(),
     context = $('#context-action');
   if (context) {
-    context.classList.toggle('hidden', !!nav.combat?.blocking || !!nav.trials?.blocking);
+    // On runs, boosting is a hold anywhere (gesture-controls.js); the button only shows if Controls turn buttons on.
+    context.classList.toggle(
+      'hidden',
+      !!nav.combat?.blocking || !!nav.trials?.blocking || (!!nav.runner?.running && !controlPrefs.buttons),
+    );
     const b = $('#context-button'),
       rushBoost = !nearest && nav.rushEnabled && nav.moving && !nav.path.length;
     if (b && rushBoost) {
@@ -2581,6 +2594,44 @@ const STUMBLE_TIPS = {
   thorns: 'Run where the thorns are down.',
 };
 const stumbleTip = type => STUMBLE_TIPS[type] || 'Jump the hurdles: ↑ or swipe up.';
+// Hold to boost (0.71): a fuel meter where the Boost button was. It fills with coins, drains while held, and glows
+// while boosting. The first time the tank is half full on a run, a hint teaches the hold.
+let boostMeterEl = null,
+  boostEmptyAt = 0;
+function boostMeter(r) {
+  if (typeof document === 'undefined' || typeof document.body?.appendChild !== 'function') return;
+  if (!r) {
+    if (boostMeterEl) boostMeterEl.hidden = true;
+    document.body.classList?.remove('boosting');
+    return;
+  }
+  if (!boostMeterEl?.isConnected) {
+    boostMeterEl = document.createElement('div');
+    boostMeterEl.id = 'boost-meter';
+    boostMeterEl.setAttribute('role', 'meter');
+    boostMeterEl.setAttribute('aria-label', 'Boost fuel');
+    boostMeterEl.innerHTML = '<span class="bolt" aria-hidden="true">⚡</span><span class="track"><i></i></span><small></small>';
+    document.body.appendChild(boostMeterEl);
+  }
+  const fuel = Math.max(0, Math.min(1, r.boostFuel(nav))),
+    touch = !!touchScreen();
+  boostMeterEl.hidden = false;
+  boostMeterEl.style.setProperty('--fuel', fuel.toFixed(3));
+  boostMeterEl.setAttribute('aria-valuenow', String(Math.round(fuel * 100)));
+  boostMeterEl.classList.toggle('active', !!r.boosting);
+  boostMeterEl.classList.toggle('ready', fuel >= 0.1);
+  boostMeterEl.classList.toggle('full', fuel >= 0.98);
+  const label = r.boosting ? 'Boosting!' : fuel < 0.1 ? 'Collect coins' : touch ? 'Hold to boost' : 'Hold Shift';
+  const small = boostMeterEl.querySelector('small');
+  if (small && small.textContent !== label) small.textContent = label;
+  document.body.classList?.toggle('boosting', !!r.boosting);
+  if (fuel >= 0.5 && !r.boosting && !controlPrefs.hints.boost)
+    gestureHint(
+      'boost',
+      touch ? 'Hold anywhere to boost · slide to steer while you hold' : 'Hold Shift (or the mouse button) to boost',
+      6000,
+    );
+}
 // When rivals wait at a gate, and in the guardian arena, a ring and a dragging hand show the joystick (first two times).
 function joystickLesson(key, html, delay = 700) {
   const k = 'stick:' + key,
@@ -2622,7 +2673,7 @@ function joystickLesson(key, html, delay = 700) {
 function controlsMenu() {
   showModal(
     'Controls',
-    `<p>Swipe up anywhere to jump. Tap anywhere to cast, or tap a rival to aim at it. On runs, swipe left or right to change lane and down to slide. Move with the joystick in clearings and arenas.</p><div class="controls-menu"><button class="secondary wide" data-do="controls-hand">Joystick: ${controlPrefs.left ? 'left side (left-handed)' : 'right side'}</button><button class="secondary wide" data-do="controls-buttons">Jump and Cast buttons: ${controlPrefs.buttons ? 'shown' : 'hidden'}</button><button class="secondary wide" data-do="controls-tutorial">Play the controls tutorial</button></div>`,
+    `<p>On runs, hold anywhere to boost and slide your finger to steer while you hold. Swipe up anywhere to jump. Tap anywhere to cast, or tap a rival to aim at it. On runs, swipe left or right to change lane and down to slide. Move with the joystick in clearings and arenas.</p><div class="controls-menu"><button class="secondary wide" data-do="controls-hand">Joystick: ${controlPrefs.left ? 'left side (left-handed)' : 'right side'}</button><button class="secondary wide" data-do="controls-buttons">Jump and Cast buttons: ${controlPrefs.buttons ? 'shown' : 'hidden'}</button><button class="secondary wide" data-do="controls-tutorial">Play the controls tutorial</button></div>`,
   );
 }
 function renderGuardian() {
@@ -3791,6 +3842,7 @@ document.addEventListener('contextmenu', e => {
   if (e.target.closest('#world,.world-piece')) e.preventDefault();
 });
 function leave() {
+  boostMeter(null);
   voice.stop();
   hideReveal();
   creatureCue(null);

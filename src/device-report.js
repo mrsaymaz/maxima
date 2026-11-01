@@ -13,7 +13,7 @@ export function deviceReport(world, graphics, checks = {}, env = {}) {
     screen = win.screen || {};
   return {
     format: 'maxima-device-report-v1',
-    release: '0.70.0',
+    release: '0.71.0',
     exportedAt: new Date().toISOString(),
     device: {
       userAgent: nav.userAgent || 'unknown',

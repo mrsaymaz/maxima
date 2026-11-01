@@ -75,7 +75,7 @@ export function sketchScene({
     demo === 'arena'
       ? `<g class="sk-stick" transform="translate(${stick === 'left' ? 32 : 168},128)"><circle r="18" fill="#102e28" fill-opacity=".75" stroke="#f2e9c7" stroke-width="2"/><circle class="sk-thumb" r="8" fill="#efe3bc"/></g>`
       : '';
-  return `<div class="sketch-scene demo-${esc(demo)}${loop ? ' loop' : ''}" data-lane="${lane}" style="--x:${demo === 'arena' ? 100 : sketchLaneX(lane)}px"><svg viewBox="0 0 200 150" role="img" aria-label="${esc(caption || 'Your creature on the track')}">${track}${ahead}<g class="sk-creature" style="transform:${at}"><g class="sk-act">${creatureSvg(color)}</g><circle class="sk-tap-ring" r="22" fill="none" stroke="#fff4b8" stroke-width="3"/></g><g class="sk-bolt"><circle r="6" fill="#fff4b8"/><circle r="10" fill="#ffd34d" opacity=".35"/></g>${joystick}</svg></div>`;
+  return `<div class="sketch-scene demo-${esc(demo)}${loop ? ' loop' : ''}" data-lane="${lane}" style="--x:${demo === 'arena' ? 100 : sketchLaneX(lane)}px"><svg viewBox="0 0 200 150" role="img" aria-label="${esc(caption || 'Your creature on the track')}">${track}${ahead}<g class="sk-speed" aria-hidden="true">${[40, 70, 100, 130, 160].map((x, i) => `<line x1="${x}" y1="${60 + (i % 2) * 20}" x2="${x + (x - 100) * 0.2}" y2="${110 + (i % 2) * 20}" stroke="#fff6c8" stroke-width="2" stroke-linecap="round"/>`).join('')}</g><g class="sk-creature" style="transform:${at}"><g class="sk-act">${creatureSvg(color)}</g><circle class="sk-tap-ring" r="22" fill="none" stroke="#fff4b8" stroke-width="3"/></g><g class="sk-bolt"><circle r="6" fill="#fff4b8"/><circle r="10" fill="#ffd34d" opacity=".35"/></g>${joystick}</svg></div>`;
 }
 // Plays one move on a sketch already in the page: lane change, jump, slide or cast (which shatters a crystal wall).
 export function sketchAct(root, kind) {
@@ -90,9 +90,9 @@ export function sketchAct(root, kind) {
       scene.style.setProperty?.('--x', sketchLaneX(lane) + 'px');
     }
   }
-  const cls = { up: 'act-jump', down: 'act-slide', tap: 'act-cast', left: 'act-lane', right: 'act-lane' }[kind];
+  const cls = { up: 'act-jump', down: 'act-slide', tap: 'act-cast', left: 'act-lane', right: 'act-lane', hold: 'act-boost' }[kind];
   if (!cls) return;
-  scene.classList.remove('act-jump', 'act-slide', 'act-cast', 'act-lane');
+  scene.classList.remove('act-jump', 'act-slide', 'act-cast', 'act-lane', 'act-boost');
   void scene.offsetWidth;
   scene.classList.add(cls);
 }

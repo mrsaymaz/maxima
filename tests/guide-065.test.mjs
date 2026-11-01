@@ -12,7 +12,7 @@ test('the opening-screen line follows the journey: welcome, back again, guardian
  assert.equal(homeGuideLine({guardian:'Mossback Warden'}).pose,'point');assert.equal(homeGuideLine({nextArea:1,nextAreaTitle:'Skyreach'}).pose,'cheer');assert.equal(homeGuideLine({completed:true}).pose,'cheer');
  assert.match(homeGuideMarkup({nickname:'<b>'}),/&lt;b&gt;/,'names are escaped');});
 test('Mr. Saymaz hosts the controls tutorial and the danger lessons',()=>{
- assert.match(tutorialMarkup(0),/guide-host.*saymaz-full/s);assert.match(tutorialMarkup(2),/saymaz-point/);assert.match(tutorialMarkup(4),/saymaz-cheer/);
+ assert.match(tutorialMarkup(0),/guide-host.*saymaz-full/s);assert.match(tutorialMarkup(2),/saymaz-point/);assert.match(tutorialMarkup(5),/saymaz-cheer/,'the last step cheers');
  assert.match(lessonMarkup(lessonPlan('roots',{lane:1,attack:{lane:1}})),/guide-host.*saymaz-point.*Roots!/s);});
 test('a cameo pops in with a line and is rate-limited',()=>{const made=[];const doc={createElement:()=>{const e={setAttribute(){},className:'',innerHTML:'',isConnected:true};made.push(e);return e;},body:{appendChild(){}}};
  assert.ok(guideCameo('Well done!',{doc,now:10_000}));assert.match(made[0].innerHTML,/Well done!/);assert.equal(made[0].className,'show');assert.equal(guideCameo('Again',{doc,now:10_500}),false);});

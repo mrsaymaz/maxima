@@ -309,3 +309,78 @@ body.playing.runner-running:not(.in-task) #toast {
     display: none;
   }
 }
+
+/* 0.71 · Hold to boost: the fuel meter sits where the Boost button was (bottom centre). Not a button: hold
+   anywhere on the track instead. It fills with coins, drains while held and glows while boosting. */
+#boost-meter {
+  position: fixed;
+  z-index: 18;
+  left: 50%;
+  bottom: calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 18px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: #0d1a2ccc;
+  border: 1px solid #ffe08a55;
+  color: #fff3d0;
+  pointer-events: none;
+  box-shadow: 0 6px 16px #0006;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+#boost-meter[hidden] {
+  display: none;
+}
+#boost-meter .bolt {
+  font-size: 18px;
+  filter: grayscale(1) opacity(0.6);
+  transition: filter 0.2s, transform 0.2s;
+}
+#boost-meter.ready .bolt {
+  filter: none;
+}
+#boost-meter .track {
+  position: relative;
+  width: 92px;
+  height: 8px;
+  border-radius: 99px;
+  background: #ffffff22;
+  overflow: hidden;
+}
+#boost-meter .track i {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(var(--fuel, 0));
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffb02a, #ffe066);
+  transition: transform 0.15s linear;
+}
+#boost-meter small {
+  font: 800 12px/1 system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.02em;
+  min-width: 86px;
+}
+#boost-meter.full {
+  border-color: #ffe08a;
+  box-shadow: 0 0 14px #ffd34d88, 0 6px 16px #0006;
+}
+#boost-meter.active {
+  border-color: #fff3b0;
+  box-shadow: 0 0 22px #ffd34dcc, 0 6px 16px #0006;
+}
+#boost-meter.active .bolt {
+  transform: scale(1.25) rotate(-8deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  #boost-meter.active .track i {
+    animation: boost-shimmer 0.6s linear infinite;
+  }
+  @keyframes boost-shimmer {
+    50% {
+      filter: brightness(1.35);
+    }
+  }
+}

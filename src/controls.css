@@ -677,3 +677,52 @@ body.playing:not(.show-buttons) .guardian-keyboard {
   transform-box: fill-box;
   transform-origin: center;
 }
+/* 0.71 · Hold to boost: speed lines rush past and the creature leans into a dash. */
+.sketch-scene .sk-speed {
+  opacity: 0;
+}
+.sketch-scene.demo-boost .sk-speed line,
+.sketch-scene.act-boost .sk-speed line {
+  animation: sk-speed 0.45s linear infinite;
+}
+.sketch-scene.demo-boost .sk-speed {
+  opacity: 0.35;
+}
+.sketch-scene.act-boost .sk-speed {
+  opacity: 1;
+}
+.sketch-scene.act-boost .sk-act {
+  animation: sk-boost 0.9s ease-out;
+}
+.sketch-scene.act-boost .sk-tap-ring {
+  animation: sk-ring 0.6s ease-out 2;
+}
+.controls-tutorial .tutorial-hand.hold {
+  animation: tutorial-hold 1.4s ease-in-out infinite;
+}
+@keyframes sk-speed {
+  from {
+    transform: translateY(-30px);
+  }
+  to {
+    transform: translateY(30px);
+  }
+}
+@keyframes sk-boost {
+  30% {
+    transform: translateY(-10px) scale(0.92, 1.1) rotate(-4deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes tutorial-hold {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  30%,
+  70% {
+    transform: translateY(6px) scale(0.88);
+  }
+}

@@ -48,12 +48,12 @@ test('control settings default to the right-hand joystick with hidden buttons, p
 });
 
 test('the tutorial teaches lane, jump, slide and cast by doing them, then shows the joystick on the chosen side',async()=>{
- assert.deepEqual(TUTORIAL_STEPS.map(s=>s.id),['lane','jump','slide','cast','move']);assert.match(tutorialMarkup(4,{left:false}),/joystick on the right/);assert.match(tutorialMarkup(4,{left:true}),/joystick on the left/);assert.match(tutorialMarkup(1,{touch:false}),/keyboard: ↑ or Space/);
+ assert.deepEqual(TUTORIAL_STEPS.map(s=>s.id),['lane','jump','slide','boost','cast','move']);assert.match(tutorialMarkup(5,{left:false}),/joystick on the right/);assert.match(tutorialMarkup(5,{left:true}),/joystick on the left/);assert.match(tutorialMarkup(1,{touch:false}),/keyboard: ↑ or Space/);
  const made=[];const element=()=>{const e={className:'',innerHTML:'',attrs:{},handlers:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener(t,fn){this.handlers[t]=fn;},querySelector:()=>null,remove(){this.removed=true;}};made.push(e);return e;};
  const doc={createElement:element,body:{appendChild(){}}},win={addEventListener(){}};let finished=null;const practised=[];
  const t=runControlsTutorial({doc,win,onDone:r=>finished=r,onPractice:id=>practised.push(id)});assert.equal(t.index,0);
  t.practise('up');assert.equal(t.index,0,'the wrong gesture does not count');t.practise('left');await new Promise(r=>setTimeout(r,700));assert.equal(t.index,1);
- for(const k of['up','down','tap']){t.practise(k);await new Promise(r=>setTimeout(r,700));}assert.equal(t.index,4);assert.deepEqual(practised,['lane','jump','slide','cast']);
+ for(const k of['up','down','hold','tap']){t.practise(k);await new Promise(r=>setTimeout(r,700));}assert.equal(t.index,5);assert.deepEqual(practised,['lane','jump','slide','boost','cast']);
  t.root.handlers.click({target:{closest:()=>({dataset:{tutorial:'next'}})}});assert.deepEqual(finished,{skipped:false,step:'move'});assert.ok(t.root.removed);
  let skipped=null;const s=runControlsTutorial({doc,win,onDone:r=>skipped=r});s.root.handlers.click({target:{closest:()=>({dataset:{tutorial:'skip'}})}});assert.deepEqual(skipped,{skipped:true,step:'lane'});
 });

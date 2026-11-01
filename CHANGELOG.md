@@ -2,6 +2,10 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.71.0 · Hold to boost
+
+On runs, boosting is a hold anywhere on the track: the creature runs faster while you hold and burns fuel, sliding the held finger steers, and letting go stops. A boost meter replaces the button. Taps still cast (instantly near a crystal wall), Shift and the mouse button can be held too, and the controls tutorial teaches the hold. See [release notes](docs/releases/RELEASE-v0.71.0.md).
+
 ## 0.70.0 · The story, beautifully drawn
 
 The story's cut-scenes are redrawn as layered paper-cut vector landscapes for each arena and the finale. The guardians are colossi drawn like their 3D figures, and the Sol Crystal comes back piece by piece. A cinematic frame adds black bars, a storybook title card, a glass dialogue box with typewriter text, parallax and particles. Layouts are tuned for phones and wide screens. See [release notes](docs/releases/RELEASE-v0.70.0.md).

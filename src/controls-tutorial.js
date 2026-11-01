@@ -33,6 +33,15 @@ export const TUTORIAL_STEPS = [
     demo: 'bar',
   },
   {
+    id: 'boost',
+    title: 'Hold to boost',
+    text: 'On a run, hold your finger anywhere to run faster. Slide it to steer while you hold. Coins fill your boost.',
+    want: ['hold'],
+    hand: 'hold',
+    keys: 'hold Shift',
+    demo: 'boost',
+  },
+  {
     id: 'cast',
     title: 'Break crystal walls',
     text: 'A crystal wall blocks the track. Tap your creature to cast and break it! Near gates, tap a rival to aim at it.',
@@ -51,7 +60,9 @@ export const TUTORIAL_STEPS = [
     demo: 'arena',
   },
 ];
-const HANDS = { side: '👉', up: '☝️', down: '👇', tap: '👆' };
+const HANDS = { side: '👉', up: '☝️', down: '👇', tap: '👆', hold: '👆' };
+// A finger held still this long counts as a hold (as in the game, gesture-controls.js).
+const HOLD_PRACTICE_MS = 300;
 const KEYS = {
   ArrowLeft: 'left',
   a: 'left',
@@ -145,7 +156,15 @@ export function runControlsTutorial({
     'pointerdown',
     e => {
       if (e.target.closest?.('button')) return;
-      start = { x: e.clientX, y: e.clientY, t: e.timeStamp, id: e.pointerId, fired: false };
+      clearTimeout(start?.hold);
+      const s = { x: e.clientX, y: e.clientY, t: e.timeStamp, id: e.pointerId, fired: false };
+      s.hold = setTimeout(() => {
+        if (start === s && !s.fired) {
+          s.fired = true;
+          practise('hold');
+        }
+      }, HOLD_PRACTICE_MS);
+      start = s;
     },
     options,
   );
@@ -156,6 +175,7 @@ export function runControlsTutorial({
       const kind = classifyGesture(e.clientX - start.x, e.clientY - start.y, e.timeStamp - start.t);
       if (kind) {
         start.fired = true;
+        clearTimeout(start.hold);
         practise(kind);
       }
     },
@@ -165,6 +185,7 @@ export function runControlsTutorial({
     'pointerup',
     e => {
       if (!start || e.pointerId !== start.id) return;
+      clearTimeout(start.hold);
       if (!start.fired) {
         const kind = classifyGesture(e.clientX - start.x, e.clientY - start.y, e.timeStamp - start.t, true);
         if (kind) practise(kind);
@@ -181,7 +202,7 @@ export function runControlsTutorial({
         finish(true);
         return;
       }
-      const kind = KEYS[key];
+      const kind = e.key === 'Shift' ? 'hold' : KEYS[key];
       if (kind && !done && TUTORIAL_STEPS[index].want?.includes(kind)) {
         e.preventDefault();
         e.stopImmediatePropagation();

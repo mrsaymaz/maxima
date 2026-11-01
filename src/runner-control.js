@@ -21,6 +21,10 @@ import { gateCount, chapterCount, shortPath } from './path-shape.js';
 // track slides beneath it; the final run.real metres are real running into the gate clearing, so the run ends
 // exactly where the valley expects. Lanes are real lateral offsets either way.
 // Lane changes, slides, jumps, Cast and Boost arrive as discrete requests from keys, swipes and buttons.
+// Hold to boost: fuel per second while held, refill per second of the runner's own tank, and the least fuel to start.
+export const BOOST_DRAIN = 0.32,
+  BOOST_REFILL = 0.08,
+  BOOST_START = 0.1;
 export const POWER_SECONDS = { magnet: 8, double: 10, dash: 2.5 };
 const BOULDER_HEIGHT = 1,
   THORN_HEIGHT = 1.05,
@@ -52,6 +56,11 @@ export class RunnerControl {
     this.power = {};
     this.burst = 0;
     this.burstCooldown = 0;
+    // Hold to boost (0.71): while a finger (or Shift) is held, the creature runs 1.4× faster and burns fuel.
+    // Fuel is the coin-chain fuel when there is one (nav.rush), otherwise the runner's own tank, which refills.
+    this.holding = false;
+    this.boosting = false;
+    this.fuel = 1;
     this.lastMove = { t: -9, kind: null, lane: 1 };
     this.passed = new Set();
     this.wasGrounded = true;
@@ -113,6 +122,7 @@ export class RunnerControl {
     this.running = false;
     this.power = {};
     this.burst = 0;
+    this.stopBoost();
     this.closeWord(section);
     if (nav && !section.run.finale) this.beginArrival(section, nav);
     this.events.finish?.(section);
@@ -195,12 +205,19 @@ export class RunnerControl {
     this.sliding = 0;
     return nav.requestJump();
   }
+  // The crystal gate a Cast would shatter now (within 18 m ahead), if any.
+  crystalInRange() {
+    if (!this.running) return null;
+    return (
+      this.section.run.obstacles.find(
+        o => o.type === 'crystal' && !this.knocked.has(o.id) && o.s - this.s > -0.5 && o.s - this.s < 18,
+      ) || null
+    );
+  }
   // Cast shatters the nearest crystal gate within 18 m ahead.
   cast() {
     if (!this.running) return false;
-    const gate = this.section.run.obstacles.find(
-      o => o.type === 'crystal' && !this.knocked.has(o.id) && o.s - this.s > -0.5 && o.s - this.s < 18,
-    );
+    const gate = this.crystalInRange();
     if (!gate) return false;
     this.knocked.add(gate.id);
     this.events.crystal?.(gate);
@@ -214,6 +231,39 @@ export class RunnerControl {
     this.burstCooldown = nav.rush ? 0 : 5;
     this.events.boost?.();
     return true;
+  }
+  // Fuel for holding: the coin-chain fuel if this journey has it, otherwise the runner's own tank (0–1).
+  boostFuel(nav) {
+    return nav?.rush ? nav.rush.fuel : this.fuel;
+  }
+  setBoostFuel(nav, value) {
+    if (nav?.rush) nav.rush.fuel = value;
+    else this.fuel = value;
+  }
+  // Hold to boost: on = finger down (or Shift held), off = released. Starting needs a little fuel.
+  holdBoost(nav, on) {
+    if (!on) {
+      this.holding = false;
+      if (this.boosting) this.stopBoost('release');
+      return true;
+    }
+    if (!this.running || this.arrival) return false;
+    this.holding = true;
+    if (this.boostFuel(nav) < BOOST_START) {
+      this.events.boostEmpty?.();
+      return false;
+    }
+    if (!this.boosting) {
+      this.boosting = true;
+      this.events.boost?.({ hold: true });
+    }
+    return true;
+  }
+  stopBoost(reason = 'stop') {
+    const was = this.boosting;
+    this.boosting = false;
+    this.holding = false;
+    if (was) this.events.boostEnd?.(reason);
   }
   has(kind) {
     return kind === 'shield' ? !!this.power.shield : (this.power[kind] || 0) > 0;
@@ -230,6 +280,16 @@ export class RunnerControl {
     this.clock += dt;
     for (const k of ['sliding', 'stun', 'mire', 'burst', 'burstCooldown']) this[k] = Math.max(0, this[k] - dt);
     for (const k of ['magnet', 'double', 'dash']) if (this.power[k]) this.power[k] = Math.max(0, this.power[k] - dt);
+    // Holding keeps the burst alive and burns fuel; letting go leaves a short tail. The own tank refills when idle.
+    if (this.boosting) {
+      const fuel = Math.max(0, this.boostFuel(nav) - dt * BOOST_DRAIN);
+      this.setBoostFuel(nav, fuel);
+      this.burst = Math.max(this.burst, 0.15);
+      if (fuel <= 0) {
+        this.stopBoost('empty');
+        this.events.boostEmpty?.();
+      }
+    } else if (!nav.rush) this.fuel = Math.min(1, this.fuel + dt * BOOST_REFILL);
     const dash = this.has('dash'),
       target =
         this.stun > 0

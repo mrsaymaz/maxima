@@ -695,7 +695,8 @@ export class World {
         return;
       if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat && this.nav.requestBoost) {
         e.preventDefault();
-        this.nav.requestBoost();
+        if (this.nav.holdBoost) this.nav.holdBoost(true);
+        else this.nav.requestBoost();
         return;
       }
       if ((e.code === 'KeyJ' || e.code === 'KeyF') && !e.repeat && this.attack) {
@@ -715,7 +716,11 @@ export class World {
         this.keys.add(key);
       }
     });
-    listen(window, 'keyup', e => this.keys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key));
+    listen(window, 'keyup', e => {
+      this.keys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key);
+      // Releasing Shift ends a held boost.
+      if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && this.nav.holdBoost) this.nav.holdBoost(false);
+    });
     const release = () => {
       this.keys.clear();
       this.setInput(0, 0);
