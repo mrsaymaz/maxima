@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{Chrysalis,chrysalisTimes}from'../dist/evolution-chrysalis.js';import{EVOLUTION_SCORES,EVOLUTION_DURATION,evolutionFrame}from'../dist/evolution-timeline.js';
+import{Chrysalis,chrysalisTimes}from'../src/evolution-chrysalis.js';import{EVOLUTION_SCORES,EVOLUTION_DURATION,evolutionFrame}from'../src/evolution-timeline.js';
 const palette={color:'#ffb968',accent:'#ff8358'};
 const visibleMeshes=c=>{let n=0;c.root.traverse(o=>{if(!o.visible)return;let v=o;while(v){if(!v.visible)return;v=v.parent;}if(o.isInstancedMesh){const m=new (o.matrix.constructor)();for(let i=0;i<o.count;i++){o.getMatrixAt(i,m);if(Math.abs(m.elements[0])+Math.abs(m.elements[5])>1e-6&&m.elements[13]>-900){n++;break;}}}else if(o.isMesh&&(o.material.opacity??1)>.01&&o.parent?.visible!==false)n++;});return n;};
 test('five beats in order for every element: call, gather, chrysalis, burst, reveal; the swap stays inside the burst light',()=>{for(const element of Object.keys(EVOLUTION_SCORES)){const t=chrysalisTimes(EVOLUTION_SCORES[element]);

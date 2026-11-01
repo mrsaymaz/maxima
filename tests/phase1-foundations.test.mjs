@@ -1,11 +1,11 @@
-import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
-import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
-import{makeCorridorEnclosure}from'../dist/corridor-geometry.js';import{bankSection}from'../dist/valley-banks.js';
-import{freshJourney,freshExpedition,chooseBranch}from'../dist/expedition.js';import{TrailNavigator}from'../dist/trail-nav.js';
-import{sectionFor,localPoint,surfaceOnCourse}from'../dist/traversal-layout.js';import{composedHalfWidth,scenicSurface}from'../dist/expedition-composition.js';
-import{makeTraversalScenery}from'../dist/traversal-props.js';import{groundMaterial}from'../dist/world-style.js';
-import{CreatureCamera,framesBoxes}from'../dist/camera-rig.js';import{castTrailCamera}from'../dist/trail-camera-collision.js';
-import{TrailWorld}from'../dist/trail-world.js';import{FrameMetrics}from'../dist/render-quality.js';
+import{RUNNER,TRAIL_STRETCH,stretchZ}from'../src/runner-mode.js';
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../src/vendor/three.module.min.js';
+import{makeCorridorEnclosure}from'../src/corridor-geometry.js';import{bankSection}from'../src/valley-banks.js';
+import{freshJourney,freshExpedition,chooseBranch}from'../src/expedition.js';import{TrailNavigator}from'../src/trail-nav.js';
+import{sectionFor,localPoint,surfaceOnCourse}from'../src/traversal-layout.js';import{composedHalfWidth,scenicSurface}from'../src/expedition-composition.js';
+import{makeTraversalScenery}from'../src/traversal-props.js';import{groundMaterial}from'../src/world-style.js';
+import{CreatureCamera,framesBoxes}from'../src/camera-rig.js';import{castTrailCamera}from'../src/trail-camera-collision.js';
+import{TrailWorld}from'../src/trail-world.js';import{FrameMetrics}from'../src/render-quality.js';
 const state=()=>{const e=freshExpedition(freshJourney(),'g5u1',0);chooseBranch(e,'left');return e;};
 test('moving jump keeps horizontal travel through anticipation and still launches/lands safely',()=>{
  const e=state(),n=new TrailNavigator(e);n.player={x:0,z:2};n.cancelJump();const z=n.player.z;assert.equal(n.requestJump(),true);n.step(.06,{x:0,z:-1});assert.equal(n.jumpStage,'anticipation');assert.ok(z-n.player.z>.15);n.step(.08,{x:0,z:-1});assert.equal(n.jumpStage,'air');assert.ok(n.y>0);for(let i=0;i<70;i++)n.step(.016);assert.equal(n.grounded,true);assert.equal(n.jumpStage,'ground');assert.equal(n.recovery,0);

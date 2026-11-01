@@ -1,10 +1,10 @@
-import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
-import{TERRAIN_CHUNKS}from'../dist/valley-terrain.js';
+import{RUNNER,TRAIL_STRETCH,stretchZ}from'../src/runner-mode.js';
+import{TERRAIN_CHUNKS}from'../src/valley-terrain.js';
 const FLAT_TOLERANCE=1e-5;
 import{test}from'node:test';import assert from'node:assert/strict';
-import{terrainHeight,buildTerrainChunks,TERRAIN_BOUNDS}from'../dist/valley-terrain.js';
-import{chapterPath,START,END,pathDistance}from'../dist/trail-layout.js';
-import{composedHalfWidth}from'../dist/expedition-composition.js';
+import{terrainHeight,buildTerrainChunks,TERRAIN_BOUNDS}from'../src/valley-terrain.js';
+import{chapterPath,START,END,pathDistance}from'../src/trail-layout.js';
+import{composedHalfWidth}from'../src/expedition-composition.js';
 const paths=[];for(let chapter=0;chapter<5;chapter++)for(const side of['left','right'])paths.push(chapterPath(chapter,side));paths.push([{x:0,z:12},START,{x:0,z:2}],[{x:0,z:stretchZ(-658)},END,{x:0,z:END.z-6}]);
 const protectedPoint=p=>paths.some(path=>pathDistance(p,path)<=Math.max(composedHalfWidth(p.z),3.2)+.45);
 

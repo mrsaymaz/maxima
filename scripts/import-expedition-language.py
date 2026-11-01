@@ -307,7 +307,7 @@ def build(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--sources', type=Path, default=DEFAULT_SOURCES)
-    parser.add_argument('--base-data', type=Path, default=ROOT/'dist/data/units.json')
-    parser.add_argument('--output', type=Path, default=ROOT/'dist/data/expedition-language.json')
-    parser.add_argument('--documentation', type=Path, default=ROOT/'dist/data/EXPEDITION-SOURCES.md')
+    parser.add_argument('--base-data', type=Path, default=ROOT/'content/data/units.json')
+    parser.add_argument('--output', type=Path, default=ROOT/'content/data/expedition-language.json')
+    parser.add_argument('--documentation', type=Path, default=ROOT/'content/data/EXPEDITION-SOURCES.md')
     build(parser.parse_args())

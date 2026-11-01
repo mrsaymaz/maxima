@@ -1,10 +1,1 @@
-// Keep exploration framing tied to terrain while the creature visibly jumps.
-export class CameraGround{
- constructor(){this.y=null;}
- update(dt,{footY=0,grounded=true,reset=false}={}){
-  if(!Number.isFinite(footY))footY=0;
-  if(reset||this.y===null){this.y=footY;return this.y;}
-  if(grounded){if(Math.abs(footY-this.y)>3)this.y=footY;else this.y+=(footY-this.y)*(1-Math.exp(-(Number.isFinite(dt)?Math.max(0,dt):0)*14));}
-  return this.y;
- }
-}
+var a=Object.defineProperty;var e=(t,s)=>a(t,"name",{value:s,configurable:!0});class y{static{e(this,"CameraGround")}constructor(){this.y=null}update(s,{footY:i=0,grounded:h=!0,reset:r=!1}={}){return Number.isFinite(i)||(i=0),r||this.y===null?(this.y=i,this.y):(h&&(Math.abs(i-this.y)>3?this.y=i:this.y+=(i-this.y)*(1-Math.exp(-(Number.isFinite(s)?Math.max(0,s):0)*14))),this.y)}}export{y as CameraGround};

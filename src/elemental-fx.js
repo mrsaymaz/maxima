@@ -1,0 +1,337 @@
+import * as T from './vendor/three.module.min.js';
+import { elementalAttack } from './elemental-attacks.js';
+import { castPresentation } from './combat-presentation.js';
+const PARTNERS = ['hufflepuff', 'gryffindor', 'slytherin', 'ravenclaw'],
+  TRAIL_POINTS = 9;
+export class ElementalFX {
+  constructor(scene) {
+    this.scene = scene;
+    this.root = new T.Group();
+    this.root.name = 'elemental-projectiles';
+    scene.add(this.root);
+    this.pool = new Map();
+    this.bursts = [];
+    this.materials = new Map();
+    this.cast = null;
+    this.spare = new Map();
+    this.impactSpare = new Map();
+    this.object = new T.Object3D();
+    this.time = 0;
+    this.geometries = {
+      orb: new T.IcosahedronGeometry(0.12, 1),
+      shard: new T.OctahedronGeometry(0.14, 0),
+      ring: new T.TorusGeometry(0.16, 0.012, 4, 20, Math.PI * 1.65),
+      leaf: new T.SphereGeometry(0.075, 5, 3),
+      ember: new T.ConeGeometry(0.04, 0.17, 4),
+      drop: new T.SphereGeometry(0.04, 5, 4),
+      disk: new T.RingGeometry(0.12, 0.15, 18),
+    };
+    for (const p of PARTNERS) {
+      this.spare.set(
+        p,
+        Array.from({ length: 4 }, () => this.makeSlot(p)),
+      );
+      this.impactSpare.set(
+        p,
+        Array.from({ length: 4 }, () => this.makeImpact(p)),
+      );
+    }
+  }
+  material(partner, accent = false) {
+    const key = partner + accent;
+    if (!this.materials.has(key)) {
+      const s = elementalAttack(partner);
+      this.materials.set(
+        key,
+        new T.MeshBasicMaterial({
+          color: accent ? s.accent : s.color,
+          transparent: true,
+          opacity: 0.85,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
+    }
+    return this.materials.get(key);
+  }
+  make(partner) {
+    const element = elementalAttack(partner).element,
+      g = new T.Group();
+    g.userData = { element, partner };
+    const add = (kind, accent = false) => {
+      const m = new T.Mesh(this.geometries[kind], this.material(partner, accent));
+      g.add(m);
+      return m;
+    };
+    if (element === 'air') {
+      for (let i = 0; i < 3; i++) {
+        const m = add('ring', i === 0);
+        m.position.z = -i * 0.09;
+        m.rotation.z = i * 2.1;
+        m.scale.setScalar(1 - i * 0.16);
+      }
+    } else if (element === 'fire') {
+      add('orb', true);
+      for (let i = 0; i < 3; i++) {
+        const m = add('ember');
+        m.position.z = -0.12 - i * 0.06;
+        m.rotation.x = Math.PI / 2;
+        m.scale.setScalar(1 - i * 0.18);
+      }
+    } else if (element === 'nature') {
+      const c = add('shard', true);
+      c.scale.set(0.72, 0.72, 1.1);
+      for (let i = 0; i < 3; i++) {
+        const m = add('leaf');
+        m.position.set(Math.cos(i * 2.1) * 0.1, Math.sin(i * 2.1) * 0.1, -0.06);
+        m.scale.set(0.35, 1.1, 0.6);
+        m.rotation.z = i * 2.1;
+      }
+    } else {
+      const c = add('orb');
+      c.scale.set(0.8, 0.8, 1.25);
+      for (let i = 0; i < 2; i++) {
+        const m = add('ring', true);
+        m.position.z = -i * 0.12;
+        m.scale.setScalar(0.85 - i * 0.2);
+      }
+    }
+    return g;
+  }
+  makeSlot(partner) {
+    const group = this.make(partner),
+      geometry = new T.BufferGeometry(),
+      n = (TRAIL_POINTS - 1) * 6;
+    geometry.setAttribute('position', new T.Float32BufferAttribute(new Float32Array(n * 3), 3));
+    geometry.setAttribute('color', new T.Float32BufferAttribute(new Float32Array(n * 3), 3));
+    const material = new T.MeshBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.32,
+        depthWrite: false,
+        side: T.DoubleSide,
+        blending: T.AdditiveBlending,
+        toneMapped: false,
+      }),
+      trail = new T.Mesh(geometry, material);
+    trail.frustumCulled = false;
+    trail.name = 'elemental-travelling-trail';
+    return { group, trail, points: [], partner };
+  }
+  makeImpact(partner) {
+    const group = new T.Group(),
+      element = elementalAttack(partner).element,
+      mat = this.material(partner).clone(),
+      accent = this.material(partner, true).clone();
+    mat.opacity = 0.65;
+    accent.opacity = 0.7;
+    const ring = new T.Mesh(this.geometries.ring, accent);
+    ring.name = element + '-impact-front';
+    group.add(ring);
+    const bits = new T.InstancedMesh(
+      this.geometries[
+        element === 'fire' ? 'ember' : element === 'nature' ? 'leaf' : element === 'water' ? 'drop' : 'shard'
+      ],
+      mat,
+      8,
+    );
+    bits.name = element + '-impact-fragments';
+    bits.frustumCulled = false;
+    group.add(bits);
+    const after = new T.Mesh(element === 'nature' ? this.geometries.shard : this.geometries.disk, mat);
+    after.name = element + '-aftermath';
+    group.add(after);
+    return { group, ring, bits, after, materials: [mat, accent], partner, element, age: 0 };
+  }
+  lease(partner) {
+    const list = this.spare.get(partner) || this.spare.get('hufflepuff'),
+      slot = list.pop();
+    if (!slot) return null;
+    slot.points = [];
+    this.root.add(slot.group, slot.trail);
+    return slot;
+  }
+  release(slot) {
+    this.root.remove(slot.group, slot.trail);
+    slot.points = [];
+    this.spare.get(slot.partner).push(slot);
+  }
+  impact(p, kind) {
+    if (kind === 'miss') return;
+    let b = this.impactSpare.get(p.partner)?.pop();
+    if (!b) {
+      const old = this.bursts.shift();
+      if (old) {
+        this.root.remove(old.group);
+        this.impactSpare.get(old.partner).push(old);
+      }
+      b = this.impactSpare.get(p.partner)?.pop();
+    }
+    if (!b) return;
+    while (this.bursts.length >= 4) {
+      const old = this.bursts.shift();
+      this.root.remove(old.group);
+      this.impactSpare.get(old.partner).push(old);
+    }
+    Object.assign(b, {
+      age: 0,
+      x: p.x,
+      y: p.y,
+      z: p.z,
+      heading: p.heading || 0,
+      kind,
+      deflect: !!p.blocked || kind === 'solid',
+    });
+    b.group.position.set(p.x, p.y, p.z);
+    b.group.rotation.set(0, b.heading, 0);
+    b.group.scale.setScalar(b.deflect ? 0.6 : 1);
+    this.root.add(b.group);
+    this.bursts.push(b);
+  }
+  trail(slot, p, effects) {
+    const points = slot.points,
+      last = points.at(-1);
+    if (!last || Math.hypot(p.x - last.x, p.y - last.y, p.z - last.z) > 0.035) points.push({ x: p.x, y: p.y, z: p.z });
+    if (points.length > TRAIL_POINTS) points.shift();
+    while (points.length > 2 && Math.hypot(points[0].x - p.x, points[0].y - p.y, points[0].z - p.z) > 1.2)
+      points.shift();
+    const pos = slot.trail.geometry.attributes.position,
+      col = slot.trail.geometry.attributes.color,
+      c = new T.Color(elementalAttack(p.partner).color),
+      side = { x: Math.cos(p.heading), z: -Math.sin(p.heading) },
+      width = p.element === 'fire' ? 0.05 : p.element === 'water' ? 0.04 : 0.025,
+      start = Math.max(0, points.length - (effects === 'low' ? 4 : TRAIL_POINTS));
+    let v = 0;
+    for (let i = 0; i < TRAIL_POINTS - 1; i++) {
+      const a = points[Math.max(start, Math.min(i, points.length - 1))] || p,
+        b = points[Math.max(start, Math.min(i + 1, points.length - 1))] || p,
+        t = i / (TRAIL_POINTS - 1),
+        w = width * (0.12 + t * 0.88);
+      for (const [k, s] of [
+        [a, -1],
+        [a, 1],
+        [b, 1],
+        [a, -1],
+        [b, 1],
+        [b, -1],
+      ]) {
+        pos.setXYZ(v, k.x + side.x * w * s, k.y, k.z + side.z * w * s);
+        col.setXYZ(v, c.r * t * 0.7, c.g * t * 0.7, c.b * t * 0.7);
+        v++;
+      }
+    }
+    pos.needsUpdate = true;
+    col.needsUpdate = true;
+    slot.trail.visible = points.length > 1;
+    slot.trail.material.opacity = effects === 'low' ? 0.16 : 0.3;
+  }
+  update(dt, projectiles = [], attack = null, player = null, visible = true, effects = 'medium') {
+    this.root.visible = visible;
+    if (!visible) return;
+    dt = Math.max(0, Math.min(0.1, dt));
+    this.time += dt;
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      quality = reduced ? 'low' : effects,
+      ids = new Set(projectiles.map(p => p.id));
+    for (const [id, g] of this.pool)
+      if (!ids.has(id)) {
+        this.release(g.userData.slot);
+        this.pool.delete(id);
+      }
+    for (const p of projectiles) {
+      let g = this.pool.get(p.id);
+      if (!g) {
+        const slot = this.lease(p.partner);
+        if (!slot) continue;
+        g = slot.group;
+        g.userData.slot = slot;
+        this.pool.set(p.id, g);
+      }
+      g.position.set(p.x, p.y, p.z);
+      g.rotation.set(0, p.heading, 0);
+      g.scale.setScalar(1);
+      g.children.forEach((m, i) => {
+        m.rotation.z = this.time * (p.element === 'water' ? -5 : 5) * (i + 1);
+      });
+      this.trail(g.userData.slot, p, quality);
+    }
+    if (attack?.ranged && player) {
+      if (!this.cast || this.cast.userData.partner !== attack.partner) {
+        if (this.cast) this.root.remove(this.cast);
+        this.cast = this.make(attack.partner);
+        this.root.add(this.cast);
+      }
+      const f = castPresentation(attack);
+      this.cast.visible = !f.released || f.after < 0.08;
+      this.cast.position.set(player.x, player.y, player.z);
+      this.cast.rotation.set(0, attack.heading, 0);
+      this.cast.scale.setScalar(f.released ? Math.max(0.1, 1 - f.after / 0.08) : 0.15 + f.charge * 0.85);
+      this.cast.children.forEach(
+        (m, i) => (m.rotation.z = (reduced ? 0 : this.time * (attack.element === 'nature' ? 2 : 4)) * (i + 1)),
+      );
+    } else if (this.cast) this.cast.visible = false;
+    const alive = [];
+    for (const b of this.bursts) {
+      b.age += dt;
+      const life = b.deflect ? 0.3 : b.element === 'fire' ? 0.58 : b.element === 'nature' ? 0.7 : 0.62;
+      if (b.age >= life) {
+        this.root.remove(b.group);
+        this.impactSpare.get(b.partner).push(b);
+        continue;
+      }
+      const t = b.age / life,
+        fade = 1 - t;
+      b.group.visible = true;
+      b.materials.forEach(m => (m.opacity = fade * (quality === 'low' ? 0.28 : 0.65)));
+      b.ring.scale.setScalar(0.5 + t * (b.element === 'air' ? 4 : 2.7));
+      b.ring.rotation.z = b.element === 'air' ? t * 2 : 0;
+      b.ring.visible = t < 0.65;
+      b.bits.count = b.deflect ? 2 : quality === 'low' ? 3 : 8;
+      for (let i = 0; i < b.bits.count; i++) {
+        const a = (i / b.bits.count) * Math.PI * 2,
+          s = b.element === 'nature' ? 1.0 : b.element === 'water' ? 1.15 : 1.4,
+          r = t * s;
+        this.object.position.set(
+          Math.cos(a) * r,
+          Math.sin(a) * r - (b.element === 'water' ? t * t * 0.8 : 0),
+          -0.02 - t * 0.12,
+        );
+        this.object.rotation.set(a, t * 3, a + (b.element === 'fire' ? Math.PI / 2 : 0));
+        this.object.scale.setScalar((b.element === 'nature' ? 0.65 : 1) * fade);
+        this.object.updateMatrix();
+        b.bits.setMatrixAt(i, this.object.matrix);
+      }
+      b.bits.instanceMatrix.needsUpdate = true;
+      b.after.visible = !b.deflect && t > 0.2 && quality !== 'low';
+      b.after.scale.setScalar(b.element === 'nature' ? fade * 1.5 : 0.6 + t * 2.4);
+      b.after.rotation.z = b.element === 'water' ? t * 2 : 0;
+      alive.push(b);
+    }
+    this.bursts = alive;
+  }
+  clear() {
+    for (const g of this.pool.values()) this.release(g.userData.slot);
+    this.pool.clear();
+    for (const b of this.bursts) {
+      this.root.remove(b.group);
+      this.impactSpare.get(b.partner).push(b);
+    }
+    this.bursts = [];
+    if (this.cast) {
+      this.root.remove(this.cast);
+      this.cast = null;
+    }
+  }
+  dispose() {
+    this.clear();
+    this.scene.remove(this.root);
+    for (const slots of this.spare.values())
+      for (const s of slots) {
+        s.trail.geometry.dispose();
+        s.trail.material.dispose();
+      }
+    for (const slots of this.impactSpare.values()) for (const s of slots) s.materials.forEach(m => m.dispose());
+    Object.values(this.geometries).forEach(g => g.dispose());
+    this.materials.forEach(m => m.dispose());
+  }
+}

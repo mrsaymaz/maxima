@@ -1,6 +1,1 @@
-// Coin contact follows the rendered body's oriented bounds, not one small centre point.
-export function touchesCoin(nav,coin){
- const p=nav.player,b=nav.pickupBounds||{halfWidth:nav.radius,halfDepth:nav.radius},yaw=nav.heading||0,dx=coin.x-p.x,dz=coin.z-p.z,side=dx*Math.cos(yaw)-dz*Math.sin(yaw),forward=dx*Math.sin(yaw)+dz*Math.cos(yaw),margin=.30;
- const sx=Math.max(0,Math.abs(side)-Math.max(nav.radius||.24,b.halfWidth||0)),sz=Math.max(0,Math.abs(forward)-Math.max(nav.radius||.24,b.halfDepth||0));
- return sx*sx+sz*sz<=margin*margin&&coin.y>=nav.y-.22&&coin.y<=nav.y+nav.height+.22;
-}
+var f=Object.defineProperty;var x=(h,t)=>f(h,"name",{value:t,configurable:!0});function l(h,t){const s=h.player,d=h.pickupBounds||{halfWidth:h.radius,halfDepth:h.radius},a=h.heading||0,i=t.x-s.x,r=t.z-s.z,o=i*Math.cos(a)-r*Math.sin(a),p=i*Math.sin(a)+r*Math.cos(a),M=.3,e=Math.max(0,Math.abs(o)-Math.max(h.radius||.24,d.halfWidth||0)),u=Math.max(0,Math.abs(p)-Math.max(h.radius||.24,d.halfDepth||0));return e*e+u*u<=M*M&&t.y>=h.y-.22&&t.y<=h.y+h.height+.22}x(l,"touchesCoin");export{l as touchesCoin};

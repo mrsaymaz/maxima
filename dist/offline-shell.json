@@ -1,5 +1,5 @@
 {
- "hash": "a214e6a889bb",
+ "hash": "811674db2305",
  "files": [
   "./",
   "index.html",
@@ -8,7 +8,6 @@
   "data/lesson-catalog.json",
   "adaptive-resolution.js",
   "app-shell.js",
-  "app.js",
   "aqueduct-channel.js",
   "aqueduct-story.js",
   "arena-art.js",
@@ -132,7 +131,6 @@
   "runner-input.js",
   "runner-mode.js",
   "runner-props.js",
-  "runner-save.js",
   "runner-walls.js",
   "runner.css",
   "runtime-lifecycle.js",

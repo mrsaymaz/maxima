@@ -1,10 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {stickVector,bindStick} from '../dist/touch-stick.js';
-import {TrailNavigator} from '../dist/trail-nav.js';
-import {freshJourney,freshExpedition} from '../dist/expedition.js';
-import {BodyMotion} from '../dist/body-motion.js';
-import * as T from '../dist/vendor/three.module.min.js';
+import {stickVector,bindStick} from '../src/touch-stick.js';
+import {TrailNavigator} from '../src/trail-nav.js';
+import {freshJourney,freshExpedition} from '../src/expedition.js';
+import {BodyMotion} from '../src/body-motion.js';
+import * as T from '../src/vendor/three.module.min.js';
 test('radial stick has neutral center, graduated speed and bounded diagonal output',()=>{
  assert.equal(stickVector(2,1).x,0);
  const slow=stickVector(14,0),fast=stickVector(28,0),diagonal=stickVector(90,90);

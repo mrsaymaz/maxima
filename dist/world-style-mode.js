@@ -1,11 +1,1 @@
-// Which world style this page shows: the classic look, or the toy-brick prototype. `?style=brick` (or
-// `?style=classic`) wins; otherwise `<html data-world-style="brick">` selects it, which is how the brick
-// Drop package opens in brick mode by default.
-export function worldStyle(){
- try{
-  const asked=new URLSearchParams(globalThis.location?.search||'').get('style');
-  if(asked==='brick'||asked==='classic')return asked;
-  return globalThis.document?.documentElement?.dataset?.worldStyle==='brick'?'brick':'classic';
- }catch{return'classic';}
-}
-export const BRICK_WORLD=worldStyle()==='brick';
+var r=Object.defineProperty;var t=(c,e)=>r(c,"name",{value:e,configurable:!0});function s(){try{const c=new URLSearchParams(globalThis.location?.search||"").get("style");return c==="brick"||c==="classic"?c:globalThis.document?.documentElement?.dataset?.worldStyle==="brick"?"brick":"classic"}catch{return"classic"}}t(s,"worldStyle");const l=s()==="brick";export{l as BRICK_WORLD,s as worldStyle};

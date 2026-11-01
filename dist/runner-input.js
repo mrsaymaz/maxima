@@ -1,9 +1,1 @@
-// Runner keys. While a run is active: ← → / A D change lane, ↑ / W jump, ↓ / S slide. Outside runs every key keeps
-// its usual meaning. Touch swipes and taps for runs (and everywhere else) live in gesture-controls.js.
-export function installRunnerInput(world){
- const win=globalThis.window;if(!win?.addEventListener)return;
- const runner=()=>world.nav?.runner?.running&&!world.home&&!world.focus&&!world.paused&&!world.runtimePaused?world.nav.runner:null;
- const act=(kind)=>{const r=runner();if(!r)return false;if(kind==='left')return r.shift(-1);if(kind==='right')return r.shift(1);if(kind==='up'){r.sliding=0;return world.jump?world.jump():r.jump(world.nav);}if(kind==='down')return r.slide(world.nav);return false;};
- const KEYS={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'up',w:'up',ArrowDown:'down',s:'down'};
- win.addEventListener('keydown',e=>{if(e.target?.matches?.('input,textarea,select'))return;const key=e.key?.length===1?e.key.toLowerCase():e.key,kind=KEYS[key];if(!kind||!runner())return;e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)act(kind);},{capture:true});
-}
+var o=Object.defineProperty;var u=(t,r)=>o(t,"name",{value:r,configurable:!0});function c(t){const r=globalThis.window;if(!r?.addEventListener)return;const i=u(()=>t.nav?.runner?.running&&!t.home&&!t.focus&&!t.paused&&!t.runtimePaused?t.nav.runner:null,"runner"),s=u(n=>{const e=i();return e?n==="left"?e.shift(-1):n==="right"?e.shift(1):n==="up"?(e.sliding=0,t.jump?t.jump():e.jump(t.nav)):n==="down"?e.slide(t.nav):!1:!1},"act"),f={ArrowLeft:"left",a:"left",ArrowRight:"right",d:"right",ArrowUp:"up",w:"up",ArrowDown:"down",s:"down"};r.addEventListener("keydown",n=>{if(n.target?.matches?.("input,textarea,select"))return;const e=n.key?.length===1?n.key.toLowerCase():n.key,a=f[e];!a||!i()||(n.preventDefault(),n.stopImmediatePropagation(),n.repeat||s(a))},{capture:!0})}u(c,"installRunnerInput");export{c as installRunnerInput};

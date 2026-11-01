@@ -4,7 +4,7 @@ import copy,csv,hashlib,json,re,shutil
 
 ROOT=Path(__file__).resolve().parents[1]
 SRC=ROOT/'content/curriculum-v1'
-OUT=ROOT/'dist/data'
+OUT=ROOT/'content/data'
 EXPORT=ROOT/'language-pack'
 VERSION='2026.10.2'
 BASE=json.loads((SRC/'baseline-v0.34.0.json').read_text())

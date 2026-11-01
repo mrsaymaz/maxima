@@ -1,0 +1,68 @@
+import * as T from './vendor/three.module.min.js';
+import { ARENA_LOOKS } from './arena-palette.js';
+import { chunkOf, noise3 } from './cliff-art.js';
+import { pathDetailHeight } from './path-detail.js';
+import { surfaceMaterial } from './surface-materials.js';
+
+// Cross sections sit outside the playable path union. Heights are geometry,
+// not a painted bevel; the existing enclosure remains the collision boundary.
+export function bankSection(p, normal, depth = 1) {
+  const patch = noise3(p.x * 0.33, 0, p.z * 0.17),
+    foot = pathDetailHeight(p.x - normal.x * 0.55, p.z - normal.z * 0.55);
+  const span = Math.min(1.05, Math.max(0.03, depth));
+  return [
+    [-0.12, 0],
+    [span * 0.23, 0.14 + patch * 0.12],
+    [span * 0.61, 0.32 + patch * 0.28],
+    [span, 0.1],
+  ].map(([d, y]) => ({ x: p.x + normal.x * d, y: foot + y - 0.012, z: p.z + normal.z * d }));
+}
+
+export function buildValleyBanks(strips) {
+  const batches = new Map(),
+    materials = {
+      earth: surfaceMaterial('soil', ARENA_LOOKS[0].banks.earth, {
+        vertexColors: true,
+        roughness: 1,
+        side: T.DoubleSide,
+      }),
+      moss: surfaceMaterial('foliage', ARENA_LOOKS[0].banks.moss, {
+        vertexColors: true,
+        roughness: 1,
+        side: T.DoubleSide,
+      }),
+    };
+  let triangles = 0;
+  for (const s of strips) {
+    // A thin central ridge must retain its width. Never bridge across to another path.
+    const a = bankSection(s.a, s.an, s.aw),
+      b = bankSection(s.b, s.bn, s.bw);
+    for (let lane = 0; lane < 3; lane++) {
+      const kind = lane === 1 ? 'moss' : 'earth',
+        points = [a[lane], b[lane], b[lane + 1], a[lane], b[lane + 1], a[lane + 1]],
+        key = kind + ':' + chunkOf((s.a.z + s.b.z) / 2);
+      if (!batches.has(key)) batches.set(key, { p: [], c: [], kind });
+      const batch = batches.get(key);
+      for (const p of points) {
+        batch.p.push(p.x, p.y, p.z);
+        const shade = 0.79 + noise3(p.x * 0.7, 1, p.z * 0.7) * 0.23;
+        batch.c.push(shade, shade, shade * 0.94);
+      }
+      triangles += 2;
+    }
+  }
+  const meshes = [];
+  for (const [key, b] of batches) {
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(b.p, 3));
+    g.setAttribute('color', new T.Float32BufferAttribute(b.c, 3));
+    g.computeVertexNormals();
+    g.computeBoundingSphere();
+    const mesh = new T.Mesh(g, materials[b.kind]);
+    mesh.name = 'valley-bank-' + key;
+    mesh.receiveShadow = true;
+    mesh.castShadow = false;
+    meshes.push(mesh);
+  }
+  return { meshes, triangles };
+}

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import * as T from '../dist/vendor/three.module.min.js';
-import {makeAqueductChannel} from '../dist/aqueduct-channel.js';
+import * as T from '../src/vendor/three.module.min.js';
+import {makeAqueductChannel} from '../src/aqueduct-channel.js';
 
 const meshes=root=>{const list=[];root.traverse(o=>{if(o.isMesh)list.push(o);});return list;};
 const snapshot=root=>{root.updateMatrixWorld(true);const result=[];root.traverse(o=>result.push([o.name,o.visible,...o.position.toArray(),...o.rotation.toArray().slice(0,3),...o.scale.toArray()]));return result;};

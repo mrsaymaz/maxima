@@ -1,12 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {freshSave,freshJourney,expedition,freshExpedition,chooseBranch,currentType,milestone,finishRun,guardianReady,winGuardian,validSave,restart,unlocked,TASK_TYPES} from '../dist/expedition.js';
-import {pathGrowthState,pathLevel} from '../dist/path-growth.js';
-import {makeTask,actTask} from '../dist/trail-tasks.js';
-import {freshGuardian} from '../dist/guardian-combat.js';
-import {growthBar} from '../dist/camp-ui.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+import {freshSave,freshJourney,expedition,freshExpedition,chooseBranch,currentType,milestone,finishRun,guardianReady,winGuardian,validSave,restart,unlocked,TASK_TYPES} from '../src/expedition.js';
+import {pathGrowthState,pathLevel} from '../src/path-growth.js';
+import {makeTask,actTask} from '../src/trail-tasks.js';
+import {freshGuardian} from '../src/guardian-combat.js';
+import {growthBar} from '../src/camp-ui.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units;
 function solve(t){
  let safety=0;
  while(!t.complete&&safety++<100){

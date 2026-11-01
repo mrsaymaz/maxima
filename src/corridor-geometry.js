@@ -1,0 +1,725 @@
+import { classicZ } from './runner-mode.js';
+import { buildValleyBanks } from './valley-banks.js';
+import { surfaceMaterial, assignSurface, assignSurfaceRoles } from './surface-materials.js';
+import { composedHalfWidth, scenicWallHeight } from './expedition-composition.js';
+import { bevelBox, carvedCylinder } from './prop-art.js';
+import { THEMED_GATES, makeTaskGate } from './task-gates.js';
+import { buildCliffs, foliageGeometry, boulderGeometry, fbm3, chunkedInstances } from './cliff-art.js';
+import * as T from './vendor/three.module.min.js';
+import { chapterPath, pathDistance, approachPoint, CHAPTER_LENGTH, END } from './trail-layout.js';
+
+// These are geometry assets. The expedition owns permission to cross a gate.
+const STATES = new WeakMap();
+const ENCLOSURE_CACHE = new Map();
+const TYPES = [
+  'translation',
+  'definition',
+  'picture',
+  'qa-pairs',
+  'halves',
+  'ending',
+  'sentence',
+  'gap',
+  'correct',
+  'repair',
+  'answer',
+  'sort',
+  'intruder',
+  'spelling',
+  'clue',
+  'listen-word',
+  'listen-tr',
+  'listen-multi',
+  'numbers',
+  'instructions',
+];
+const PALETTES = [
+  ['#6e6b5d', '#aaa38c', '#5b8055', '#b8e2c5'],
+  ['#7f7663', '#cbbf9f', '#7d9a6e', '#b7e7e9'],
+  ['#56586c', '#9799ae', '#6e7f94', '#d5ccfb'],
+];
+const clamp = n => Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
+function kit(name, area = 0) {
+  const g = new T.Group();
+  g.name = name;
+  const p = PALETTES[area] || PALETTES[0],
+    cache = new Map();
+  const mat = (color, extra = {}) => surfaceMaterial('stone', color, extra);
+  const m = {
+    dark: mat(p[0]),
+    stone: mat(p[1]),
+    moss: mat(p[2]),
+    air: mat(p[3], { emissive: p[3], emissiveIntensity: 0.55, roughness: 0.45 }),
+    wood: mat('#846b50'),
+    light: mat('#b79b70'),
+    gold: mat('#cbb078', { metalness: 0.18, roughness: 0.56 }),
+    root: mat('#665b49'),
+    corrupt: mat('#766680'),
+    fruit: mat('#dfaa62'),
+    water: mat('#6fbbb7', { roughness: 0.3 }),
+    cream: mat('#e1d9b9'),
+    eye: mat('#253c36'),
+  };
+  assignSurfaceRoles(m, {
+    stone: ['dark', 'stone'],
+    foliage: ['moss'],
+    effect: ['air'],
+    wood: ['wood', 'light', 'root'],
+    metal: ['gold'],
+    organic: ['corrupt', 'fruit', 'cream', 'eye'],
+    water: ['water'],
+  });
+  const geo = (key, fn) => {
+    if (!cache.has(key)) cache.set(key, fn());
+    return cache.get(key);
+  };
+  const box = (w, h, d) => geo(`b${w},${h},${d}`, () => bevelBox(w, h, d));
+  const cyl = (a, b, h, n = 7) => geo(`c${a},${b},${h},${n}`, () => carvedCylinder(a, b, h, n));
+  const ball = r => geo(`s${r}`, () => new T.SphereGeometry(r, 8, 5));
+  const crystal = r => geo(`o${r}`, () => new T.OctahedronGeometry(r));
+  const ring = (r, t = 0.045, arc = Math.PI * 2) =>
+    geo(`t${r},${t},${arc}`, () => new T.TorusGeometry(r, t, 4, 20, arc));
+  const mesh = (geometry, material, x = 0, y = 0, z = 0, parent = g) => {
+    const o = new T.Mesh(geometry, material);
+    o.position.set(x, y, z);
+    o.castShadow = true;
+    o.receiveShadow = true;
+    parent.add(o);
+    return o;
+  };
+  const part = (name, parent = g) => {
+    const o = new T.Group();
+    o.name = name;
+    parent.add(o);
+    return o;
+  };
+  const link = (a, b, r, material, parent = g) => {
+    const av = new T.Vector3(...a),
+      bv = new T.Vector3(...b),
+      delta = bv.clone().sub(av);
+    const o = mesh(cyl(r, r, delta.length(), 6), material, 0, 0, 0, parent);
+    o.position.copy(av.add(bv).multiplyScalar(0.5));
+    o.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), delta.normalize());
+    return o;
+  };
+  return { g, m, box, cyl, ball, crystal, ring, mesh, part, link };
+}
+
+function rune(k, parent, x, y, z, size = 1) {
+  const { mesh, box, m } = k;
+  for (const s of [-1, 1])
+    mesh(box(0.055 * size, 0.3 * size, 0.035), m.air, x + s * 0.075 * size, y, z, parent).rotation.z = s * 0.35;
+}
+function owl(k, parent, x, y, z, size = 0.6) {
+  const { part, mesh, ball, cyl, m } = k,
+    g = part('woodland-visitor', parent);
+  g.position.set(x, y, z);
+  g.scale.setScalar(size);
+  mesh(ball(0.34), m.moss, 0, 0.43, 0, g).scale.y = 1.2;
+  mesh(ball(0.35), m.moss, 0, 0.91, 0.02, g);
+  for (const s of [-1, 1]) {
+    mesh(ball(0.16), m.cream, s * 0.16, 0.94, 0.3, g).scale.z = 0.2;
+    mesh(ball(0.06), m.eye, s * 0.16, 0.95, 0.335, g);
+    mesh(cyl(0, 0.09, 0.23, 5), m.moss, s * 0.23, 1.22, 0, g).rotation.z = -s * 0.25;
+  }
+  mesh(cyl(0, 0.06, 0.14, 5), m.gold, 0, 0.84, 0.35, g).rotation.x = Math.PI / 2;
+  return g;
+}
+
+function batchStatic(root) {
+  // Keep each animated stage separate, merging its fixed details by material.
+  root.updateMatrixWorld(true);
+  const inverse = root.matrixWorld.clone().invert(),
+    batches = new Map();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    geo.applyMatrix4(inverse.clone().multiply(o.matrixWorld));
+    if (!batches.has(o.material)) batches.set(o.material, { position: [], normal: [] });
+    const out = batches.get(o.material);
+    out.position.push(...geo.attributes.position.array);
+    out.normal.push(...geo.attributes.normal.array);
+    geo.dispose();
+  });
+  root.clear();
+  for (const [material, data] of batches) {
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(data.position, 3));
+    geo.setAttribute('normal', new T.Float32BufferAttribute(data.normal, 3));
+    const mesh = new T.Mesh(geo, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    root.add(mesh);
+  }
+}
+
+// Each family has three independently restored spans across the entire 6.4m path.
+// Completed pieces either sink into the verges or become a flush crossing deck.
+export function makeRouteBarrier(type, { area = 0, completed = false } = {}) {
+  if (!TYPES.includes(type)) throw new Error('Unknown corridor barrier type: ' + type);
+  if (THEMED_GATES.includes(type)) {
+    const gate = makeTaskGate(type, { area }),
+      { group: g, update } = gate;
+    g.name = 'route-barrier-' + type;
+    g.userData = {
+      ...g.userData,
+      type,
+      area,
+      progress: 0,
+      completed: false,
+      blocking: true,
+      family: 'themed-' + type,
+      themed: true,
+      width: 6.4,
+      stages: 3,
+      solids: [],
+      time: 0,
+    };
+    STATES.set(g, {
+      gate,
+      callbacks: [{ fn: f => update(f, g.userData.time), index: 0 }],
+      segments: [],
+      crossing: false,
+      themed: update,
+    });
+    setRouteBarrierProgress(g, completed ? 1 : 0);
+    return g;
+  }
+  const k = kit('route-barrier-' + type, area),
+    { g, m, mesh, box, cyl, crystal, ball, ring, part, link } = k;
+  const updates = [],
+    segments = [],
+    crossing = ['halves', 'sentence', 'gap'].includes(type);
+  const family = ['translation', 'definition', 'correct', 'repair', 'answer'].includes(type)
+    ? 'rune'
+    : crossing
+      ? 'crossing'
+      : ['picture', 'sort', 'clue', 'listen-multi', 'numbers', 'instructions'].includes(type)
+        ? 'supplies'
+        : ['ending', 'intruder', 'spelling'].includes(type)
+          ? 'roots'
+          : ['listen-word', 'listen-tr'].includes(type)
+            ? 'echo'
+            : 'wind';
+  for (const s of [-1, 1]) {
+    mesh(cyl(0.24, 0.34, 0.24, 8), m.dark, s * 2.86, 0.12, 0);
+    const h = family === 'roots' ? 1.55 : 2.85;
+    mesh(cyl(0.16, 0.24, h, 7), family === 'roots' ? m.root : m.stone, s * 2.86, h / 2 + 0.12, 0);
+    if (family !== 'roots') {
+      mesh(crystal(0.18), m.gold, s * 2.86, h + 0.2, 0);
+      mesh(cyl(0.27, 0.21, 0.11, 7), m.dark, s * 2.86, h + 0.07, 0);
+      for (const y of [0.62, h - 0.28]) mesh(cyl(0.235, 0.25, 0.08, 7), m.dark, s * 2.86, y, 0);
+    }
+    for (let j = 0; j < 3; j++) {
+      const a = (j - 1) * 1.1,
+        tuft = mesh(ball(0.2), m.moss, s * (2.86 + Math.cos(a) * 0.3), 0.09, Math.sin(a) * 0.3);
+      tuft.scale.set(1, 0.45, 1);
+    }
+  }
+  for (let i = 0; i < 3; i++) {
+    const span = part('accepted-stage-' + (i + 1));
+    span.position.x = (i - 1) * 2.1;
+    segments.push(span);
+    const deco = part('restored-verge-' + (i + 1));
+    deco.position.set((i === 1 ? -1 : Math.sign(i - 1)) * 2.96, 0.18, (i - 1) * 0.32);
+    mesh(crystal(0.11), m.air, 0, 0.1, 0, deco);
+    deco.visible = false;
+    if (family === 'rune') {
+      mesh(box(2.08, 2.35, 0.36), type === 'answer' ? m.wood : m.dark, 0, 1.175, 0, span);
+      for (const s of [-1, 1]) mesh(box(0.12, 2.4, 0.43), m.stone, s * 0.97, 1.2, 0, span);
+      mesh(box(1.86, 0.14, 0.43), m.stone, 0, 2.25, 0, span);
+      rune(k, span, 0, 1.22, 0.2, 1.7);
+      if (type === 'definition')
+        for (let j = 0; j < 3; j++) mesh(box(0.12, 0.3, 0.04), m.gold, (j - 1) * 0.38, 0.62, 0.205, span);
+      if (type === 'correct') {
+        const sign = mesh(box(1.34, 0.32, 0.07), m.light, 0, 1.92, 0.24, span);
+        sign.rotation.z = (i - 1) * 0.16;
+      }
+      if (type === 'repair') {
+        const arc = mesh(ring(0.55, 0.1, Math.PI * 1.65), m.air, 0, 1.28, 0.23, span);
+        arc.rotation.z = i * 2.1;
+      }
+      if (type === 'answer') owl(k, span, 0, 2.36, 0, 0.55);
+    } else if (family === 'crossing') {
+      const deck = part('folding-crossing', span);
+      deck.position.set(0, 0.04, -0.12);
+      if (type === 'halves')
+        for (let j = 0; j < 3; j++) {
+          const log = mesh(cyl(0.17, 0.19, 2.08, 7), m.light, 0, 0.22 + j * 0.54, 0, deck);
+          log.rotation.z = Math.PI / 2;
+        }
+      else
+        for (let j = 0; j < 3; j++)
+          mesh(box(2.08, 0.48, 0.2), type === 'gap' ? m.stone : m.dark, 0, 0.28 + j * 0.54, 0, deck);
+      for (const s of [-1, 1]) mesh(box(0.14, 1.85, 0.2), type === 'gap' ? m.gold : m.wood, s * 0.77, 0.93, 0.07, deck);
+      if (type === 'gap') mesh(box(1.35, 1.6, 0.08), m.water, 0, 0.84, -0.13, deck);
+      else rune(k, deck, 0, 0.88, 0.15, 1.15);
+      batchStatic(deck);
+      updates.push((f, p) => {
+        deck.rotation.x = (-p * Math.PI) / 2;
+        deck.position.y = 0.04 - p * 0.04;
+        deck.scale.z = 1 - p * 0.82;
+      });
+    } else if (family === 'supplies') {
+      // A loaded expedition sled: boxes and supplies visibly leave the trail.
+      mesh(box(2.08, 0.18, 0.86), m.wood, 0, 0.34, 0, span);
+      for (const s of [-1, 1]) {
+        const wheel = mesh(cyl(0.3, 0.3, 0.14, 10), m.dark, s * 0.77, 0.3, 0.4, span);
+        wheel.rotation.x = Math.PI / 2;
+      }
+      for (let j = 0; j < 2; j++) {
+        mesh(box(0.86, 1.03, 0.76), j ? m.light : m.wood, (j - 0.5) * 0.99, 0.96, 0, span);
+        mesh(box(0.09, 1.12, 0.82), m.gold, (j - 0.5) * 0.99, 1.0, 0, span);
+      }
+      mesh(box(1.9, 0.16, 0.88), m.light, 0, 1.58, 0, span);
+      if (type === 'picture')
+        for (const s of [-1, 1]) mesh(ball(0.18), s === 1 ? m.fruit : m.moss, s * 0.49, 1.84, 0, span);
+      else if (type === 'sort')
+        for (const s of [-1, 1]) mesh(box(0.36, 0.33, 0.38), s === 1 ? m.moss : m.cream, s * 0.5, 1.83, 0, span);
+      else if (type === 'clue') {
+        const lid = mesh(box(1.58, 0.2, 0.7), m.gold, 0, 1.83, 0, span);
+        lid.rotation.z = 0.1;
+      } else if (type === 'listen-multi') owl(k, span, 0, 1.69, -0.1, 0.62);
+      else if (type === 'numbers') {
+        mesh(cyl(0.06, 0.09, 0.8), m.gold, 0, 2, 0, span);
+        mesh(box(1.45, 0.08, 0.1), m.gold, 0, 2.38, 0, span);
+        for (const s of [-1, 1]) mesh(cyl(0.25, 0.18, 0.11, 8), m.cream, s * 0.6, 2.16, 0, span);
+      } else {
+        const pack = mesh(box(0.87, 0.86, 0.55), m.moss, 0, 2.02, 0, span);
+        mesh(box(0.98, 0.16, 0.62), m.light, 0, 2.48, 0, span);
+        pack.rotation.z = 0.08;
+      }
+    } else if (family === 'roots') {
+      const curve = new T.CatmullRomCurve3([
+        new T.Vector3(-0.92, 0.15, 0),
+        new T.Vector3(-0.7, 1.1, 0.05),
+        new T.Vector3(0, 2.12, -0.1),
+        new T.Vector3(0.64, 1.5, 0.08),
+        new T.Vector3(0.92, 0.3, 0),
+      ]);
+      mesh(new T.TubeGeometry(curve, 14, 0.16, 6, false), type === 'spelling' ? m.corrupt : m.root, 0, 0, 0, span);
+      link([-0.95, 0.45, -0.12], [0.9, 1.68, 0.1], 0.12, m.root, span);
+      link([-0.8, 1.63, 0.1], [0.93, 0.39, -0.06], 0.12, m.root, span);
+      for (let j = 0; j < 4; j++) {
+        const x = (j - 1.5) * 0.44;
+        if (type === 'ending') {
+          const crown = mesh(ball(0.35), m.moss, x, 2.2 + Math.sin(j) * 0.18, 0, span);
+          crown.scale.y = 0.63;
+          mesh(ball(0.13), m.fruit, x, 1.96, 0.18, span);
+        } else if (type === 'spelling') {
+          mesh(cyl(0.07, 0.12, 0.33), m.cream, x, 0.48, 0.22, span);
+          mesh(cyl(0, 0.28, 0.27, 7), m.corrupt, x, 0.78, 0.22, span);
+        } else {
+          const thorn = mesh(cyl(0, 0.14, 0.43, 5), m.corrupt, x, 1.06 + (j % 2) * 0.58, 0.14, span);
+          thorn.rotation.z = j % 2 ? 0.8 : -0.8;
+        }
+      }
+    } else if (family === 'echo') {
+      mesh(box(2.08, 0.16, 0.65), m.dark, 0, 0.08, 0, span);
+      for (let j = 0; j < 3; j++) {
+        const x = (j - 1) * 0.62,
+          h = 1.65 + (j % 2) * 0.65;
+        if (type === 'listen-tr') {
+          const c = mesh(crystal(0.45), m.air, x, h * 0.52, 0, span);
+          c.scale.set(0.8, h / 0.9, 0.75);
+        } else {
+          mesh(cyl(0.09, 0.14, h), m.moss, x, h / 2, 0, span);
+          for (let t = 0; t < 4; t++) {
+            const a = (t * Math.PI) / 2,
+              petal = mesh(ball(0.25), m.cream, x + Math.cos(a) * 0.24, h + Math.sin(a) * 0.24, 0.02, span);
+            petal.scale.z = 0.3;
+          }
+          mesh(ball(0.17), m.gold, x, h, 0.15, span);
+        }
+      }
+      const echo = mesh(ring(0.67, 0.035, Math.PI * 1.7), m.air, 0, 1.18, 0.27, span);
+      echo.rotation.z = i * 0.5;
+    } else {
+      mesh(box(2.08, 2.35, 0.1), m.air, 0, 1.175, 0, span);
+      for (const s of [-1, 1]) mesh(cyl(0.07, 0.1, 2.3), m.wood, s * 0.96, 1.15, 0.12, span);
+      mesh(box(1.55, 0.16, 0.35), m.light, 0, 2.31, 0.08, span);
+      for (let j = 0; j < 3; j++) {
+        const x = (j - 1) * 0.46;
+        mesh(box(0.36, 0.25, 0.06), m.cream, x, 1.12, 0.11, span);
+        for (const s of [-1, 1]) {
+          const fold = mesh(box(0.22, 0.025, 0.03), m.gold, x + s * 0.085, 1.16, 0.16, span);
+          fold.rotation.z = -s * 0.44;
+        }
+      }
+    }
+    // All non-crossing obstructions retract toward the ground, never over the player.
+    if (!crossing) {
+      batchStatic(span);
+      updates.push((f, p) => {
+        span.scale.y = Math.max(0.001, 1 - p);
+        span.visible = p < 1;
+      });
+    }
+    updates.push((f, p) => {
+      deco.visible = p === 1;
+    });
+  }
+  // One update pair per stage above. Each callback carries its stage index.
+  const callbacks = updates.map((fn, j) => ({ fn, index: Math.floor(j / 2) }));
+  g.userData = { type, area, progress: 0, completed: false, blocking: true, family, width: 6.4, stages: 3, solids: [] };
+  STATES.set(g, { callbacks, segments, crossing });
+  setRouteBarrierProgress(g, completed ? 1 : 0);
+  return g;
+}
+
+// Idle motion for themed gates (swaying bells, echo rings); progress itself only changes through setRouteBarrierProgress.
+export function animateRouteBarrier(group, time) {
+  const state = STATES.get(group);
+  if (!state?.themed) return group;
+  group.userData.time = time;
+  state.themed(group.userData.progress, time);
+  return group;
+}
+export function setRouteBarrierTask(group, task) {
+  const state = STATES.get(group);
+  state?.gate?.setTask(task);
+  return group;
+}
+export function setRouteBarrierProgress(group, fraction) {
+  const state = STATES.get(group);
+  if (!state) return group;
+  const f = clamp(fraction);
+  group.userData.progress = f;
+  group.userData.completed = f === 1;
+  group.userData.blocking = f < 1;
+  for (const { fn, index } of state.callbacks) fn(f, clamp(f * 3 - index));
+  group.userData.solids = [];
+  if (!state.crossing)
+    for (let i = 0; i < 3; i++) {
+      const p = clamp(f * 3 - i);
+      if (p < 1)
+        group.userData.solids.push({
+          id: `barrier-${group.userData.type}-${i}`,
+          kind: 'route-barrier',
+          shape: 'box',
+          x: (i - 1) * 2.1,
+          z: 0,
+          hx: 1.05,
+          hz: 0.45,
+          minY: 0,
+          maxY: 3.25 * (1 - p),
+        });
+    }
+  return group;
+}
+
+export function makeBranchClosure(chapter, side) {
+  if (!Number.isInteger(chapter) || chapter < 0 || chapter > 4 || !['left', 'right'].includes(side))
+    throw new Error('Invalid branch closure');
+  const k = kit(`branch-closure-${chapter}-${side}`),
+    { g, m, mesh, box, cyl, crystal } = k,
+    path = chapterPath(chapter, side),
+    p = path[1];
+  g.position.set(p.x, 0, p.z);
+  g.rotation.y = Math.atan2(-(path[2].x - path[0].x), -(path[2].z - path[0].z));
+  // Ground to crown is solid: taller than every creature jump, with no overhead gap.
+  mesh(box(6.4, 3.45, 0.68), m.dark, 0, 1.725, 0);
+  for (let i = 0; i < 7; i++) {
+    mesh(box(0.83, 3.28, 0.08), m.stone, (i - 3) * 0.9, 1.64, 0.38);
+    rune(k, g, (i - 3) * 0.9, 1.65, 0.43, 0.9);
+  }
+  for (const s of [-1, 1]) {
+    mesh(cyl(0.3, 0.38, 3.2, 7), m.stone, s * 2.94, 1.6, 0);
+    mesh(crystal(0.18), m.gold, s * 2.94, 3.4, 0);
+  }
+  mesh(box(6.4, 0.14, 0.8), m.moss, 0, 3.45, 0);
+  const solids = [];
+  for (let i = 0; i < 9; i++) {
+    const x = (i - 4) * 0.73,
+      v = new T.Vector3(x, 0, 0).applyAxisAngle(new T.Vector3(0, 1, 0), g.rotation.y);
+    solids.push({
+      id: `closed-${chapter}-${side}-${i}`,
+      kind: 'branch-closure',
+      shape: 'circle',
+      x: p.x + v.x,
+      z: p.z + v.z,
+      r: 0.47,
+      minY: 0,
+      maxY: 3.6,
+    });
+  }
+  g.userData = { chapter, side, closed: true, solids, collidersInWorldSpace: true, width: 6.4 };
+  return g;
+}
+
+// Extract a contour from the distance to the actual path union. Unlike parallel
+// ribbons, this naturally preserves both fork mouths and every shared merge.
+function cloneEnclosure(source) {
+  const group = new T.Group();
+  group.name = source.name;
+  group.userData = JSON.parse(JSON.stringify(source.userData));
+  for (const original of source.children) {
+    const geometry = original.geometry.clone(),
+      material = original.material.clone(),
+      mesh = original.isInstancedMesh
+        ? new T.InstancedMesh(geometry, material, original.count)
+        : new T.Mesh(geometry, material);
+    mesh.name = original.name;
+    mesh.castShadow = original.castShadow;
+    mesh.receiveShadow = original.receiveShadow;
+    if (original.isInstancedMesh) {
+      mesh.instanceMatrix.copy(original.instanceMatrix);
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+    group.add(mesh);
+  }
+  return group;
+}
+export function makeCorridorEnclosure({ composed = false, reveals = false } = {}) {
+  const paths = [];
+  for (let c = 0; c < 5; c++) for (const s of ['left', 'right']) paths.push(chapterPath(c, s));
+  paths.push(
+    [
+      { x: 0, z: 9 },
+      { x: 0, z: 2 },
+    ],
+    [
+      { x: 0, z: 2 - 5 * CHAPTER_LENGTH },
+      { x: END.x, z: END.z - 3 },
+    ],
+  );
+  const cacheKey = JSON.stringify({ paths, CHAPTER_LENGTH, END, composed, reveals });
+  if (ENCLOSURE_CACHE.has(cacheKey)) return cloneEnclosure(ENCLOSURE_CACHE.get(cacheKey));
+  const k = kit('corridor-enclosure'),
+    { g, m } = k;
+  const protectedRoutes = paths.slice();
+  for (let c = 0; c < 5; c++)
+    for (const side of ['left', 'right']) {
+      const path = chapterPath(c, side);
+      for (const node of path.slice(2, 6)) {
+        const a = approachPoint(node);
+        protectedRoutes.push([node, a]);
+      }
+    }
+  const distance = p => Math.min(...paths.map(path => pathDistance(p, path)));
+  const radius = 3.45,
+    field = (x, z) => distance({ x, z }) - (composed ? composedHalfWidth(z) + 0.25 : radius);
+  const normal = (x, z) => {
+    const dx = field(x + 0.04, z) - field(x - 0.04, z),
+      dz = field(x, z + 0.04) - field(x, z - 0.04),
+      len = Math.hypot(dx, dz) || 1;
+    return { x: dx / len, z: dz / len };
+  };
+  // Crags and dips vary the skyline so the valley shows over lower stretches of wall.
+  const height = (x, z) => {
+    const base =
+      4.3 +
+      0.42 * Math.sin(z * 0.18) +
+      0.28 * Math.cos(z * 0.53 + x * 0.55) +
+      (Math.abs(x) > 9 ? 0.6 : 0) +
+      (fbm3(x * 0.08, 0, z * 0.05) - 0.5) * 2.4;
+    return composed || reveals ? scenicWallHeight(x, z, base) : base;
+  };
+  const strips = [],
+    solids = [],
+    segments = [];
+  const tri = (out, a, b, c) => out.push(...a, ...b, ...c);
+  const quad = (out, a, b, c, d) => {
+    tri(out, a, b, c);
+    tri(out, a, c, d);
+  };
+  const availableDepth = (p, n) => {
+    let depth = 0;
+    for (let t = 0.1; t <= 1.65 + 0.001; t += 0.05) {
+      if (field(p.x + n.x * t, p.z + n.z * t) < -0.015) break;
+      depth = t;
+    }
+    return Math.max(0.03, depth);
+  };
+  const shell = (a, b) => {
+    const an = normal(a.x, a.z),
+      bn = normal(b.x, b.z),
+      ha = height(a.x, a.z),
+      hb = height(b.x, b.z),
+      aw = availableDepth(a, an),
+      bw = availableDepth(b, bn);
+    strips.push({ a, b, an, bn, ha, hb, aw, bw });
+    const mid = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 },
+      n = normal(mid.x, mid.z),
+      r = 0.63,
+      c = { x: mid.x + n.x * 0.48, z: mid.z + n.z * 0.48 };
+    // Explicit clearance check includes task approach spurs for adult radius .78.
+    if (protectedRoutes.every(path => pathDistance(c, path) > r + 0.78 + 0.025))
+      solids.push({
+        id: 'cliff-' + solids.length,
+        kind: 'cliff',
+        shape: 'circle',
+        x: c.x,
+        z: c.z,
+        r,
+        minY: 0,
+        maxY: Math.max(ha, hb) + 0.1,
+      });
+    segments.push({ a, b });
+  };
+  const step = 0.9,
+    x0 = -20,
+    z0 = Math.min(END.z, ...paths.flat().map(p => p.z)) - 9,
+    nx = 45,
+    nz = Math.ceil((16 - z0) / step);
+  const rows = [];
+  for (let iz = 0; iz <= nz; iz++) {
+    const row = new Float64Array(nx + 1);
+    for (let ix = 0; ix <= nx; ix++) row[ix] = field(x0 + ix * step, z0 + iz * step);
+    rows.push(row);
+  }
+  for (let iz = 0; iz < nz; iz++)
+    for (let ix = 0; ix < nx; ix++) {
+      const x = x0 + ix * step,
+        z = z0 + iz * step,
+        ps = [
+          { x, z },
+          { x: x + step, z },
+          { x: x + step, z: z + step },
+          { x, z: z + step },
+        ],
+        vs = [rows[iz][ix], rows[iz][ix + 1], rows[iz + 1][ix + 1], rows[iz + 1][ix]],
+        hits = [];
+      for (let e = 0; e < 4; e++) {
+        const j = (e + 1) % 4;
+        if (vs[e] < 0 !== vs[j] < 0) {
+          const t = vs[e] / (vs[e] - vs[j]);
+          hits.push({ x: ps[e].x + (ps[j].x - ps[e].x) * t, z: ps[e].z + (ps[j].z - ps[e].z) * t });
+        }
+      }
+      if (hits.length === 2) shell(hits[0], hits[1]);
+      else if (hits.length === 4) {
+        shell(hits[0], hits[1]);
+        shell(hits[2], hits[3]);
+      }
+    }
+  const cliffs = buildCliffs(strips);
+  for (const mesh of cliffs.meshes) g.add(mesh);
+  const banks = composed ? buildValleyBanks(strips) : null;
+  if (banks) for (const mesh of banks.meshes) g.add(mesh);
+  // Faceted outcrops at the foot of the wall, bushes along the rim and occasional trees on the crest.
+  const sites = segments
+    .filter(({ a, b }, i) => {
+      if (i % 9) return false;
+      const x = (a.x + b.x) / 2,
+        z = (a.z + b.z) / 2,
+        n = normal(x, z);
+      return field(x + n.x * 1.1, z + n.z * 1.1) > 0.8;
+    })
+    .map(({ a, b }) => {
+      const x = (a.x + b.x) / 2,
+        z = (a.z + b.z) / 2,
+        n = normal(x, z);
+      return { x: x + n.x * 1.15, z: z + n.z * 1.15, size: 0.55 + fbm3(x, 1, z) * 0.6 };
+    });
+  const rockMaterial = new T.MeshStandardMaterial({
+      color: '#b4ab94',
+      vertexColors: true,
+      roughness: 0.95,
+      flatShading: true,
+    }),
+    leafMaterial = new T.MeshStandardMaterial({
+      color: '#5f8a4c',
+      vertexColors: true,
+      roughness: 0.9,
+      flatShading: true,
+    }),
+    barkMaterial = new T.MeshStandardMaterial({ color: '#6e5641', roughness: 0.95 });
+  assignSurface(rockMaterial, 'stone');
+  assignSurface(leafMaterial, 'foliage');
+  assignSurface(barkMaterial, 'wood');
+  const bushSpots = cliffs.rim.filter((r, i) =>
+      composed || reveals ? i % 11 === 0 && fbm3(r.x * 0.2, 0, r.z * 0.08) > 0.52 : i % 5 === 0,
+    ),
+    treeSpots = cliffs.rim.filter(
+      (r, i) =>
+        i % (composed || reveals ? 67 : 15) === 7 &&
+        r.depth > 1.2 &&
+        (!(composed || reveals) || ((-classicZ(r.z) % 132) + 132) % 132 > 33),
+    ),
+    bush = foliageGeometry(2, 1),
+    crown = foliageGeometry(5, 1),
+    trunk = new T.CylinderGeometry(0.09, 0.15, 1, 6),
+    rock = boulderGeometry(3);
+  const add = list => {
+    for (const mesh of list) g.add(mesh);
+  };
+  add(
+    chunkedInstances(
+      rock,
+      rockMaterial,
+      composed ? sites.filter(r => fbm3(r.x * 0.2, 0, r.z * 0.08) > 0.55) : sites,
+      (o, r, i) => {
+        o.position.set(r.x, r.size * 0.25, r.z);
+        o.rotation.set(0.2 * Math.sin(i), i * 0.67, 0.15 * Math.cos(i));
+        o.scale.set(r.size * 1.1, r.size * 0.85, r.size);
+      },
+      'cliff-outcrops',
+    ),
+  );
+  add(
+    chunkedInstances(
+      bush,
+      leafMaterial,
+      bushSpots,
+      (o, r, i) => {
+        const k = 0.32 + fbm3(r.x * 0.7, 2, r.z * 0.7) * 0.45;
+        o.position.set(r.x + r.nx * r.depth * 0.35, r.y + k * 0.35, r.z + r.nz * r.depth * 0.35);
+        o.rotation.set(0, i * 1.3, 0);
+        o.scale.set(k * 1.3, k, k * 1.2);
+      },
+      'rim-bushes',
+    ),
+  );
+  const trees = treeSpots.map(r => ({
+    ...r,
+    h: 1.4 + fbm3(r.x * 0.5, 4, r.z * 0.5) * 1.6,
+    x: r.x + r.nx * r.depth * 0.6,
+    z: r.z + r.nz * r.depth * 0.6,
+  }));
+  add(
+    chunkedInstances(
+      trunk,
+      barkMaterial,
+      trees,
+      (o, r, i) => {
+        o.rotation.set(0, i, 0);
+        o.position.set(r.x, r.y + r.h * 0.4, r.z);
+        o.scale.set(1, r.h * 0.8, 1);
+      },
+      'rim-tree-trunks',
+    ),
+  );
+  add(
+    chunkedInstances(
+      crown,
+      leafMaterial,
+      trees.flatMap(r => [
+        { ...r, k: 0 },
+        { ...r, k: 1 },
+      ]),
+      (o, r) => {
+        const s = (0.75 - r.k * 0.22) * r.h * 0.55;
+        o.rotation.set(0, r.h * 3, 0);
+        o.position.set(r.x + (r.k ? 0.18 : 0), r.y + r.h * (0.82 + r.k * 0.32), r.z);
+        o.scale.set(s, s * 0.9, s);
+      },
+      'rim-tree-crowns',
+    ),
+  );
+  g.userData = {
+    bankTriangles: banks?.triangles || 0,
+    bankBatches: banks?.meshes.length || 0,
+    solids,
+    composed,
+    reveals,
+    collidersInWorldSpace: true,
+    pathUnionRadius: radius,
+    segments: segments.length,
+    wallHeight: [3.8, 5.8],
+    adultRadius: 0.78,
+    protectedRoutes: protectedRoutes.length,
+  };
+  ENCLOSURE_CACHE.set(cacheKey, cloneEnclosure(g));
+  return g;
+}

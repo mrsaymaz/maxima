@@ -1,8 +1,8 @@
 // Append portable combat clips to existing weighted rigs. Mesh/skin/rest data are immutable.
-import fs from 'node:fs';import * as T from '../dist/vendor/three.module.min.js';import {readGLB,packGLB,accessor}from './lib/glb.mjs';
+import fs from 'node:fs';import * as T from '../src/vendor/three.module.min.js';import {readGLB,packGLB,accessor}from './lib/glb.mjs';
 const report=[];
 for(const partner of ['hufflepuff','gryffindor','ravenclaw','slytherin'])for(let level=0;level<=10;level++){
- const path=`dist/assets/creatures/${partner}-${level}.glb`,{json:j,binary:input}=readGLB(path),skin=j.skins?.[0];if(!skin){report.push({partner,level,skeletal:false,reason:'Source has no skeleton or skin weights.'});continue;}
+ const path=`art/creatures/${partner}-${level}.glb`,{json:j,binary:input}=readGLB(path),skin=j.skins?.[0];if(!skin){report.push({partner,level,skeletal:false,reason:'Source has no skeleton or skin weights.'});continue;}
  const meta=j.extras?.maximaLocomotion||{};
  if(partner==='hufflepuff'&&level===0)Object.assign(meta,{rootNode:27,bodyNode:24,headNode:17,tailNode:26,limbNodes:{leftHind:{nodes:[6,5,4],phase:0},leftFore:{nodes:[12,11,10],phase:.25},rightHind:{nodes:[3,2,1],phase:.5},rightFore:{nodes:[9,8,7],phase:.75}}});
  const original=meta.actionOriginal||{binaryLength:input.length,bufferViews:j.bufferViews.length,accessors:j.accessors.length},binary=input.subarray(0,original.binaryLength);
@@ -29,4 +29,4 @@ for(const partner of ['hufflepuff','gryffindor','ravenclaw','slytherin'])for(let
  j.extras??={};j.extras.maximaLocomotion={...meta,clips:j.animations.map(a=>a.name),actionOriginal:original,actionValidation:{samples:25,maxDisplacementInHeights:worstDisplacement,minHeightRatio:minHeight,maxHeightRatio:maxHeight},actionLimit:'Conservative generated skeletal clips. Source skin retained; no facial rig, new joints or guaranteed foot lock.'};
  fs.writeFileSync(path,packGLB(j,Buffer.concat(chunks)));report.push({partner,level,skeletal:true,joints:skin.joints.length,clips:j.animations.map(a=>a.name),validation:j.extras.maximaLocomotion.actionValidation,limitations:meta.limitations||'Supplied skin retained; no foot IK.'});console.log(partner,level,'skeletal actions baked');
 }
-fs.writeFileSync('docs/animation-rig-audit.json',JSON.stringify({rigged:report.filter(r=>r.skeletal).length,unrigged:report.filter(r=>!r.skeletal).length,forms:report},null,2)+'\n');
+fs.writeFileSync('docs/audits/animation-rig-audit.json',JSON.stringify({rigged:report.filter(r=>r.skeletal).length,unrigged:report.filter(r=>!r.skeletal).length,forms:report},null,2)+'\n');

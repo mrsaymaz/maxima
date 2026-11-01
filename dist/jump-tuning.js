@@ -1,9 +1,1 @@
-import{FORM_HEIGHTS}from'./world-layout.js';
-// Feet rise with the growing body. Physics, coyote jumps and wave timing share
-// this profile; model clips never add a second vertical arc.
-export const JUMP_GRAVITY=13;
-export function jumpTuning(level=0){
- const height=FORM_HEIGHTS[Math.max(0,Math.min(10,Math.round(level))) ]??FORM_HEIGHTS[0];
- const rise=.56+1.9*(height-FORM_HEIGHTS[0]),velocity=Math.sqrt(2*JUMP_GRAVITY*rise),flight=2*velocity/JUMP_GRAVITY;
- return{rise,velocity,flight,ringInterval:Math.max(1.2,flight+.40),guardianVelocity:Math.sqrt(49+24*(rise-.56))};
-}
+var M=Object.defineProperty;var o=(t,i)=>M(t,"name",{value:i,configurable:!0});import{FORM_HEIGHTS as r}from"./world-layout.js";const e=13;function m(t=0){const n=.56+1.9*((r[Math.max(0,Math.min(10,Math.round(t)))]??r[0])-r[0]),a=Math.sqrt(2*e*n),h=2*a/e;return{rise:n,velocity:a,flight:h,ringInterval:Math.max(1.2,h+.4),guardianVelocity:Math.sqrt(49+24*(n-.56))}}o(m,"jumpTuning");export{e as JUMP_GRAVITY,m as jumpTuning};

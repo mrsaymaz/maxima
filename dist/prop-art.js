@@ -1,154 +1,38 @@
-import{assignSurface}from'./surface-materials.js';
-import * as T from './vendor/three.module.min.js';
-import{fbm3,chunkedInstances,chunkOf}from'./cliff-art.js';
-import{chapterPath,TRAIL_WIDTH,CHAPTER_LENGTH}from'./trail-layout.js';
-// Shared building blocks that make hand-placed props read as carved stone and worn wood instead of raw
-// primitives: chamfered boxes, carved posts, irregular rock columns and animated water. Every shape keeps the
-// bounding box (and, for platforms, the exact top height) of the primitive it replaces, so physics is unchanged.
-
-export const WORLD_TIME={value:0};
-
-function finish(positions){
- // Faces are wound outward from the shape's centre line, then flat shaded so chamfers catch the light.
- const lo=[1e9,1e9,1e9],hi=[-1e9,-1e9,-1e9];for(let i=0;i<positions.length;i++){lo[i%3]=Math.min(lo[i%3],positions[i]);hi[i%3]=Math.max(hi[i%3],positions[i]);}const centre=new T.Vector3((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2);
- for(let i=0;i<positions.length;i+=9){const a=new T.Vector3(positions[i],positions[i+1],positions[i+2]),b=new T.Vector3(positions[i+3],positions[i+4],positions[i+5]),c=new T.Vector3(positions[i+6],positions[i+7],positions[i+8]),n=b.clone().sub(a).cross(c.clone().sub(a)),mid=a.add(b).add(c).multiplyScalar(1/3).sub(centre);if(n.dot(mid)<0)for(let k=0;k<3;k++){const t=positions[i+3+k];positions[i+3+k]=positions[i+6+k];positions[i+6+k]=t;}}
- const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.computeVertexNormals();
- const uv=[];for(let i=0;i<positions.length;i+=3)uv.push(positions[i]+positions[i+2],positions[i+1]);geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));return geo;
-}
-
-// A box with chamfered edges and corners; the faces stay where BoxGeometry puts them.
-export function bevelBox(w,h,d,bevel){
- const hx=w/2,hy=h/2,hz=d/2,b=Math.min(bevel??.05,Math.min(w,h,d)*.22);if(b<.004)return new T.BoxGeometry(w,h,d);
- const p=[],tri=(a,c,e)=>p.push(...a,...c,...e),quad=(a,c,e,f)=>{tri(a,c,e);tri(a,e,f);};
- const ix=hx-b,iy=hy-b,iz=hz-b;
- for(const s of[-1,1]){
-  quad([s*hx,-iy,-iz],[s*hx,iy,-iz],[s*hx,iy,iz],[s*hx,-iy,iz]);
-  quad([-ix,s*hy,-iz],[ix,s*hy,-iz],[ix,s*hy,iz],[-ix,s*hy,iz]);
-  quad([-ix,-iy,s*hz],[ix,-iy,s*hz],[ix,iy,s*hz],[-ix,iy,s*hz]);
- }
- for(const sx of[-1,1])for(const sy of[-1,1]){quad([sx*hx,sy*iy,-iz],[sx*ix,sy*hy,-iz],[sx*ix,sy*hy,iz],[sx*hx,sy*iy,iz]);}
- for(const sx of[-1,1])for(const sz of[-1,1]){quad([sx*hx,-iy,sz*iz],[sx*ix,-iy,sz*hz],[sx*ix,iy,sz*hz],[sx*hx,iy,sz*iz]);}
- for(const sy of[-1,1])for(const sz of[-1,1]){quad([-ix,sy*iy,sz*hz],[-ix,sy*hy,sz*iz],[ix,sy*hy,sz*iz],[ix,sy*iy,sz*hz]);}
- for(const sx of[-1,1])for(const sy of[-1,1])for(const sz of[-1,1])tri([sx*hx,sy*iy,sz*iz],[sx*ix,sy*hy,sz*iz],[sx*ix,sy*iy,sz*hz]);
- return finish(p);
-}
-
-function ringShape(rings,n,jitter=()=>0){
- const p=[],pt=(j,i)=>{const r=rings[j],a=i/n*Math.PI*2,k=r.r*(1+jitter(i%n,j));return[Math.sin(a)*k,r.y,Math.cos(a)*k];};
- for(let j=0;j<rings.length-1;j++)for(let i=0;i<n;i++){const a=pt(j,i),b=pt(j,i+1),c=pt(j+1,i+1),d=pt(j+1,i);if(rings[j].r>1e-5)p.push(...a,...b,...c);if(rings[j+1].r>1e-5)p.push(...a,...c,...d);}
- return finish(p);
-}
-// A post or disc with chamfered rims (CylinderGeometry argument order).
-export function carvedCylinder(top,bottom,h,n=8,bevel){
- const c=Math.min(bevel??.04,h*.28,Math.max(top,bottom)*.35),y=h/2;if(c<.004||h<.03)return new T.CylinderGeometry(top,bottom,h,n);
- const rings=[{y:-y,r:0}];if(bottom>c)rings.push({y:-y,r:bottom-c},{y:-y+c,r:bottom-c*.1});else rings.push({y:-y,r:bottom});
- if(top>c)rings.push({y:y-c,r:top-c*.1},{y,r:top-c});else rings.push({y,r:top});rings.push({y,r:0});
- return ringShape(rings,n);
-}
-// An irregular rock column whose flat top is exactly radius r at local y=0, widening into the ground below.
-export function stoneColumn(r,depth,seed=1,n=13){
- const c=Math.min(.07,r*.15),rings=[{y:0,r:0},{y:0,r:r-c*.6},{y:-c,r:r*1.01},{y:-c-.2,r:r*1.04},{y:-depth*.55,r:r*1.07},{y:-depth,r:r*1.12},{y:-depth,r:0}];
- return ringShape(rings,n,(i,j)=>j<2||j>5?0:(fbm3(i*.9+seed*3.1,j*1.7,seed*.37)-.5)*.16);
-}
-
-// Animated surface for pools and lava (world-space ripples, shoreline foam, moving glints).
-export function liquidMaterial(color,{local=false,lava=false,center={x:0,z:0},forward={x:0,z:-1},right={x:1,z:0},halfWidth=3,halfLength=3}={}){
- const material=new T.MeshStandardMaterial({color,roughness:lava?.7:.16,metalness:0,emissive:lava?'#ff6a2b':'#000000',emissiveIntensity:lava?.9:0});
- const u={uTime:WORLD_TIME,uCenter:{value:new T.Vector2(center.x,center.z)},uForward:{value:new T.Vector2(forward.x,forward.z)},uRight:{value:new T.Vector2(right.x,right.z)},uHalf:{value:new T.Vector2(halfWidth,halfLength)}};
- assignSurface(material,'water');if(lava)material.roughness=.7;material.userData.liquid=u;material.userData.stylized='liquid';
- material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,u);
-  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vLiquidWorld;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvLiquidWorld = '+(local?'transformed':'( modelMatrix * vec4( transformed, 1.0 ) ).xyz')+';');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
+var $=Object.defineProperty;var b=(r,u)=>$(r,"name",{value:u,configurable:!0});import{assignSurface as L}from"./surface-materials.js";import*as f from"./vendor/three.module.min.js";import{fbm3 as W,chunkedInstances as H,chunkOf as K}from"./cliff-art.js";import{chapterPath as Y,TRAIL_WIDTH as O,CHAPTER_LENGTH as _}from"./trail-layout.js";const j={value:0};function I(r){const u=[1e9,1e9,1e9],o=[-1e9,-1e9,-1e9];for(let e=0;e<r.length;e++)u[e%3]=Math.min(u[e%3],r[e]),o[e%3]=Math.max(o[e%3],r[e]);const n=new f.Vector3((u[0]+o[0])/2,(u[1]+o[1])/2,(u[2]+o[2])/2);for(let e=0;e<r.length;e+=9){const a=new f.Vector3(r[e],r[e+1],r[e+2]),c=new f.Vector3(r[e+3],r[e+4],r[e+5]),l=new f.Vector3(r[e+6],r[e+7],r[e+8]),d=c.clone().sub(a).cross(l.clone().sub(a)),h=a.add(c).add(l).multiplyScalar(1/3).sub(n);if(d.dot(h)<0)for(let m=0;m<3;m++){const y=r[e+3+m];r[e+3+m]=r[e+6+m],r[e+6+m]=y}}const t=new f.BufferGeometry;t.setAttribute("position",new f.Float32BufferAttribute(r,3)),t.computeVertexNormals();const i=[];for(let e=0;e<r.length;e+=3)i.push(r[e]+r[e+2],r[e+1]);return t.setAttribute("uv",new f.Float32BufferAttribute(i,2)),t}b(I,"finish");function te(r,u,o,n){const t=r/2,i=u/2,e=o/2,a=Math.min(n??.05,Math.min(r,u,o)*.22);if(a<.004)return new f.BoxGeometry(r,u,o);const c=[],l=b((s,g,q)=>c.push(...s,...g,...q),"tri"),d=b((s,g,q,x)=>{l(s,g,q),l(s,q,x)},"quad"),h=t-a,m=i-a,y=e-a;for(const s of[-1,1])d([s*t,-m,-y],[s*t,m,-y],[s*t,m,y],[s*t,-m,y]),d([-h,s*i,-y],[h,s*i,-y],[h,s*i,y],[-h,s*i,y]),d([-h,-m,s*e],[h,-m,s*e],[h,m,s*e],[-h,m,s*e]);for(const s of[-1,1])for(const g of[-1,1])d([s*t,g*m,-y],[s*h,g*i,-y],[s*h,g*i,y],[s*t,g*m,y]);for(const s of[-1,1])for(const g of[-1,1])d([s*t,-m,g*y],[s*h,-m,g*e],[s*h,m,g*e],[s*t,m,g*y]);for(const s of[-1,1])for(const g of[-1,1])d([-h,s*m,g*e],[-h,s*i,g*y],[h,s*i,g*y],[h,s*m,g*e]);for(const s of[-1,1])for(const g of[-1,1])for(const q of[-1,1])l([s*t,g*m,q*y],[s*h,g*i,q*y],[s*h,g*m,q*e]);return I(c)}b(te,"bevelBox");function P(r,u,o=()=>0){const n=[],t=b((i,e)=>{const a=r[i],c=e/u*Math.PI*2,l=a.r*(1+o(e%u,i));return[Math.sin(c)*l,a.y,Math.cos(c)*l]},"pt");for(let i=0;i<r.length-1;i++)for(let e=0;e<u;e++){const a=t(i,e),c=t(i,e+1),l=t(i+1,e+1),d=t(i+1,e);r[i].r>1e-5&&n.push(...a,...c,...l),r[i+1].r>1e-5&&n.push(...a,...l,...d)}return I(n)}b(P,"ringShape");function re(r,u,o,n=8,t){const i=Math.min(t??.04,o*.28,Math.max(r,u)*.35),e=o/2;if(i<.004||o<.03)return new f.CylinderGeometry(r,u,o,n);const a=[{y:-e,r:0}];return u>i?a.push({y:-e,r:u-i},{y:-e+i,r:u-i*.1}):a.push({y:-e,r:u}),r>i?a.push({y:e-i,r:r-i*.1},{y:e,r:r-i}):a.push({y:e,r}),a.push({y:e,r:0}),P(a,n)}b(re,"carvedCylinder");function oe(r,u,o=1,n=13){const t=Math.min(.07,r*.15),i=[{y:0,r:0},{y:0,r:r-t*.6},{y:-t,r:r*1.01},{y:-t-.2,r:r*1.04},{y:-u*.55,r:r*1.07},{y:-u,r:r*1.12},{y:-u,r:0}];return P(i,n,(e,a)=>a<2||a>5?0:(W(e*.9+o*3.1,a*1.7,o*.37)-.5)*.16)}b(oe,"stoneColumn");function ie(r,{local:u=!1,lava:o=!1,center:n={x:0,z:0},forward:t={x:0,z:-1},right:i={x:1,z:0},halfWidth:e=3,halfLength:a=3}={}){const c=new f.MeshStandardMaterial({color:r,roughness:o?.7:.16,metalness:0,emissive:o?"#ff6a2b":"#000000",emissiveIntensity:o?.9:0}),l={uTime:j,uCenter:{value:new f.Vector2(n.x,n.z)},uForward:{value:new f.Vector2(t.x,t.z)},uRight:{value:new f.Vector2(i.x,i.z)},uHalf:{value:new f.Vector2(e,a)}};return L(c,"water"),o&&(c.roughness=.7),c.userData.liquid=l,c.userData.stylized="liquid",c.onBeforeCompile=d=>{Object.assign(d.uniforms,l),d.vertexShader=d.vertexShader.replace("#include <common>",`#include <common>
+varying vec3 vLiquidWorld;`).replace("#include <worldpos_vertex>",`#include <worldpos_vertex>
+vLiquidWorld = `+(u?"transformed":"( modelMatrix * vec4( transformed, 1.0 ) ).xyz")+";"),d.fragmentShader=d.fragmentShader.replace("#include <common>",`#include <common>
 varying vec3 vLiquidWorld;
 uniform float uTime;
 uniform vec2 uCenter, uForward, uRight, uHalf;
 float liquidWave( vec2 p ) {
 	return sin( p.x * 2.1 + uTime * 1.3 ) * 0.5 + sin( p.y * 1.7 - uTime * 1.1 + p.x * 0.6 ) * 0.5 + sin( ( p.x + p.y ) * 3.7 + uTime * 2.2 ) * 0.25;
-}`).replace('#include <color_fragment>',`#include <color_fragment>
+}`).replace("#include <color_fragment>",`#include <color_fragment>
 	vec2 liquidRel = vLiquidWorld.xz - uCenter;
 	vec2 liquidLocal = vec2( dot( liquidRel, uRight ), dot( liquidRel, uForward ) );
 	float liquidEdge = min( uHalf.x - abs( liquidLocal.x ), uHalf.y - abs( liquidLocal.y ) );
 	float liquidW = liquidWave( liquidLocal );
-	float liquidShore = 1.0 - smoothstep( 0.0, ${lava?'0.55':'0.42'}, liquidEdge + liquidW * 0.05 );
+	float liquidShore = 1.0 - smoothstep( 0.0, ${o?"0.55":"0.42"}, liquidEdge + liquidW * 0.05 );
 	float liquidBands = smoothstep( 0.55, 0.95, sin( liquidLocal.x * 5.0 + liquidW * 1.6 ) * sin( liquidLocal.y * 4.3 - uTime * 0.8 ) );
-	${lava?`float liquidCrack = smoothstep( 0.25, 0.0, abs( sin( liquidLocal.x * 2.3 + liquidW * 0.9 ) * sin( liquidLocal.y * 1.9 - uTime * 0.35 + liquidW * 0.5 ) ) );
+	${o?`float liquidCrack = smoothstep( 0.25, 0.0, abs( sin( liquidLocal.x * 2.3 + liquidW * 0.9 ) * sin( liquidLocal.y * 1.9 - uTime * 0.35 + liquidW * 0.5 ) ) );
 	float liquidHeat = max( liquidCrack, liquidShore * 0.8 );
 	diffuseColor.rgb = mix( vec3( 0.16, 0.08, 0.07 ), diffuseColor.rgb * 0.8, liquidHeat );
 	vec3 liquidGlow = mix( vec3( 0.55, 0.1, 0.02 ), vec3( 1.0, 0.62, 0.18 ), liquidHeat * liquidHeat ) * ( 0.15 + 1.1 * liquidHeat ) * ( 0.85 + 0.15 * sin( uTime * 2.0 + liquidW ) );`:`float liquidDepth = smoothstep( 0.0, 1.6, liquidEdge );
 	diffuseColor.rgb = mix( diffuseColor.rgb * 1.18, diffuseColor.rgb * 0.62, liquidDepth );
 	diffuseColor.rgb += vec3( 0.10, 0.13, 0.12 ) * liquidBands;
-	diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.93, 0.97, 0.95 ), liquidShore * ( 0.65 + 0.35 * sin( liquidLocal.y * 9.0 + uTime * 3.0 ) ) );`}`).replace('#include <normal_fragment_begin>',`#include <normal_fragment_begin>
+	diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.93, 0.97, 0.95 ), liquidShore * ( 0.65 + 0.35 * sin( liquidLocal.y * 9.0 + uTime * 3.0 ) ) );`}`).replace("#include <normal_fragment_begin>",`#include <normal_fragment_begin>
 	{
 		vec2 lq = vec2( dot( vLiquidWorld.xz - uCenter, uRight ), dot( vLiquidWorld.xz - uCenter, uForward ) );
 		float e = 0.05, h0 = liquidWave( lq );
 		vec2 g = vec2( liquidWave( lq + vec2( e, 0.0 ) ) - h0, liquidWave( lq + vec2( 0.0, e ) ) - h0 ) / e;
-		vec3 worldTilt = vec3( g.x * uRight.x + g.y * uForward.x, 0.0, g.x * uRight.y + g.y * uForward.y ) * ${lava?'0.04':'0.12'};
+		vec3 worldTilt = vec3( g.x * uRight.x + g.y * uForward.x, 0.0, g.x * uRight.y + g.y * uForward.y ) * ${o?"0.04":"0.12"};
 		normal = normalize( normal - ( viewMatrix * vec4( worldTilt, 0.0 ) ).xyz );
-	}`);
-  if(lava)shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = liquidGlow;');
- };
- material.customProgramCacheKey=()=>'maxima-liquid-'+(lava?1:0)+(local?'l':'');
- return material;
-}
-
-// A round, lumpy boulder that still reads as a ball when it rolls; vertex coloured with a mossy crown.
-export function roundBoulderGeometry(seed=1,moss='#6f9a54'){
- const geo=new T.IcosahedronGeometry(1,2),p=geo.attributes.position,v=new T.Vector3(),colors=[],m=new T.Color(moss),c=new T.Color();
- for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);v.multiplyScalar(1+(fbm3(v.x*1.4+seed,v.y*1.4,v.z*1.4-seed)-.5)*.32);p.setXYZ(i,v.x,v.y,v.z);}
- const nn=[];for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).normalize();nn.push(v.x,v.y,v.z);}geo.setAttribute('normal',new T.Float32BufferAttribute(nn,3));for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const g=.74+fbm3(v.x*3.2,v.y*3.2,v.z*3.2)*.34,band=Math.sin(v.y*7+v.x*2)*.04;c.setRGB(g+band,g+band,g*.96+band);const up=Math.max(0,v.y-.45)/.55;if(up>0)c.lerp(m,Math.min(1,up*1.3));colors.push(c.r,c.g,c.b);}
- geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));return geo;
-}
-// An irregular rock lump (unit radius, flattened base) for shorelines, cave mouths and rubble.
-const LUMPS=new Map();
-export function rockLump(seed=1){if(!LUMPS.has(seed)){const geo=new T.IcosahedronGeometry(1,1),p=geo.attributes.position,v=new T.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);v.multiplyScalar(.74+fbm3(v.x*1.5+seed*1.7,v.y*1.5,v.z*1.5+seed)*.42);if(v.y<-.25)v.y=-.25+(v.y+.25)*.25;p.setXYZ(i,v.x,v.y,v.z);}geo.computeVertexNormals();LUMPS.set(seed,geo);}return LUMPS.get(seed);}
-
-// Ground dressing along every trail edge: scattered pebbles, wildflower clusters and fern fans. Purely visual,
-// small enough never to read as obstacles, and split into route chunks for culling.
-function flowerGeometry(){
- const p=[],c=[],push=(v,col)=>{p.push(...v);for(let i=0;i<v.length/3;i++)c.push(...col);};
- for(let k=0;k<3;k++){const a=k*2.1,ox=Math.cos(a)*.07,oz=Math.sin(a)*.07,h=.16+k*.04;push([ox-.006,0,oz,ox+.006,0,oz,ox,h,oz],[.35,.5,.3]);
-  for(let j=0;j<5;j++){const b=j/5*Math.PI*2+k;push([ox,h,oz,ox+Math.cos(b)*.045,h+.01,oz+Math.sin(b)*.045,ox+Math.cos(b+.6)*.045,h+.01,oz+Math.sin(b+.6)*.045],[1,1,1]);}
-  push([ox-.012,h+.012,oz,ox+.012,h+.012,oz,ox,h+.02,oz+.012],[1.4,1.2,.4]);}
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));g.computeVertexNormals();return g;
-}
-function fernGeometry(){
- const p=[],c=[];for(let k=0;k<6;k++){const a=k/6*Math.PI*2,dx=Math.cos(a),dz=Math.sin(a),sx=-dz*.05,sz=dx*.05;const pts=[[0,0,0],[dx*.18+sx,.16,dz*.18+sz],[dx*.34,.2,dz*.34],[dx*.18-sx,.16,dz*.18-sz]];for(const[i,j,l]of[[0,1,2],[0,2,3]]){p.push(...pts[i],...pts[j],...pts[l]);c.push(.55,.6,.5,.9,.95,.85,1.1,1.1,1,.9,.95,.85,.55,.6,.5,1.1,1.1,1);}}
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('color',new T.Float32BufferAttribute(c.slice(0,p.length),3));g.computeVertexNormals();return g;
-}
-export function trailDressing({widthAt=()=>TRAIL_WIDTH,heightAt=()=>0,clusterAt=null}={}){
- let seed=811;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
- const pebbles=[],flowers=[],ferns=[];
- for(let c=0;c<5;c++)for(const side of['left','right']){const points=chapterPath(c,side);for(let k=1;k<points.length;k++){const a=points[k-1],b=points[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz),nx=-dz/len,nz=dx/len;
-  for(let d=.2;d<len;d+=.7){const at=(off)=>({x:a.x+dx*d/len+nx*off,z:a.z+dz*d/len+nz*off}),center=at(0),width=widthAt(center.x,center.z);if(Math.abs(center.x)<2.4&&Math.abs(center.z-(-c*CHAPTER_LENGTH+2))<6)continue;
-   for(const edge of[-1,1]){const p=at(edge*(width-(clusterAt?.7:.6)+rnd()*(clusterAt?.9:1.6)));if(clusterAt&&rnd()>clusterAt(p.x,p.z))continue;pebbles.push({...p,s:(clusterAt?.045:.03)+rnd()*(clusterAt?.09:.06),r:rnd()*6,seed:rnd()});if(rnd()<.4){const q=at(edge*(width+(clusterAt?-.30:.1)+rnd()*(clusterAt?.45:1.4)));flowers.push({...q,s:1.3+rnd()*.8,r:rnd()*6,hue:rnd()});}if(rnd()<.2){const q=at(edge*(width+(clusterAt?-.45:.5)+rnd()*(clusterAt?.45:1.6)));ferns.push({...q,s:1.4+rnd()*1.4,r:rnd()*6});}}
-   if(rnd()<.35&&(!clusterAt||(((-center.z%CHAPTER_LENGTH+CHAPTER_LENGTH)%CHAPTER_LENGTH)<25))){const p=at((rnd()-.5)*width*1.4);pebbles.push({...p,s:.02+rnd()*.035,r:rnd()*6,seed:rnd()});}}}}
- const group=new T.Group();group.name='trail-dressing';
- const stone=new T.MeshStandardMaterial({color:'#9b9583',roughness:.95,flatShading:true}),bloom=new T.MeshStandardMaterial({vertexColors:true,roughness:.8,side:T.DoubleSide}),fern=new T.MeshStandardMaterial({color:'#5b8a4c',vertexColors:true,roughness:.9,side:T.DoubleSide});
- assignSurface(stone,'stone');assignSurface(bloom,'organic');assignSurface(fern,'foliage');
- stone.userData.stylized='pebble';bloom.userData.stylized='flower';fern.userData.stylized='fern';
- const petals=['#f4e2a1','#f0b6c8','#ffffff','#c9b8f2','#f6c27a'].map(h=>new T.Color(h));
- const add=list=>{for(const m of list){m.castShadow=false;group.add(m);}return list;};
- const pebble=new T.IcosahedronGeometry(1,0),pp=pebble.attributes.position;for(let i=0;i<pp.count;i++)pp.setY(i,Math.max(-.3,pp.getY(i)));pebble.computeVertexNormals();
- add(chunkedInstances(pebble,stone,pebbles,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z)+v.s*.15,v.z);o.rotation.set(v.seed,v.r,0);o.scale.set(v.s*1.2,v.s*.7,v.s);},'trail-pebbles'));
- const blooms=add(chunkedInstances(flowerGeometry(),bloom,flowers,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z),v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s);},'trail-flowers'));
- for(const mesh of blooms){const list=flowers.filter(f=>mesh.name.endsWith('-'+chunkOf(f.z)));list.forEach((f,i)=>mesh.setColorAt(i,petals[Math.floor(f.hue*petals.length)]));}
- add(chunkedInstances(fernGeometry(),fern,ferns,(o,v)=>{o.position.set(v.x,heightAt(v.x,v.z),v.z);o.rotation.set(0,v.r,0);o.scale.setScalar(v.s*.6);},'trail-ferns'));
- group.userData={pebbles:pebbles.length,flowers:flowers.length,ferns:ferns.length,materials:{stone,fern}};return group;
-}
-
-// Collectables that drift between the camera and the creature dissolve with a stable screen-space dither instead of
-// filling a phone screen. Opaque rendering is kept (no sorting cost); only fragments closer than `far` can vanish.
-export function fadeNearCamera(material,near=1.3,far=3.0){
- if(material.userData.nearFade)return material;material.userData.nearFade={near,far};const previous=material.onBeforeCompile;
- material.onBeforeCompile=(shader,renderer)=>{previous?.call(material,shader,renderer);shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
+	}`),o&&(d.fragmentShader=d.fragmentShader.replace("#include <emissivemap_fragment>",`#include <emissivemap_fragment>
+	totalEmissiveRadiance = liquidGlow;`))},c.customProgramCacheKey=()=>"maxima-liquid-"+(o?1:0)+(u?"l":""),c}b(ie,"liquidMaterial");function ne(r=1,u="#6f9a54"){const o=new f.IcosahedronGeometry(1,2),n=o.attributes.position,t=new f.Vector3,i=[],e=new f.Color(u),a=new f.Color;for(let l=0;l<n.count;l++)t.fromBufferAttribute(n,l),t.multiplyScalar(1+(W(t.x*1.4+r,t.y*1.4,t.z*1.4-r)-.5)*.32),n.setXYZ(l,t.x,t.y,t.z);const c=[];for(let l=0;l<n.count;l++)t.fromBufferAttribute(n,l).normalize(),c.push(t.x,t.y,t.z);o.setAttribute("normal",new f.Float32BufferAttribute(c,3));for(let l=0;l<n.count;l++){t.fromBufferAttribute(n,l);const d=.74+W(t.x*3.2,t.y*3.2,t.z*3.2)*.34,h=Math.sin(t.y*7+t.x*2)*.04;a.setRGB(d+h,d+h,d*.96+h);const m=Math.max(0,t.y-.45)/.55;m>0&&a.lerp(e,Math.min(1,m*1.3)),i.push(a.r,a.g,a.b)}return o.setAttribute("color",new f.Float32BufferAttribute(i,3)),o}b(ne,"roundBoulderGeometry");const k=new Map;function ae(r=1){if(!k.has(r)){const u=new f.IcosahedronGeometry(1,1),o=u.attributes.position,n=new f.Vector3;for(let t=0;t<o.count;t++)n.fromBufferAttribute(o,t),n.multiplyScalar(.74+W(n.x*1.5+r*1.7,n.y*1.5,n.z*1.5+r)*.42),n.y<-.25&&(n.y=-.25+(n.y+.25)*.25),o.setXYZ(t,n.x,n.y,n.z);u.computeVertexNormals(),k.set(r,u)}return k.get(r)}b(ae,"rockLump");function X(){const r=[],u=[],o=b((t,i)=>{r.push(...t);for(let e=0;e<t.length/3;e++)u.push(...i)},"push");for(let t=0;t<3;t++){const i=t*2.1,e=Math.cos(i)*.07,a=Math.sin(i)*.07,c=.16+t*.04;o([e-.006,0,a,e+.006,0,a,e,c,a],[.35,.5,.3]);for(let l=0;l<5;l++){const d=l/5*Math.PI*2+t;o([e,c,a,e+Math.cos(d)*.045,c+.01,a+Math.sin(d)*.045,e+Math.cos(d+.6)*.045,c+.01,a+Math.sin(d+.6)*.045],[1,1,1])}o([e-.012,c+.012,a,e+.012,c+.012,a,e,c+.02,a+.012],[1.4,1.2,.4])}const n=new f.BufferGeometry;return n.setAttribute("position",new f.Float32BufferAttribute(r,3)),n.setAttribute("color",new f.Float32BufferAttribute(u,3)),n.computeVertexNormals(),n}b(X,"flowerGeometry");function Z(){const r=[],u=[];for(let n=0;n<6;n++){const t=n/6*Math.PI*2,i=Math.cos(t),e=Math.sin(t),a=-e*.05,c=i*.05,l=[[0,0,0],[i*.18+a,.16,e*.18+c],[i*.34,.2,e*.34],[i*.18-a,.16,e*.18-c]];for(const[d,h,m]of[[0,1,2],[0,2,3]])r.push(...l[d],...l[h],...l[m]),u.push(.55,.6,.5,.9,.95,.85,1.1,1.1,1,.9,.95,.85,.55,.6,.5,1.1,1.1,1)}const o=new f.BufferGeometry;return o.setAttribute("position",new f.Float32BufferAttribute(r,3)),o.setAttribute("color",new f.Float32BufferAttribute(u.slice(0,r.length),3)),o.computeVertexNormals(),o}b(Z,"fernGeometry");function ue({widthAt:r=b(()=>O,"widthAt"),heightAt:u=b(()=>0,"heightAt"),clusterAt:o=null}={}){let n=811;const t=b(()=>(n=Math.imul(n,1664525)+1013904223>>>0,n/4294967296),"rnd"),i=[],e=[],a=[];for(let x=0;x<5;x++)for(const p of["left","right"]){const z=Y(x,p);for(let M=1;M<z.length;M++){const B=z[M-1],A=z[M],T=A.x-B.x,G=A.z-B.z,v=Math.hypot(T,G),E=-G/v,N=T/v;for(let D=.2;D<v;D+=.7){const C=b(w=>({x:B.x+T*D/v+E*w,z:B.z+G*D/v+N*w}),"at"),S=C(0),F=r(S.x,S.z);if(!(Math.abs(S.x)<2.4&&Math.abs(S.z-(-x*_+2))<6)){for(const w of[-1,1]){const V=C(w*(F-(o?.7:.6)+t()*(o?.9:1.6)));if(!(o&&t()>o(V.x,V.z))){if(i.push({...V,s:(o?.045:.03)+t()*(o?.09:.06),r:t()*6,seed:t()}),t()<.4){const R=C(w*(F+(o?-.3:.1)+t()*(o?.45:1.4)));e.push({...R,s:1.3+t()*.8,r:t()*6,hue:t()})}if(t()<.2){const R=C(w*(F+(o?-.45:.5)+t()*(o?.45:1.6)));a.push({...R,s:1.4+t()*1.4,r:t()*6})}}}if(t()<.35&&(!o||(-S.z%_+_)%_<25)){const w=C((t()-.5)*F*1.4);i.push({...w,s:.02+t()*.035,r:t()*6,seed:t()})}}}}}const c=new f.Group;c.name="trail-dressing";const l=new f.MeshStandardMaterial({color:"#9b9583",roughness:.95,flatShading:!0}),d=new f.MeshStandardMaterial({vertexColors:!0,roughness:.8,side:f.DoubleSide}),h=new f.MeshStandardMaterial({color:"#5b8a4c",vertexColors:!0,roughness:.9,side:f.DoubleSide});L(l,"stone"),L(d,"organic"),L(h,"foliage"),l.userData.stylized="pebble",d.userData.stylized="flower",h.userData.stylized="fern";const m=["#f4e2a1","#f0b6c8","#ffffff","#c9b8f2","#f6c27a"].map(x=>new f.Color(x)),y=b(x=>{for(const p of x)p.castShadow=!1,c.add(p);return x},"add"),s=new f.IcosahedronGeometry(1,0),g=s.attributes.position;for(let x=0;x<g.count;x++)g.setY(x,Math.max(-.3,g.getY(x)));s.computeVertexNormals(),y(H(s,l,i,(x,p)=>{x.position.set(p.x,u(p.x,p.z)+p.s*.15,p.z),x.rotation.set(p.seed,p.r,0),x.scale.set(p.s*1.2,p.s*.7,p.s)},"trail-pebbles"));const q=y(H(X(),d,e,(x,p)=>{x.position.set(p.x,u(p.x,p.z),p.z),x.rotation.set(0,p.r,0),x.scale.setScalar(p.s)},"trail-flowers"));for(const x of q)e.filter(z=>x.name.endsWith("-"+K(z.z))).forEach((z,M)=>x.setColorAt(M,m[Math.floor(z.hue*m.length)]));return y(H(Z(),h,a,(x,p)=>{x.position.set(p.x,u(p.x,p.z),p.z),x.rotation.set(0,p.r,0),x.scale.setScalar(p.s*.6)},"trail-ferns")),c.userData={pebbles:i.length,flowers:e.length,ferns:a.length,materials:{stone:l,fern:h}},c}b(ue,"trailDressing");function le(r,u=1.3,o=3){if(r.userData.nearFade)return r;r.userData.nearFade={near:u,far:o};const n=r.onBeforeCompile;r.onBeforeCompile=(i,e)=>{n?.call(r,i,e),i.fragmentShader=i.fragmentShader.replace("#include <clipping_planes_fragment>",`#include <clipping_planes_fragment>
 	{
 		float maximaDepth = vViewPosition.z; // three.js stores -mvPosition, so this is the distance in front of the camera
-		if ( maximaDepth < ${far.toFixed(2)} ) {
-			float maximaKeep = smoothstep( ${near.toFixed(2)}, ${far.toFixed(2)}, maximaDepth );
+		if ( maximaDepth < ${o.toFixed(2)} ) {
+			float maximaKeep = smoothstep( ${u.toFixed(2)}, ${o.toFixed(2)}, maximaDepth );
 			float maximaDither = fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) );
 			if ( maximaDither > maximaKeep ) discard;
 		}
-	}`);};
- const key=material.customProgramCacheKey?.bind(material);material.customProgramCacheKey=()=>(key?key():'')+'|near-fade';
- return material;
-}
+	}`)};const t=r.customProgramCacheKey?.bind(r);return r.customProgramCacheKey=()=>(t?t():"")+"|near-fade",r}b(le,"fadeNearCamera");export{j as WORLD_TIME,te as bevelBox,re as carvedCylinder,le as fadeNearCamera,ie as liquidMaterial,ae as rockLump,ne as roundBoulderGeometry,oe as stoneColumn,ue as trailDressing};

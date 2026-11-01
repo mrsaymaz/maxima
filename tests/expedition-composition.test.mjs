@@ -1,9 +1,9 @@
-import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
-import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../dist/vendor/three.module.min.js';
-import{EXPEDITION_SCENES,composedHalfWidth,routeHalfWidth,scenicRise,segmentRectDistance,expeditionTitle}from'../dist/expedition-composition.js';
-import{makeExpeditionArt,updateExpeditionArt}from'../dist/expedition-art.js';import{makeCorridorEnclosure}from'../dist/corridor-geometry.js';
-import{chapterPath,trailAllowed,pathDistance,approachPoint,activeNode}from'../dist/trail-layout.js';import{freshExpedition,freshJourney}from'../dist/expedition.js';
-import{sectionFor,sectionsFor,localPoint,surfaceOnCourse,approachHeight}from'../dist/traversal-layout.js';import{makeTraversalScenery}from'../dist/traversal-props.js';import{TrailNavigator}from'../dist/trail-nav.js';import{TrailWorld}from'../dist/trail-world.js';
+import{RUNNER,TRAIL_STRETCH,stretchZ}from'../src/runner-mode.js';
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../src/vendor/three.module.min.js';
+import{EXPEDITION_SCENES,composedHalfWidth,routeHalfWidth,scenicRise,segmentRectDistance,expeditionTitle}from'../src/expedition-composition.js';
+import{makeExpeditionArt,updateExpeditionArt}from'../src/expedition-art.js';import{makeCorridorEnclosure}from'../src/corridor-geometry.js';
+import{chapterPath,trailAllowed,pathDistance,approachPoint,activeNode}from'../src/trail-layout.js';import{freshExpedition,freshJourney}from'../src/expedition.js';
+import{sectionFor,sectionsFor,localPoint,surfaceOnCourse,approachHeight}from'../src/traversal-layout.js';import{makeTraversalScenery}from'../src/traversal-props.js';import{TrailNavigator}from'../src/trail-nav.js';import{TrailWorld}from'../src/trail-world.js';
 const eFor=(area=0,side='left',index=0)=>{const e=freshExpedition(freshJourney(),'g5u1',area);e.choices.fill(side);e.index=index;return e;};
 const fields=()=>makeExpeditionArt();
 

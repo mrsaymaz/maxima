@@ -1,18 +1,1 @@
-import{elementalAttack}from'./elemental-attacks.js';
-const clamp=x=>Math.max(0,Math.min(1,x));
-// The generated Cast clip releases at 36%; map that pose to the real gameplay wind-up.
-export function castPresentation(attack){
- const spec=elementalAttack(attack?.partner),age=Math.max(0,attack?.age||0),windup=spec.windup,recovery=Math.max(.01,(attack?.duration||windup+spec.recovery)-windup),released=!!attack?.hit||age>=windup;
- const charge=clamp(age/windup),after=Math.max(0,age-windup),recover=clamp(after/recovery);
- return{released,charge:released?Math.max(0,1-after/.12):charge,release:released?Math.max(0,1-after/.13):0,clipPhase:released?.36+.64*recover:.36*charge,after,recover};
-}
-export function anatomicalSquash(partner='hufflepuff',level=0,amount=0){
- // Only soft cub forms use a small stretch; feathers, scales, armour and multiple heads retain proportions.
- const limit=partner==='hufflepuff'&&level<=2?.018:partner==='gryffindor'&&level<=1?.012:0,q=Math.max(-limit,Math.min(limit,amount*.3));
- return{y:1+q,xz:1-q*.35};
-}
-export function walkContacts(meta={},partner='hufflepuff'){
- if(Array.isArray(meta.contacts))return meta.contacts.filter(n=>Number.isFinite(n)&&n>=0&&n<1);if(partner==='slytherin')return[];const limbs=Object.values(meta.limbNodes||{}),split=partner==='ravenclaw'?.40:partner==='hufflepuff'&&(meta.version===2||String(meta.profile).includes('young'))?.34:.35;
- return [...new Set(limbs.map(l=>((split-(l.phase||0))%1+1)%1))].sort((a,b)=>a-b);
-}
-export function crossedContacts(from,to,phases){if(to<=from||!Number.isFinite(from)||!Number.isFinite(to))return 0;let n=0;for(const p of phases)for(let k=Math.floor(from)-1;k<=Math.floor(to);k++)if(k+p>from+1e-8&&k+p<=to+1e-8)n++;return n;}
+var l=Object.defineProperty;var o=(e,t)=>l(e,"name",{value:t,configurable:!0});import{elementalAttack as h}from"./elemental-attacks.js";const c=o(e=>Math.max(0,Math.min(1,e)),"clamp");function x(e){const t=h(e?.partner),a=Math.max(0,e?.age||0),n=t.windup,r=Math.max(.01,(e?.duration||n+t.recovery)-n),i=!!e?.hit||a>=n,s=c(a/n),f=Math.max(0,a-n),u=c(f/r);return{released:i,charge:i?Math.max(0,1-f/.12):s,release:i?Math.max(0,1-f/.13):0,clipPhase:i?.36+.64*u:.36*s,after:f,recover:u}}o(x,"castPresentation");function M(e="hufflepuff",t=0,a=0){const n=e==="hufflepuff"&&t<=2?.018:e==="gryffindor"&&t<=1?.012:0,r=Math.max(-n,Math.min(n,a*.3));return{y:1+r,xz:1-r*.35}}o(M,"anatomicalSquash");function d(e={},t="hufflepuff"){if(Array.isArray(e.contacts))return e.contacts.filter(r=>Number.isFinite(r)&&r>=0&&r<1);if(t==="slytherin")return[];const a=Object.values(e.limbNodes||{}),n=t==="ravenclaw"?.4:t==="hufflepuff"&&(e.version===2||String(e.profile).includes("young"))?.34:.35;return[...new Set(a.map(r=>((n-(r.phase||0))%1+1)%1))].sort((r,i)=>r-i)}o(d,"walkContacts");function y(e,t,a){if(t<=e||!Number.isFinite(e)||!Number.isFinite(t))return 0;let n=0;for(const r of a)for(let i=Math.floor(e)-1;i<=Math.floor(t);i++)i+r>e+1e-8&&i+r<=t+1e-8&&n++;return n}o(y,"crossedContacts");export{M as anatomicalSquash,x as castPresentation,y as crossedContacts,d as walkContacts};

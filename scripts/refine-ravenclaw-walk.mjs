@@ -1,10 +1,10 @@
 // Rebuild only Walk on the eleven runtime birds. Other clips, bind data, skins,
 // original geometry and images remain intact. Run from the project root.
 import fs from'node:fs';import path from'node:path';
-import * as T from'../dist/vendor/three.module.min.js';
-import{GLTFLoader}from'../dist/vendor/loaders/GLTFLoader.js';
+import * as T from'../src/vendor/three.module.min.js';
+import{GLTFLoader}from'../src/vendor/loaders/GLTFLoader.js';
 import{readGLB,packGLB}from'./lib/glb.mjs';
-import{FORM_HEIGHTS}from'../dist/world-layout.js';
+import{FORM_HEIGHTS}from'../src/world-layout.js';
 globalThis.ProgressEvent??=class extends Event{constructor(t,o={}){super(t);Object.assign(this,o);}};
 const N=64,duration=.72,report=[],clamp=n=>Math.max(-1,Math.min(1,n));
 const hermite=(a,b,m,u)=>(2*u**3-3*u*u+1)*a+(u**3-2*u*u+u)*m+(-2*u**3+3*u*u)*b+(u**3-u*u)*m;
@@ -63,4 +63,4 @@ for(let level=0;level<=10;level++){
  mixer?.stopAllAction();for(const mesh of meshes){mesh.skeleton.dispose();mesh.geometry.dispose();}report.push({level,duration,playbackSpeedWorld:speedFloor,groundErrorInHeights:[minGround,maxGround],maxRootStepInHeights:maxRootStep});
  console.log(JSON.stringify(report.at(-1)));
 }
-fs.writeFileSync('docs/ravenclaw-stride-v0.42.0.json',JSON.stringify(report,null,2)+'\n');
+fs.writeFileSync('docs/audits/ravenclaw-stride-v0.42.0.json',JSON.stringify(report,null,2)+'\n');

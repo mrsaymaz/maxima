@@ -1,12 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import * as T from '../dist/vendor/three.module.min.js';
-import{freshJourney,freshExpedition as freshCurrentExpedition}from'../dist/expedition.js';
+import * as T from '../src/vendor/three.module.min.js';
+import{freshJourney,freshExpedition as freshCurrentExpedition}from'../src/expedition.js';
 // These mechanics tests use the legacy week layout (rivals in chapters 1, 3 and 5; extra trials in chapters 2 and 4), which older saves keep.
 const freshExpedition=(...a)=>Object.assign(freshCurrentExpedition(...a),{adventureVersion:1});
-import {sectionsFor,courseCoordinates,localPoint} from '../dist/traversal-layout.js';
-import {boulderPose,movingPose,gustState,crystalState} from '../dist/path-trials-layout.js';
-import {makeTrialScenery,updateTrialScenery} from '../dist/path-trial-props.js';
+import {sectionsFor,courseCoordinates,localPoint} from '../src/traversal-layout.js';
+import {boulderPose,movingPose,gustState,crystalState} from '../src/path-trials-layout.js';
+import {makeTrialScenery,updateTrialScenery} from '../src/path-trial-props.js';
 
 const TAU=Math.PI*2;
 const originalBatches={boulders:6,wind:8,moving:2,thorns:4,crystals:8,bonus:2};
@@ -73,4 +73,4 @@ test('[classic] animated hazard cues reuse all Three geometry/material/mesh reso
  for(const kind of['boulders','wind','moving','crystals']){const {group:g}=fixture(kind),objects=[],geometry=[],materials=[];g.traverse(o=>{objects.push(o);if(o.geometry)geometry.push(o.geometry);if(o.material)materials.push(o.material);});for(let frame=0;frame<240;frame++)updateTrialScenery(g,{time:frame/30});const after=[];g.traverse(o=>after.push(o));assert.deepEqual(after,objects);assert.deepEqual(after.filter(o=>o.geometry).map(o=>o.geometry),geometry);assert.deepEqual(after.filter(o=>o.material).map(o=>o.material),materials);assertFinite(g);dispose(g);}
 });
 
-test('[classic] boulder entrance faces remain visible on the inner side of the real enclosing cliffs',async()=>{const{makeCorridorEnclosure}=await import('../dist/corridor-geometry.js'),{section:s,group:g}=fixture('boulders'),wall=makeCorridorEnclosure();g.updateMatrixWorld(true);wall.updateMatrixWorld(true);for(const mouth of g.userData.boulderMouths){const centerPoint=localPoint(s,s.trial.lanes.find(l=>l.id===mouth.laneId).s),origin=new T.Vector3(centerPoint.x,.94,centerPoint.z),target=new T.Vector3(mouth.faceX,.94,mouth.faceZ),direction=target.clone().sub(origin).normalize(),ray=new T.Raycaster(origin,direction),art=ray.intersectObject(g,true)[0],cliff=ray.intersectObject(wall,true)[0];assert.ok(art);assert.ok(!cliff||art.distance<cliff.distance,'mouth must sit in front of the cliff surface');}dispose(g);dispose(wall);});
+test('[classic] boulder entrance faces remain visible on the inner side of the real enclosing cliffs',async()=>{const{makeCorridorEnclosure}=await import('../src/corridor-geometry.js'),{section:s,group:g}=fixture('boulders'),wall=makeCorridorEnclosure();g.updateMatrixWorld(true);wall.updateMatrixWorld(true);for(const mouth of g.userData.boulderMouths){const centerPoint=localPoint(s,s.trial.lanes.find(l=>l.id===mouth.laneId).s),origin=new T.Vector3(centerPoint.x,.94,centerPoint.z),target=new T.Vector3(mouth.faceX,.94,mouth.faceZ),direction=target.clone().sub(origin).normalize(),ray=new T.Raycaster(origin,direction),art=ray.intersectObject(g,true)[0],cliff=ray.intersectObject(wall,true)[0];assert.ok(art);assert.ok(!cliff||art.distance<cliff.distance,'mouth must sit in front of the cliff surface');}dispose(g);dispose(wall);});

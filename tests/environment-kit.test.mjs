@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import * as T from '../dist/vendor/three.module.min.js';
-import * as kit from '../dist/environment-kit.js';
+import * as T from '../src/vendor/three.module.min.js';
+import * as kit from '../src/environment-kit.js';
 
 const budgets={rockFormation:320,treeTrunk:650,treeCanopy:500,fernCluster:450,fallenLog:420,masonryFragment:480};
 const sizeOf=g=>g.boundingBox.getSize(new T.Vector3());

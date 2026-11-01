@@ -1,5 +1,5 @@
-import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
-import{OcclusionFade}from'../dist/occlusion-fade.js';
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../src/vendor/three.module.min.js';
+import{OcclusionFade}from'../src/occlusion-fade.js';
 
 test('meshes between camera and creature turn see-through and recover once the view clears',()=>{
  const scene=new T.Scene(),material=new T.MeshStandardMaterial({color:'#aa8866'});

@@ -75,4 +75,4 @@ def render(path,out,width=600,height=650,yaw=24,pitch=12,ss=2):
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('--level',type=int);p.add_argument('--yaw',type=float,default=24);p.add_argument('--pitch',type=float,default=12);a=p.parse_args()
  for level in ([a.level] if a.level is not None else range(11)):
-  f=UPLOAD/(f'hufflepuff-{level}(1).glb' if level<10 else 'hufflepuff-10.glb');out=ROOT/f'dist/assets/portraits/hufflepuff-{level}.png';start=time.time();render(f,out,yaw=a.yaw,pitch=a.pitch);print(f'{out.name} {out.stat().st_size} bytes in {time.time()-start:.2f}s',flush=True)
+  f=UPLOAD/(f'hufflepuff-{level}(1).glb' if level<10 else 'hufflepuff-10.glb');out=ROOT/f'art/portraits/hufflepuff-{level}.png';start=time.time();render(f,out,yaw=a.yaw,pitch=a.pitch);print(f'{out.name} {out.stat().st_size} bytes in {time.time()-start:.2f}s',flush=True)

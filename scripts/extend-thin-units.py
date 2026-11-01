@@ -19,7 +19,7 @@ questions={
 ('A family cannot provide the daily care a pet needs. Which choice is responsible?','Wait until they can provide the necessary care.',['Adopt it and leave it without care.','Keep it only when it is convenient.']),
 ('Which action grooms a cat’s coat?','Brushing it gently.',['Reading a receipt.','Watering a plant.'])]
 }
-p=Path('dist/data/expedition-language.json');data=json.loads(p.read_text())
+p=Path('content/data/expedition-language.json');data=json.loads(p.read_text())
 for unit in data['units']:
  uid=unit['id']
  if uid not in packs:continue

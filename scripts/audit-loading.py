@@ -48,7 +48,7 @@ if args.baseline:report['baselineFreshStart']=budget(args.baseline,False)
 report['formAssetCases']=[dict(partner=p,level=l,sourceBytes=budget(root,True,p,l)['sourceBytes']) for p in ['hufflepuff','gryffindor','slytherin','ravenclaw'] for l in [0,10]]
 (out/'LOADING-BUDGET-v0.46.0.json').write_text(json.dumps(report,indent=2))
 textures=[]
-for path in sorted((root/'dist/assets/creatures').glob('*.glb')):
+for path in sorted((root/'art/creatures').glob('*.glb')):
  raw=path.read_bytes();n=struct.unpack_from('<I',raw,12)[0];g=json.loads(raw[20:20+n]);binary=20+n+8
  for image in g.get('images',[]):
   view=g['bufferViews'][image['bufferView']];data=raw[binary+view.get('byteOffset',0):binary+view.get('byteOffset',0)+view['byteLength']]

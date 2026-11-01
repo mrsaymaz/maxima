@@ -1,5 +1,5 @@
-import fs from'node:fs';import path from'node:path';import * as T from'../dist/vendor/three.module.min.js';
-const DIR='dist/assets/rigs',TAU=Math.PI*2,report=[];
+import fs from'node:fs';import path from'node:path';import * as T from'../src/vendor/three.module.min.js';
+const DIR='art/rigs',TAU=Math.PI*2,report=[];
 const clamp=(x,a=-1,b=1)=>Math.max(a,Math.min(b,x));
 for(const filename of fs.readdirSync(DIR).filter(f=>f.endsWith('.gltf')).sort()){
  const file=path.join(DIR,filename),j=JSON.parse(fs.readFileSync(file)),rig=j.extras.maximaRig,meta=j.extras.maximaLocomotion,H=rig.height,partner=filename.startsWith('ravenclaw')?'ravenclaw':'slytherin',level=Number(filename.match(/-(\d+)/)[1]),base=rig.jointBase;
@@ -46,4 +46,4 @@ for(const filename of fs.readdirSync(DIR).filter(f=>f.endsWith('.gltf')).sort())
  meta.clips=Object.keys(durations);meta.walkCycleSeconds=durations.Walk;meta.contacts=partner==='ravenclaw'?[0,.5]:[];meta.validation={samplesPerClip:33,maxDisplacementInHeights:maxDisplacement,minHeightRatio:minRatio,maxHeightRatio:maxRatio};
  j.buffers[1].byteLength=bytes;fs.writeFileSync(path.resolve(DIR,j.buffers[1].uri),Buffer.concat(chunks));fs.writeFileSync(file,JSON.stringify(j));report.push({partner,level,joints:bones.length,vertices:rig.vertices,headCount:rig.headCount,clips:meta.clips,validation:meta.validation});console.log(filename,'8 clips',maxDisplacement.toFixed(3),'height',minRatio.toFixed(3),maxRatio.toFixed(3));
 }
-fs.writeFileSync('docs/new-rig-audit.json',JSON.stringify({newSkins:19,forms:report},null,2)+'\n');
+fs.writeFileSync('docs/audits/new-rig-audit.json',JSON.stringify({newSkins:19,forms:report},null,2)+'\n');

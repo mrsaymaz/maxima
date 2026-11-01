@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import path from'node:path';import vm from'node:vm';
-import{registerOffline,canInstall,installed,promptInstall,fullscreenAvailable,inFullscreen,toggleFullscreen,keepAwake,loadedFiles}from'../dist/app-shell.js';
+import{registerOffline,canInstall,installed,promptInstall,fullscreenAvailable,inFullscreen,toggleFullscreen,keepAwake,loadedFiles}from'../src/app-shell.js';
 import{shellFiles,shellHash}from'../scripts/build-offline.mjs';
 
 const dist=path.resolve('dist'),read=f=>fs.readFileSync(path.join(dist,f),'utf8');
@@ -9,7 +9,7 @@ test('app shell helpers are inert without browser APIs (tests, old browsers, pla
 });
 test('offline shell list and hash are current, and the worker carries the hash',()=>{
  const shell=JSON.parse(read('offline-shell.json')),files=shellFiles();
- assert.deepEqual(shell.files,files);assert.equal(shell.hash,shellHash(files));assert.ok(read('sw.js').includes(`const SHELL_HASH='${shell.hash}';`));
+ assert.deepEqual(shell.files,files);assert.equal(shell.hash,shellHash(files));assert.match(read('sw.js'),new RegExp(`const SHELL_HASH ?= ?'${shell.hash}';`));
  for(const f of['./','index.html','manifest.webmanifest','corridor-app.js','app-shell.js','data/lesson-catalog.json','vendor/three.module.min.js'])assert.ok(files.includes(f),f);
  assert.ok(!files.includes('sw.js'),'the worker never caches itself');for(const f of files)if(f!=='./')assert.ok(fs.existsSync(path.join(dist,f)),f);
 });
@@ -35,7 +35,7 @@ test('service worker serves media from cache while refreshing it, data and code 
  assert.deepEqual(log,['https://maxima.test/data/lessons/g5u2.json'],'only missing same-origin files are fetched');
 });
 test('a new build offers a reload only when it replaces a running one, never on the first install',async()=>{
- const{watchUpdates}=await import('../dist/app-shell.js');const listeners={},sw={controller:null,addEventListener:(t,f)=>listeners[t]=f};
+ const{watchUpdates}=await import('../src/app-shell.js');const listeners={},sw={controller:null,addEventListener:(t,f)=>listeners[t]=f};
  const before=globalThis.navigator;Object.defineProperty(globalThis,'navigator',{value:{serviceWorker:sw},configurable:true});
  try{let offers=0;assert.equal(watchUpdates(()=>offers++),true);listeners.controllerchange();assert.equal(offers,0,'first install');listeners.controllerchange();assert.equal(offers,1,'a later build');
   sw.controller={};let again=0;watchUpdates(()=>again++);listeners.controllerchange();assert.equal(again,1,'page already controlled');}

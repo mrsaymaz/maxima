@@ -1,14 +1,14 @@
-// Regressions from play-testing 0.55 (see docs/RELEASE-v0.56.0.md).
+// Regressions from play-testing 0.55 (see docs/releases/RELEASE-v0.56.0.md).
 import{test}from'node:test';import assert from'node:assert/strict';
-import{freshJourney,freshExpedition,shuffleGates,autoBranch,STORE,EARLIER_STORES}from'../dist/expedition.js';
-import{makeEnvironmentField}from'../dist/environment-field.js';
-import{endPoint,chapterPath,activeNode,approachPoint}from'../dist/trail-layout.js';
-import{RunnerControl}from'../dist/runner-control.js';
-import{hurdleHeight}from'../dist/runner-course.js';
-import{FORM_HEIGHTS}from'../dist/world-layout.js';
-import{jumpTuning,JUMP_GRAVITY}from'../dist/jump-tuning.js';
-import{RUN_JUMP_BONUS}from'../dist/trail-nav.js';
-import{specialKey,specialReady}from'../dist/specials-ui.js';
+import{freshJourney,freshExpedition,shuffleGates,autoBranch,STORE,EARLIER_STORES}from'../src/expedition.js';
+import{makeEnvironmentField}from'../src/environment-field.js';
+import{endPoint,chapterPath,activeNode,approachPoint}from'../src/trail-layout.js';
+import{RunnerControl}from'../src/runner-control.js';
+import{hurdleHeight}from'../src/runner-course.js';
+import{FORM_HEIGHTS}from'../src/world-layout.js';
+import{jumpTuning,JUMP_GRAVITY}from'../src/jump-tuning.js';
+import{RUN_JUMP_BONUS}from'../src/trail-nav.js';
+import{specialKey,specialReady}from'../src/specials-ui.js';
 const six=()=>{const j=freshJourney(),e=freshExpedition(j,'g5u1',0);shuffleGates(j,e);return{j,e};};
 
 test('a saved six-gate area builds its valley scenery (a reload no longer fails to open)',()=>{const{e}=six();e.choices=['left','right','left',null,null];e.index=3;assert.doesNotThrow(()=>makeEnvironmentField(e));e.index=6;assert.doesNotThrow(()=>makeEnvironmentField(e));});

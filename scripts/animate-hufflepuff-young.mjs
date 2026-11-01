@@ -2,7 +2,7 @@
 // Source names are unreliable: these mappings use rest anatomy AND skin weights.
 // Meshes, skin, textures, rest nodes and inverse bind matrices stay unchanged.
 import {readFileSync,writeFileSync} from 'node:fs';
-import * as T from '../dist/vendor/three.module.min.js';
+import * as T from '../src/vendor/three.module.min.js';
 const profiles={
  1:{joints:17,root:16,body:15,head:8,tail:0,duration:1.00,upper:.13,middle:.16,tailAmplitude:.022,limbs:[
   {id:'leftHind',nodes:[3,2,1],phase:0},
@@ -62,4 +62,4 @@ function bake(level,path){
  const pad=(4-bytes%4)%4;if(pad){chunks.push(Buffer.alloc(pad));bytes+=pad;}json.buffers[0].byteLength=bytes;const bin=Buffer.concat(chunks),text=Buffer.from(JSON.stringify(json)),body=Buffer.concat([text,Buffer.alloc((4-text.length%4)%4,32)]),header=Buffer.alloc(20);header.writeUInt32LE(0x46546c67);header.writeUInt32LE(2,4);header.writeUInt32LE(28+body.length+bin.length,8);header.writeUInt32LE(body.length,12);header.writeUInt32LE(0x4e4f534a,16);const bh=Buffer.alloc(8);bh.writeUInt32LE(bin.length);bh.writeUInt32LE(0x004e4942,4);writeFileSync(path,Buffer.concat([header,body,bh,bin]));
  console.log(JSON.stringify({level,bones:profile.joints,tracks:idle.channels.length,samples:samples+1,forwardYaw:json.extras.maximaLocomotion.forwardYaw,strideLength,referenceSpeed:strideLength/profile.duration,paws:profile.limbs.map(c=>({id:c.id,vertices:c.pawVertices.length,single:!!c.single}))}));
 }
-for(const level of process.argv.slice(2).map(Number).length?process.argv.slice(2).map(Number):[1,2,3])bake(level,`dist/assets/creatures/hufflepuff-${level}.glb`);
+for(const level of process.argv.slice(2).map(Number).length?process.argv.slice(2).map(Number):[1,2,3])bake(level,`art/creatures/hufflepuff-${level}.glb`);

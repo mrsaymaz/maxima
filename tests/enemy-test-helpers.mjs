@@ -1,4 +1,4 @@
-import assert from'node:assert/strict';import{localPoint}from'../dist/traversal-layout.js';
+import assert from'node:assert/strict';import{localPoint}from'../src/traversal-layout.js';
 export function tick(nav,seconds,input={x:0,z:0}){for(let t=0;t<seconds;t+=.016)nav.step(Math.min(.016,seconds-t),input);}
 export function waitPhase(nav,r,phase){for(let i=0;i<1200;i++){if(r.phase===phase)return;nav.step(.016);}assert.fail('phase not reached '+phase+' got '+r.phase+' retries '+nav.state.travel.retries);}
 export function moveTo(nav,p,limit=500){for(let i=0;i<limit;i++){const dx=p.x-nav.player.x,dz=p.z-nav.player.z,d=Math.hypot(dx,dz);if(d<.07)return;nav.step(.016,{x:dx/d,z:dz/d});}assert.fail('movement blocked at '+JSON.stringify(nav.player)+' to '+JSON.stringify(p));}

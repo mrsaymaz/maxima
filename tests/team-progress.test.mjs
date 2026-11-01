@@ -1,9 +1,9 @@
-import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../dist/vendor/three.module.min.js';
-import{PARTNERS,choosePartner,upgradePartners,journeysFor,allJourneyMaps}from'../dist/partners.js';
-import{freshSave,freshJourney,freshExpedition,chooseBranch,currentType,milestone,chestPending,finishRun,winGuardian,unlocked,restart,validSave,encode}from'../dist/expedition.js';
-import{freshGuardian}from'../dist/guardian-combat.js';import{upgradeTraversalSave,travelState}from'../dist/traversal.js';
-import{TrailWorld}from'../dist/trail-world.js';import{TrailNavigator}from'../dist/trail-nav.js';import{activeNode}from'../dist/trail-layout.js';import{makeTask,actTask}from'../dist/trail-tasks.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units,copy=x=>JSON.parse(encode(x));
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../src/vendor/three.module.min.js';
+import{PARTNERS,choosePartner,upgradePartners,journeysFor,allJourneyMaps}from'../src/partners.js';
+import{freshSave,freshJourney,freshExpedition,chooseBranch,currentType,milestone,chestPending,finishRun,winGuardian,unlocked,restart,validSave,encode}from'../src/expedition.js';
+import{freshGuardian}from'../src/guardian-combat.js';import{upgradeTraversalSave,travelState}from'../src/traversal.js';
+import{TrailWorld}from'../src/trail-world.js';import{TrailNavigator}from'../src/trail-nav.js';import{activeNode}from'../src/trail-layout.js';import{makeTask,actTask}from'../src/trail-tasks.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units,copy=x=>JSON.parse(encode(x));
 function checkpoint(j,e){if(e.index%4===0)chooseBranch(e,'left');const type=currentType(e);e.active={type,nodeId:`${e.id}:${e.index}`,complete:true};assert.ok(milestone(j,e,type).changed);if(chestPending(e))finishRun(j,e);}
 function firstArena(s,unit=units[0]){const j=s.journeys[unit.id]??=freshJourney(),e=j.expeditions[0]=freshExpedition(j,unit.id,0);while(e.index<20)checkpoint(j,e);e.battle=freshGuardian(unit,'team-progress');Object.assign(e.battle,{phase:'victory',bossHp:0,finishStep:3});assert.ok(winGuardian(j,e));return{j,e};}
 test('all four teams independently earn Form 4 and the first guardian without unlocking or evolving another team',()=>{

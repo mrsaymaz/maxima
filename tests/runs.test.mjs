@@ -1,10 +1,10 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{freshSave,freshJourney,freshExpedition,expedition,currentType,chooseBranch,milestone,finishRun,chestPending,ready,advance,validSave,TASK_TYPES}from'../dist/expedition.js';
-import{makeTask,actTask}from'../dist/trail-tasks.js';import{sectionFor}from'../dist/traversal-layout.js';import{enemiesFor}from'../dist/path-combat.js';import{RUN_TRIALS}from'../dist/path-trials-layout.js';
-import{recordAnswer,reviewPriority,itemIds,isDue,points,masteredCount,growthNeed,masteryReady,poolSize,wordex,upgradeMastery,dueCount}from'../dist/mastery.js';
-import{explainMistake,grammarReason}from'../dist/mistakes.js';import{dailyState,questProgress,markPlayed,streakInfo,questsFor}from'../dist/daily.js';import{useCosmetic,COSMETICS}from'../dist/cosmetics.js';import{freshWallet}from'../dist/traversal.js';
-import{chestPoint,trailAllowed,chapterPath}from'../dist/trail-layout.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+import{freshSave,freshJourney,freshExpedition,expedition,currentType,chooseBranch,milestone,finishRun,chestPending,ready,advance,validSave,TASK_TYPES}from'../src/expedition.js';
+import{makeTask,actTask}from'../src/trail-tasks.js';import{sectionFor}from'../src/traversal-layout.js';import{enemiesFor}from'../src/path-combat.js';import{RUN_TRIALS}from'../src/path-trials-layout.js';
+import{recordAnswer,reviewPriority,itemIds,isDue,points,masteredCount,growthNeed,masteryReady,poolSize,wordex,upgradeMastery,dueCount}from'../src/mastery.js';
+import{explainMistake,grammarReason}from'../src/mistakes.js';import{dailyState,questProgress,markPlayed,streakInfo,questsFor}from'../src/daily.js';import{useCosmetic,COSMETICS}from'../src/cosmetics.js';import{freshWallet}from'../src/traversal.js';
+import{chestPoint,trailAllowed,chapterPath}from'../src/trail-layout.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units;
 function solve(t){let guard=0;while(!t.complete&&guard++<80){if(t.kind==='pairs'){const i=t.leftOrder.find(i=>!t.matched.includes(i));actTask(t,{kind:'left',index:i});actTask(t,{kind:'right',index:i});continue;}const q=t.rounds[t.round];if(q.kind==='blocks'){const i=q.blocks.findIndex((b,i)=>!t.used.includes(i)&&b.text===q.correct[t.used.length]);actTask(t,{kind:'block',index:i});}else if(q.kind==='repair'&&!t.repairFound)actTask(t,{kind:'find',text:q.broken});else if(['multi','sequence'].includes(q.kind)){for(const text of q.answer)actTask(t,{kind:'pick',text});actTask(t,{kind:'confirm'});}else actTask(t,{kind:'choice',text:q.answer});}}
 function run(j,e,day,unit=units[0]){chooseBranch(e,'left');for(let k=0;k<4;k++){const type=currentType(e);e.active=makeTask(unit,type,`${e.id}:${e.index}`,`${e.id}:${e.index}:${type}`,reviewPriority(j,{day}),j.level);solve(e.active);const t=e.active;(t.pairs||t.rounds).forEach((_,i)=>{for(const id of itemIds(t,i,unit))recordAnswer(j,id,true,{day});});milestone(j,e,type);}return finishRun(j,e);}
 
@@ -28,7 +28,7 @@ test('daily quests pay once, all three add a bonus, and rest days never break th
 
 test('hats, coats and camp decorations are bought once with coins, toggle freely and survive validation',()=>{const s=freshSave();s.wallet.balance=s.wallet.total=200;assert.ok(useCosmetic(s,'hat-party').ok);assert.equal(s.wallet.hat,'hat-party');assert.equal(s.wallet.balance,155);assert.ok(useCosmetic(s,'hat-party').ok);assert.equal(s.wallet.hat,null);assert.equal(s.wallet.balance,155,'re-equipping is free');assert.ok(useCosmetic(s,'coat-ocean').ok&&useCosmetic(s,'camp-fire').ok);assert.deepEqual(s.wallet.camp,['camp-fire']);assert.ok(validSave(s,units));const poor=freshSave();assert.equal(useCosmetic(poor,'hat-crown').short,90);s.wallet.hat='hat-crown';assert.equal(validSave(s,units),false,'unowned hats are rejected');assert.equal(COSMETICS.filter(c=>c.kind==='hat').length,6);});
 test('guardian rounds at the reward chest open their task in front of the creature (no trail node is active there)',async()=>{
- const{TrailWorld}=await import('../dist/trail-world.js');const{activeNode}=await import('../dist/trail-layout.js');
+ const{TrailWorld}=await import('../src/trail-world.js');const{activeNode}=await import('../src/trail-layout.js');
  const j=freshJourney(),e=expedition(j,'g5u1',0);e.index=4;e.choices.fill(null);assert.equal(activeNode(e),null);
  const w=Object.create(TrailWorld.prototype);w.nav={state:e,player:{x:0,z:-80}};
  const battle=makeTask(units[0],'sentence',`${e.id}:battle:0`,`${e.id}:battle:0`,{},2),node=w.mechanismNode(battle);

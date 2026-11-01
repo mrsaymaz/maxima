@@ -1,9 +1,9 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{RUNNER,TRAIL_STRETCH,trailWarp,stretchZ}from'../dist/runner-mode.js';
-import{CHAPTER_LENGTH,chapterPath,END}from'../dist/trail-layout.js';
-import{gateRival,GATE_RUNUP,runFor,setRunnerWords,runSurface,LANES,CLEARING,RUN_SCALE,laneSpan,speedAt,speedRange,hurdleHeight}from'../dist/runner-course.js';import{FORM_HEIGHTS}from'../dist/world-layout.js';import{jumpTuning}from'../dist/jump-tuning.js';
-import{RunnerControl}from'../dist/runner-control.js';
-import{sectionFor,localPoint,courseCoordinates}from'../dist/traversal-layout.js';
+import{RUNNER,TRAIL_STRETCH,trailWarp,stretchZ}from'../src/runner-mode.js';
+import{CHAPTER_LENGTH,chapterPath,END}from'../src/trail-layout.js';
+import{gateRival,GATE_RUNUP,runFor,setRunnerWords,runSurface,LANES,CLEARING,RUN_SCALE,laneSpan,speedAt,speedRange,hurdleHeight}from'../src/runner-course.js';import{FORM_HEIGHTS}from'../src/world-layout.js';import{jumpTuning}from'../src/jump-tuning.js';
+import{RunnerControl}from'../src/runner-control.js';
+import{sectionFor,localPoint,courseCoordinates}from'../src/traversal-layout.js';
 
 const expedition={id:'t',area:0,adventureVersion:2,level:0,serial:1,choices:Array(5).fill('left'),index:1};
 // Runner sections exist only on the stretched map, so these tests use a straight 60 m section of the same shape.
@@ -79,7 +79,7 @@ test('after falling into a hole the creature returns before it, in a lane the ho
  assert.equal(r.afterRetry(nav),true);assert.ok(r.s<120-1.2-6);assert.equal(r.lane,0);assert.ok(Math.abs(r.lat-LANES[0])<1e-9);
 });
 test('every obstacle wears a look from its own arena, and swamps slow the creature instead of dropping it',async()=>{
- const{RUNNER_STYLES}=await import('../dist/runner-course.js');
+ const{RUNNER_STYLES}=await import('../src/runner-course.js');
  for(const area of[0,1,2])for(let index=0;index<20;index++){const base=withRun(index,index%2?'challenge':'relaxed'),run=runFor({...base,area},expedition,index%2?'challenge':'relaxed',true);
   for(const o of run.obstacles.filter(o=>RUNNER_STYLES[o.type]&&o.style!=='stream')){assert.ok(RUNNER_STYLES[o.type][area].includes(o.style),`${o.style} belongs to arena ${area}`);if(o.type==='swamp'){assert.ok(o.lanes.length<3);assert.equal(runSurface(run,o.s,LANES[o.lanes[0]]),0,'swamps are ground, not holes');}}}
  const section=withRun(1),nav=navFor(section),r=new RunnerControl(),events=[];r.events={swamp:o=>events.push(o.id)};r.engage(nav);
@@ -92,7 +92,7 @@ test('runner mode has its own running loop per arena',async()=>{
  for(const arena of['whisperwood','skyreach','stormglass']){const t=m.tracks['run-'+arena];assert.ok(t&&t.bpm>=130&&t.loop>40,arena);assert.ok(existsSync('dist/assets/music/'+t.base));}
 });
 test('a classic journey carries over to the runner with its positions moved onto the longer trail',async()=>{
- const{importClassicSave}=await import('../dist/runner-save.js');const{freshSave,freshJourney,freshExpedition}=await import('../dist/expedition.js');
+ const{importClassicSave}=await import('../src/runner-save.js');const{freshSave,freshJourney,freshExpedition}=await import('../src/expedition.js');
  const save=freshSave(),j=freshJourney(),e=freshExpedition(j,'g5u1',0);e.position={x:-10,z:-58};e.checkpoint={position:{x:6,z:-200}};e.travel={collected:[],completed:[0],earned:3,retries:0,safe:{x:-10,z:-58,y:0,heading:1}};
  j.expeditions={[e.id]:e};save.journeys={g5u1:j};save.wallet={balance:12,total:12,owned:['air'],equipped:'air'};
  const w=trailWarp(2.5),runner=importClassicSave(save,w.stretchZ),moved=runner.journeys.g5u1.expeditions[e.id];
@@ -108,14 +108,14 @@ test('the word closes as soon as it is spelled or its last row is passed, not at
  r2.s=other.run.word.tokens.at(-1).s+2;r2.collide(nav2);assert.equal(missed.length,1,'closes once the last row is behind');assert.equal(missed[0][0],other.run.word.answer[0],'the given letter counts');assert.ok(missed[0].slice(1).every(c=>c===null));
 });
 test('Low graphics keeps the track readable with far fewer objects; the HUD helpers are safe without a page',async()=>{
- const{makeRunnerScenery}=await import('../dist/runner-props.js');const{flash,runProgress}=await import('../dist/runner-hud.js');
+ const{makeRunnerScenery}=await import('../src/runner-props.js');const{flash,runProgress}=await import('../src/runner-hud.js');
  // Triangles drawn per tile (walls, backdrop, arches) are what cheaper phones feel.
  const count=low=>{let n=0;makeRunnerScenery(withRun(5),{creatureHeight:1,low}).traverse(o=>{if(o.isMesh&&!o.isInstancedMesh){const g=o.geometry;n+=(g.index?g.index.count:g.attributes.position.count)/3;}});return n;};
  const full=count(false),low=count(true);assert.ok(low<full*.8,`low ${low} vs full ${full}`);
  flash('Stumble!');runProgress(.5);runProgress(null);
 });
 test('the valley eases away while the track slides and grows back for the final real metres',async()=>{
- const T=await import('../dist/vendor/three.module.min.js');const{TrailWorld}=await import('../dist/trail-world.js');
+ const T=await import('../src/vendor/three.module.min.js');const{TrailWorld}=await import('../src/trail-world.js');
  const w=Object.create(TrailWorld.prototype),field=new T.Group(),cluster=new T.Group(),meadow=new T.Group(),crowns=new T.Mesh();cluster.name='environment-cluster-3';meadow.name='valley-meadow';field.add(cluster,meadow);
  const run={length:400,real:40},runner={running:true,s:10,section:{run}};
  Object.assign(w,{nav:{runner},environmentField:field,crowns,scene:{fog:{near:40,far:125}},time:0});
@@ -127,7 +127,7 @@ test('the valley eases away while the track slides and grows back for the final 
 });
 
 test('each chapter brings all six trials back as runner moments, and power-ups ride the open lanes',async()=>{
- const{RUN_MOMENTS}=await import('../dist/runner-course.js');
+ const{RUN_MOMENTS}=await import('../src/runner-course.js');
  for(const mode of['relaxed','challenge'])for(let chapter=0;chapter<5;chapter++){const seen=new Set();for(let n=0;n<4;n++){const run=withRun(chapter*4+n,mode).run;run.moments.forEach(k=>seen.add(k));assert.ok(run.powerups.length>=1);for(const p of run.powerups)assert.ok(!run.obstacles.some(o=>Math.abs(o.s-p.s)<1&&o.lanes.includes(p.lane)&&o.type!=='wind'),'power-ups are not inside an obstacle');}
   assert.deepEqual([...seen].sort(),[...RUN_MOMENTS].sort(),`chapter ${chapter}`);}
 });
@@ -186,7 +186,7 @@ test('never stuck at a stream: after a second fall its stones settle into a brid
  assert.equal(bridges.length,1);r.s=water[1].s;r.lat=LANES[water[1].lanes[0]];assert.equal(r.surface(),0,'the whole stream now carries the creature');
 });
 test('guardian sightings come in the last run of chapters 2, 3 and 4 only, each longer and fiercer, with the area guardian\'s own attacks',async()=>{
- const{SIGHTINGS,CHASE_KITS}=await import('../dist/runner-course.js');
+ const{SIGHTINGS,CHASE_KITS}=await import('../src/runner-course.js');
  for(const area of[0,1,2]){const found=[];
   for(let index=0;index<20;index++){const run=withRun(index,'relaxed',undefined,area).run,g=run.obstacles.filter(o=>o.type==='guardian');if(index%4===3&&index>=7&&index<=15){assert.equal(g.length,1,`run ${index}`);found.push(g[0]);}else assert.equal(g.length,0,`run ${index}`);}
   assert.deepEqual(found.map(g=>g.level),[1,2,3]);
@@ -210,7 +210,7 @@ const readWarnings=(r,nav,st)=>{if(!st)return;const danger=new Set(st.pose?.lane
  if(danger.has(r.lane)){const options=[st.pose?.gap,...[0,1,2].sort((x,y)=>Math.abs(x-r.lane)-Math.abs(y-r.lane))].filter(l=>l!=null&&!danger.has(l)&&path(l));if(options.length)r.lane=options[0];}
  for(const w of st.waves)if(w.gap!==r.lane&&w.s-r.s<3.2&&w.s>r.s&&!(nav.jumpUntil>r.clock))nav.jumpUntil=r.clock+.5;};
 test('the guardian rises, roars, warns before every attack and backs away when the sighting ends',async()=>{
- const{CHASE_KITS}=await import('../dist/runner-course.js');
+ const{CHASE_KITS}=await import('../src/runner-course.js');
  for(const area of[0,1,2]){const{section,o}=guardianRun(3,'relaxed',area),{log,st}=playGuardian(section,o,null,o.duration+3);
   assert.equal(log[0],'roar');const warns=log.filter(x=>x.startsWith('warn:')),attacks=log.filter(x=>x.startsWith('attack:'));assert.equal(warns.length,o.attacks.length);assert.equal(attacks.length,o.attacks.length);
   for(const kind of CHASE_KITS[area])assert.ok(log.indexOf('warn:'+kind)>=0&&log.indexOf('warn:'+kind)<log.indexOf('attack:'+kind),`${kind} is warned first`);

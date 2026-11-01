@@ -50,10 +50,10 @@ for grade in raw:
   stats.append({'id':u['id'],**counts,'uniqueQuestionAnswers':len(set(normal(q['answer']) for q in u['questions']))})
   g['units'].append(u)
  out['grades'].append(g)
-(ROOT/'dist/data/units.json').write_text(json.dumps(out,ensure_ascii=False,separators=(',',':')))
+(ROOT/'content/data/units.json').write_text(json.dumps(out,ensure_ascii=False,separators=(',',':')))
 for code in sorted(pictures):
  (ROOT/'dist/assets/emoji'/f'{code}.webp').write_bytes(wordramp.read(f'public/emoji/{code}.webp'))
-(ROOT/'dist/data/emoji-groups.json').write_text(json.dumps(emoji['groups'],ensure_ascii=False,separators=(',',':')))
+(ROOT/'content/data/emoji-groups.json').write_text(json.dumps(emoji['groups'],ensure_ascii=False,separators=(',',':')))
 report={'sourceActivityRecords':sum(len(u['tasks']) for g in raw for u in g['units']),'units':stats,'totals':{k:sum(s[k] for s in stats) for k in ['vocabulary','sentences','questions']},'deduplicated':dict(duplicate),'dropped':dict(dropped),'pictures':len(pictures),'issues':errors}
-(ROOT/'dist/data/import-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+(ROOT/'content/data/import-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
 print(json.dumps({k:v for k,v in report.items() if k!='units'},ensure_ascii=False,indent=2))

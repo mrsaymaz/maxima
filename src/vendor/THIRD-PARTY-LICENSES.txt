@@ -1,0 +1,8 @@
+Compressed creature model decoders (solMaxima 0.66.0), copied unchanged from three.js r180 examples/jsm except for
+import paths pointing to ../three.module.min.js:
+
+- loaders/KTX2Loader.js, utils/WorkerPool.js, math/ColorSpaces.js: three.js, MIT License (see THREE-LICENSE.txt).
+- libs/meshopt_decoder.module.js: meshoptimizer, MIT License, Copyright (c) 2016-2025 Arseny Kapoulkine.
+- libs/ktx-parse.module.js: ktx-parse, MIT License, Copyright (c) Don McCurdy.
+- libs/zstddec.module.js: zstddec, MIT License, Copyright (c) Don McCurdy; includes zstd (BSD License, Meta Platforms).
+- libs/basis/basis_transcoder.js and .wasm: Basis Universal transcoder, Apache License 2.0, Copyright (c) Binomial LLC.

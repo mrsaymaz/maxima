@@ -1,14 +1,1 @@
-// The shape of an expedition's path. Classic expeditions have 20 gates in five chapters of four. From pathVersion 3
-// an area has six gates in three chapters of two (about 15–20 minutes): rivals guard each chapter's second gate,
-// a chest stands on the first run of chapters 2 and 3 and on the final chase, and guardian sightings come on those
-// same runs before the chase to the arena.
-export const CLASSIC=Object.freeze({chapters:5,perChapter:4,gates:20}),SHORT=Object.freeze({chapters:3,perChapter:2,gates:6});
-export const shortPath=e=>e?.pathVersion===3;
-export const shapeOf=e=>shortPath(e)?SHORT:CLASSIC;
-export const gateCount=e=>shapeOf(e).gates;
-export const perChapter=e=>shapeOf(e).perChapter;
-export const chapterCount=e=>shapeOf(e).chapters;
-// Chapter of a gate index (clamped, so the end of the path belongs to the last chapter) and its slot in the chapter.
-export const chapterOf=(e,index=e.index)=>Math.min(chapterCount(e)-1,Math.floor(index/perChapter(e)));
-export const slotOf=(e,index=e.index)=>index%perChapter(e);
-export const pathDone=(e,index=e.index)=>index>=gateCount(e);
+var a=Object.defineProperty;var e=(t,r)=>a(t,"name",{value:r,configurable:!0});const s=Object.freeze({chapters:5,perChapter:4,gates:20}),n=Object.freeze({chapters:3,perChapter:2,gates:6}),c=e(t=>t?.pathVersion===3,"shortPath"),o=e(t=>c(t)?n:s,"shapeOf"),h=e(t=>o(t).gates,"gateCount"),p=e(t=>o(t).perChapter,"perChapter"),x=e(t=>o(t).chapters,"chapterCount"),f=e((t,r=t.index)=>Math.min(x(t)-1,Math.floor(r/p(t))),"chapterOf"),O=e((t,r=t.index)=>r%p(t),"slotOf"),i=e((t,r=t.index)=>r>=h(t),"pathDone");export{s as CLASSIC,n as SHORT,x as chapterCount,f as chapterOf,h as gateCount,i as pathDone,p as perChapter,o as shapeOf,c as shortPath,O as slotOf};

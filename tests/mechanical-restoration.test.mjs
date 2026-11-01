@@ -1,10 +1,10 @@
-import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../dist/vendor/three.module.min.js';
-import{TASK_TYPES,freshJourney,freshExpedition,currentType}from'../dist/expedition.js';
-import{makeTask,actTask,taskFraction}from'../dist/trail-tasks.js';
-import{WorldMechanism}from'../dist/world-mechanisms.js';import{taskMechanismState,HARDWARE_PROFILES}from'../dist/mechanism-hardware.js';
-import{makeTaskGate}from'../dist/task-gates.js';import{makeRouteBarrier,setRouteBarrierProgress,setRouteBarrierTask,animateRouteBarrier}from'../dist/corridor-geometry.js';
-import{restoredSites}from'../dist/restored-sites.js';import{TrailWorld}from'../dist/trail-world.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units,node={x:-10,z:-28,index:0,chapter:0,side:'left'};
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../src/vendor/three.module.min.js';
+import{TASK_TYPES,freshJourney,freshExpedition,currentType}from'../src/expedition.js';
+import{makeTask,actTask,taskFraction}from'../src/trail-tasks.js';
+import{WorldMechanism}from'../src/world-mechanisms.js';import{taskMechanismState,HARDWARE_PROFILES}from'../src/mechanism-hardware.js';
+import{makeTaskGate}from'../src/task-gates.js';import{makeRouteBarrier,setRouteBarrierProgress,setRouteBarrierTask,animateRouteBarrier}from'../src/corridor-geometry.js';
+import{restoredSites}from'../src/restored-sites.js';import{TrailWorld}from'../src/trail-world.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units,node={x:-10,z:-28,index:0,chapter:0,side:'left'};
 const clone=x=>JSON.parse(JSON.stringify(x)),settle=stage=>{for(let i=0;i<30;i++)stage.update(.05,null,null,null);};
 const allSteps=s=>s.groups.flatMap(g=>g.steps);
 function action(t){if(t.kind==='pairs'){const index=[2,0,1].find(i=>!t.matched.includes(i));if(t.selected!==index){actTask(t,{kind:'left',index});}return{kind:'right',index};}const q=t.rounds[t.round];if(q.kind==='blocks')return{kind:'block',index:q.blocks.findIndex((b,i)=>!t.used.includes(i)&&b.text===q.correct[t.used.length])};if(q.kind==='repair'&&!t.repairFound)return{kind:'find',text:q.broken};if(['multi','sequence'].includes(q.kind)){for(const text of q.answer)if(!t.picked.includes(text))actTask(t,{kind:'pick',text});return{kind:'confirm'};}return{kind:'choice',text:q.answer};}

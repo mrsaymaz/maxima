@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {freshJourney,freshSave,TYPES,required,recordSet,guardianReady,winGuardian,unlocked,restart,validSave,choose} from '../dist/core.js';
+import {freshJourney,freshSave,TYPES,required,recordSet,guardianReady,winGuardian,unlocked,restart,validSave,choose} from '../src/core.js';
 import {readFileSync} from 'node:fs';
-const data=JSON.parse(readFileSync(new URL('../dist/data/units.json',import.meta.url))),units=data.grades.flatMap(g=>g.units);
+const data=JSON.parse(readFileSync(new URL('../content/data/units.json',import.meta.url))),units=data.grades.flatMap(g=>g.units);
 function train(j){for(const t of TYPES)for(let i=0;i<required(j);i++){const n=j.level;recordSet(j,t);if(j.level!==n||guardianReady(j))return;}}
 test('level zero requires one set of every category; repeats cannot bypass categories',()=>{const j=freshJourney();recordSet(j,'match');recordSet(j,'match');assert.equal(j.level,0);assert.equal(j.sets.match,1);recordSet(j,'sentence');assert.equal(j.level,0);recordSet(j,'qa');assert.equal(j.level,1);assert.equal(required(j),2);});
 test('all eleven forms and area guardian gates can be completed without a dead end',()=>{const j=freshJourney();let guardians=0,guardLevels=[];while(!j.completed){const level=j.level;train(j);if(guardianReady(j)){guardLevels.push(j.level);assert.equal(unlocked(j),guardians);assert.ok(winGuardian(j));guardians++;assert.equal(unlocked(j),Math.min(guardians,2));}assert.ok(j.level>level||j.completed,'progression must advance');}assert.equal(j.level,10);assert.deepEqual(guardLevels,[2,5,10]);assert.equal(j.history.length,1);assert.equal(winGuardian(j),false);});

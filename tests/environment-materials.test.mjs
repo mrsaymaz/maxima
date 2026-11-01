@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import * as T from '../dist/vendor/three.module.min.js';
-import {environmentPalette,makeEnvironmentMaterials} from '../dist/environment-materials.js';
-import {propKind,stylizeProps} from '../dist/world-style.js';
+import * as T from '../src/vendor/three.module.min.js';
+import {environmentPalette,makeEnvironmentMaterials} from '../src/environment-materials.js';
+import {propKind,stylizeProps} from '../src/world-style.js';
 
 const names=['rock','rockTop','bark','leaf','leafLight','fern','timber','masonry','soil','damp','water','foam','metal'];
 const roles={rock:'stone',rockTop:'stone',bark:'wood',leaf:'foliage',leafLight:'foliage',fern:'foliage',timber:'wood',masonry:'stone',soil:'soil',damp:'soil',water:'water',foam:'water',metal:'metal'};

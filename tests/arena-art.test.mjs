@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import * as T from '../dist/vendor/three.module.min.js';
-import {makeArenaArt,updateArenaArt} from '../dist/arena-art.js';
-import {chapterPath,pathDistance,END} from '../dist/trail-layout.js';
+import * as T from '../src/vendor/three.module.min.js';
+import {makeArenaArt,updateArenaArt} from '../src/arena-art.js';
+import {chapterPath,pathDistance,END} from '../src/trail-layout.js';
 
 const paths=Array.from({length:5},(_,c)=>['left','right'].map(s=>chapterPath(c,s))).flat();
 paths.push([{x:0,z:9},{x:0,z:2}],[{x:0,z:END.z+8},{...END}]);

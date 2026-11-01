@@ -1,12 +1,12 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
-import {makeTask,actTask,numberWords} from '../dist/trail-tasks.js';
-import {ordinalLabel,ordinalWords} from '../dist/curriculum-numbers.js';
-import {freshJourney,freshSave,expedition,chooseBranch,currentType,milestone,finishRun,validSave,TASK_TYPES} from '../dist/expedition.js';
-import {upgradePractice} from '../dist/practice-selection.js';
-import {mechanismPlan,repairOffset} from '../dist/world-mechanisms.js';
-const data=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')),units=data.units;
+import {makeTask,actTask,numberWords} from '../src/trail-tasks.js';
+import {ordinalLabel,ordinalWords} from '../src/curriculum-numbers.js';
+import {freshJourney,freshSave,expedition,chooseBranch,currentType,milestone,finishRun,validSave,TASK_TYPES} from '../src/expedition.js';
+import {upgradePractice} from '../src/practice-selection.js';
+import {mechanismPlan,repairOffset} from '../src/world-mechanisms.js';
+const data=JSON.parse(fs.readFileSync('content/data/expedition-language.json')),units=data.units;
 const base=JSON.parse(fs.readFileSync('content/curriculum-v1/baseline-v0.34.0.json'));
-const map=JSON.parse(fs.readFileSync('dist/data/curriculum-manifest.json'));
+const map=JSON.parse(fs.readFileSync('content/data/curriculum-manifest.json'));
 const master=JSON.parse(fs.readFileSync('language-pack/authored-expansion.json'));
 const core=units.filter(u=>u.curriculum.kind==='core');
 function solve(t){let safety=0;while(!t.complete&&safety++<100){

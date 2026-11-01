@@ -3,4 +3,4 @@ import fs from'node:fs';import{execFileSync}from'node:child_process';import{veri
 execFileSync('python3',['scripts/rig-missing.py'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/bake-anatomy-clips.mjs'],{stdio:'inherit'});
 execFileSync(process.execPath,['scripts/refine-ravenclaw-walk.mjs'],{stdio:'inherit'});
-fs.writeFileSync('docs/runtime-rig-audit-v0.27.0.json',JSON.stringify(verifyRuntimeRigs(),null,2)+'\n');
+fs.writeFileSync('docs/audits/runtime-rig-audit-v0.27.0.json',JSON.stringify(verifyRuntimeRigs(),null,2)+'\n');

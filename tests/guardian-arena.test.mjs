@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{freshGuardian,GuardianCombat,validGuardian,guardianQuestion,guardianPhase,inGuardianDanger,attackDuration,BOSS,ARENA,WARDS,TOUGH_WARDS,guardianWards,guardianSeals}from'../dist/guardian-combat.js';
-import{AREA_PATTERNS,ATTACK_KINDS,attackShapes,bodyRadius,segmentDistance,cageWall,CAGE,JUMP_CLEAR}from'../dist/guardian-attacks.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units,u=units[0];
+import{freshGuardian,GuardianCombat,validGuardian,guardianQuestion,guardianPhase,inGuardianDanger,attackDuration,BOSS,ARENA,WARDS,TOUGH_WARDS,guardianWards,guardianSeals}from'../src/guardian-combat.js';
+import{AREA_PATTERNS,ATTACK_KINDS,attackShapes,bodyRadius,segmentDistance,cageWall,CAGE,JUMP_CLEAR}from'../src/guardian-attacks.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units,u=units[0];
 const dt=.016,dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const create=(area,mode='relaxed',body,tough=false)=>{const b=freshGuardian(u,'arena-'+area+mode,{tough});const events=[];return{b,events,c:new GuardianCombat(b,{area,mode,bodyProfile:body,event:(k,d)=>events.push([k,d])})};};
 

@@ -1,10 +1,10 @@
-import{RUNNER,TRAIL_STRETCH,stretchZ}from'../dist/runner-mode.js';
-import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
-import{freshJourney,freshExpedition,validSave,freshSave,chooseBranch}from'../dist/expedition.js';
-import{makeEnvironmentField,updateEnvironmentField,environmentClearance}from'../dist/environment-field.js';
-import{composedHalfWidth,scenicSurface}from'../dist/expedition-composition.js';
-import{TrailNavigator}from'../dist/trail-nav.js';import{sectionFor,localPoint,surfaceOnCourse}from'../dist/traversal-layout.js';import{makeTraversalScenery}from'../dist/traversal-props.js';
-import{TrailWorld}from'../dist/trail-world.js';
+import{RUNNER,TRAIL_STRETCH,stretchZ}from'../src/runner-mode.js';
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../src/vendor/three.module.min.js';
+import{freshJourney,freshExpedition,validSave,freshSave,chooseBranch}from'../src/expedition.js';
+import{makeEnvironmentField,updateEnvironmentField,environmentClearance}from'../src/environment-field.js';
+import{composedHalfWidth,scenicSurface}from'../src/expedition-composition.js';
+import{TrailNavigator}from'../src/trail-nav.js';import{sectionFor,localPoint,surfaceOnCourse}from'../src/traversal-layout.js';import{makeTraversalScenery}from'../src/traversal-props.js';
+import{TrailWorld}from'../src/trail-world.js';
 const eFor=(area=0)=>freshExpedition(freshJourney(),'g5u1',area),fields=[0,1,2].map(a=>makeEnvironmentField(eFor(a)));
 
 // Two five-tree stands per chapter replace uniform scatter; scene coverage and

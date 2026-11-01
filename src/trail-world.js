@@ -1,0 +1,1743 @@
+import { RUNNER } from './runner-mode.js';
+import { perChapter, chapterOf, chapterCount, gateCount } from './path-shape.js';
+import { installRunnerInput } from './runner-input.js';
+import { installGestures } from './gesture-controls.js';
+import { updateRunnerScenery } from './runner-props.js';
+import { stretchZ } from './runner-mode.js';
+import { OcclusionFade } from './occlusion-fade.js';
+import { BrickStyle } from './brick-style.js';
+import { BrickWorld } from './brick-world.js';
+import { BRICK_WORLD } from './world-style-mode.js';
+import { ARENA_LOOKS } from './arena-palette.js';
+import { sceneryFocus } from './scenery-plan.js';
+import { CreatureExpression } from './combat-expression.js';
+import { ContinuousMechanism } from './continuous-mechanism.js';
+import { gateEntry } from './flow-transitions.js';
+import { GuardianStage } from './guardian-stage.js';
+import { terrainTint } from './valley-terrain.js';
+import { measuredTaskRect } from './task-presentation.js';
+import { TaskOcclusion } from './task-occlusion.js';
+import { TerrainResponse } from './terrain-response.js';
+import { makeEnvironmentField, updateEnvironmentField, ENVIRONMENT_LIGHTING } from './environment-field.js';
+import { castTrailCamera } from './trail-camera-collision.js';
+import { combatThreats, threatPins, ThreatOverlay } from './combat-awareness.js';
+import { VisualHierarchy } from './visual-hierarchy.js';
+import { assignSurface } from './surface-materials.js';
+import { QuietMoments } from './quiet-moments.js';
+import { makeContactShade, updateContactShade } from './contact-shade.js';
+import { WORLD_TIME, trailDressing } from './prop-art.js';
+import { ElementalFX } from './elemental-fx.js';
+import {
+  groundMaterial,
+  edgeGrass,
+  skyDome,
+  SKY_ZENITH,
+  creatureRim,
+  stylizeProps,
+  varySceneryInstances,
+  sceneryTint,
+} from './world-style.js';
+import { tintCliffs } from './cliff-art.js';
+import { makeChest, makeHat, placeHat, makeCampDecor, animateCamp, CAMP_SPOTS } from './cosmetic-props.js';
+import { cosmetic } from './cosmetics.js';
+import { chestPending, runChapter } from './expedition.js';
+import { ProceduralMotion, needsProceduralMotion } from './procedural-motion.js';
+import { restoredSites } from './restored-sites.js';
+import { makeArenaArt, updateArenaArt } from './arena-art.js';
+import { makeExpeditionArt, updateExpeditionArt } from './expedition-art.js';
+import { makePathDetail, configurePathDetail, updatePathDetail } from './path-detail.js';
+import { BodyMotion } from './body-motion.js';
+import { makeTrialScenery, updateTrialScenery } from './path-trial-props.js';
+import { makePathEnemy, updatePathEnemy } from './path-enemy-props.js';
+import { ShrineStage } from './shrine-stage.js';
+import { enemyFor, enemiesFor } from './path-combat.js';
+import { PartnerAttackPose } from './partner-attack.js';
+import * as T from './vendor/three.module.min.js';
+import { WorldMechanism, mechanismPlacement } from './world-mechanisms.js';
+import { sectionFor, courseCoordinates, localPoint } from './traversal-layout.js';
+import { makeTraversalScenery, updateTraversalScenery } from './traversal-props.js';
+import { desktopSteering } from './creature-controls.js';
+import {
+  makeCorridorEnclosure,
+  makeRouteBarrier,
+  setRouteBarrierProgress,
+  setRouteBarrierTask,
+  animateRouteBarrier,
+  makeBranchClosure,
+} from './corridor-geometry.js';
+import { mergeGeometries } from './vendor/utils/BufferGeometryUtils.js';
+import { World } from './scene.js';
+import { makeTrailProp, setTrailPropProgress } from './trail-props.js';
+import {
+  endPoint,
+  chapterPath,
+  nodesFor,
+  activeNode,
+  chestPoint,
+  END,
+  TRAIL_WIDTH,
+  CHAPTER_LENGTH,
+} from './trail-layout.js';
+import { taskFraction } from './trail-tasks.js';
+const PALETTES = ARENA_LOOKS.map(l => ({
+  sky: l.lighting.sky,
+  grass: l.terrain.low,
+  leaves: l.kit.leaf,
+  stone: l.kit.rock,
+  path: l.kit.soil,
+}));
+export class TrailWorld extends World {
+  constructor(container, onNode, nav) {
+    super(container, onNode, nav);
+    if (RUNNER) installRunnerInput(this);
+    this.disposeGestures = installGestures(this, { onGesture: (...a) => this.onGesture?.(...a) });
+    this.sky = skyDome();
+    this.scene.add(this.sky);
+    this.campGroup = new T.Group();
+    this.campGroup.visible = false;
+    this.scene.add(this.campGroup);
+    this.keyboardJumpFromButtons = true;
+    this.scene.fog.near = 40;
+    this.scene.fog.far = 125;
+    this.camera.position.set(nav.player.x, 5, nav.player.z + 7);
+    this.target.set(nav.player.x, 0.5, nav.player.z);
+    this.setArea(nav.state.area);
+    this.refresh();
+  }
+  makeLand() {
+    this.palette = PALETTES[this.nav.state.area];
+    this.terrain = new T.Group();
+    this.land.add(this.terrain);
+    const p = this.palette;
+    this.grass = groundMaterial(p.grass, p.path);
+    this.rock = this.mat(p.stone);
+    this.dark = this.mat('#546b60');
+    this.groundBase = this.mesh(
+      new T.BoxGeometry(180, 0.7, CHAPTER_LENGTH * 5 + 100),
+      this.grass,
+      0,
+      -0.36,
+      END.z / 2,
+      this.terrain,
+    );
+    this.legacyLandscape = [
+      this.mesh(
+        new T.BoxGeometry(10, 0.06, CHAPTER_LENGTH * 5 + 60),
+        this.mat('#83bdc6', { roughness: 0.3 }),
+        -30,
+        -0.045,
+        END.z / 2,
+        this.terrain,
+      ),
+    ];
+    this.paths = new T.Group();
+    this.terrain.add(this.paths);
+    for (let c = 0; c < 5; c++)
+      for (const side of ['left', 'right']) {
+        const points = chapterPath(c, side);
+        for (let i = 1; i < points.length; i++) {
+          const a = points[i - 1],
+            b = points[i],
+            len = Math.hypot(b.x - a.x, b.z - a.z),
+            road = this.mesh(
+              new T.BoxGeometry(TRAIL_WIDTH * 2, 0.045, len + 0.8),
+              this.mat(p.path),
+              (a.x + b.x) / 2,
+              0.005,
+              (a.z + b.z) / 2,
+              this.paths,
+            );
+          road.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+        }
+        for (const point of points)
+          this.mesh(
+            new T.CylinderGeometry(TRAIL_WIDTH, TRAIL_WIDTH, 0.045, 14),
+            this.mat(p.path),
+            point.x,
+            0.005,
+            point.z,
+            this.paths,
+          );
+      }
+    this.mesh(new T.BoxGeometry(6.4, 0.045, 12), this.mat(p.path), 0, 0.005, 4, this.paths);
+    {
+      const from = stretchZ(-654),
+        to = END.z - 2;
+      this.mesh(new T.BoxGeometry(6.4, 0.045, from - to), this.mat(p.path), 0, 0.005, (from + to) / 2, this.paths);
+    }
+    const roadParts = this.paths.children.map(o => {
+        o.updateMatrix();
+        return o.geometry.clone().applyMatrix4(o.matrix);
+      }),
+      roadGeometry = mergeGeometries(roadParts);
+    for (const o of [...this.paths.children]) {
+      this.paths.remove(o);
+      o.geometry.dispose();
+      o.material.dispose();
+    }
+    for (const g of roadParts) g.dispose();
+    this.mesh(roadGeometry, this.mat(p.path), 0, 0, 0, this.paths).castShadow = false;
+    this.paths.visible = false;
+    this.edgeGrassMesh = edgeGrass();
+    this.terrain.add(this.edgeGrassMesh);
+    this.dressing = trailDressing();
+    this.terrain.add(this.dressing);
+    this.nearPathDetails = makePathDetail();
+    this.terrain.add(this.nearPathDetails);
+    this.enclosure = makeCorridorEnclosure({
+      composed: this.nav.state.area === 0 && this.nav.state.adventureVersion === 2,
+      reveals: this.nav.state.adventureVersion === 2,
+    });
+    this.land.add(this.enclosure);
+    const spots = [],
+      rocks = [];
+    let seed = 197;
+    const random = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < 640; i++) {
+      const z = 10 - random() * (CHAPTER_LENGTH * 5 + 35),
+        chapter = Math.min(4, Math.max(0, Math.floor(-z / CHAPTER_LENGTH))),
+        x = (random() < 0.5 ? -1 : 1) * (17 + random() * 23);
+      spots.push({ x, z, h: 3.4 + random() * 3 });
+      if (i % 2 === 0)
+        rocks.push({ x: Math.sign(x) * (Math.abs(x) * 0.78 + 3), z: z + random() * 3, r: 0.7 + random() * 0.7 });
+    }
+    // Instanced verge plants bring depth close to a cub-sized creature without blocking the trail.
+    const verge = [];
+    for (let c = 0; c < 5; c++)
+      for (const side of ['left', 'right']) {
+        const points = chapterPath(c, side);
+        for (let k = 1; k < points.length; k++) {
+          const a = points[k - 1],
+            b = points[k],
+            dx = b.x - a.x,
+            dz = b.z - a.z,
+            len = Math.hypot(dx, dz);
+          for (let d = 1.8; d < len; d += 3.2)
+            for (const edge of [-1, 1]) {
+              const x = a.x + (dx * d) / len - (dz / len) * edge * (TRAIL_WIDTH + 0.38),
+                z = a.z + (dz * d) / len + (dx / len) * edge * (TRAIL_WIDTH + 0.38);
+              if (Math.abs(x) < 2 && Math.abs(z - (-c * CHAPTER_LENGTH + 2)) < 5) continue;
+              verge.push({ x, z, h: 0.25 + random() * 0.3 });
+            }
+        }
+      }
+    const sprig = new T.Object3D(),
+      leaves = new T.InstancedMesh(
+        new T.ConeGeometry(0.23, 1, 5),
+        this.mat('#5d8559', { kind: 'foliage' }),
+        verge.length * 2,
+      ),
+      buds = new T.InstancedMesh(
+        new T.IcosahedronGeometry(0.1),
+        this.mat('#e7cf94', { kind: 'organic' }),
+        verge.length,
+      );
+    verge.forEach((v, i) => {
+      for (let k = 0; k < 2; k++) {
+        sprig.position.set(v.x + k * 0.16, v.h * 0.5, v.z);
+        sprig.rotation.set(0, i * 0.7, k ? 0.3 : -0.3);
+        sprig.scale.set(1, v.h, 1);
+        sprig.updateMatrix();
+        leaves.setMatrixAt(i * 2 + k, sprig.matrix);
+      }
+      sprig.position.set(v.x, v.h + 0.05, v.z);
+      sprig.rotation.set(0, 0, 0);
+      sprig.scale.set(1, 1, 1);
+      sprig.updateMatrix();
+      buds.setMatrixAt(i, sprig.matrix);
+    });
+    this.terrain.add(leaves, buds);
+    this.legacyVerge = [leaves, buds];
+    const obj = new T.Object3D(),
+      trunkMaterial = this.mat('#77664d', { kind: 'wood' }),
+      crownsMaterial = this.mat(p.leaves, { kind: 'foliage' }),
+      trunks = new T.InstancedMesh(new T.CylinderGeometry(0.18, 0.28, 1, 7), trunkMaterial, spots.length),
+      crowns = new T.InstancedMesh(new T.ConeGeometry(1.2, 1, 8), crownsMaterial, spots.length * 2);
+    spots.forEach((s, i) => {
+      obj.position.set(s.x, s.h * 0.28, s.z);
+      obj.rotation.set(0, Math.sin(s.x * 0.13 + s.z * 0.08) * 0.28, 0);
+      obj.scale.set(1, s.h * 0.56, 1);
+      obj.updateMatrix();
+      trunks.setMatrixAt(i, obj.matrix);
+      for (let k = 0; k < 2; k++) {
+        obj.position.set(s.x, s.h * (0.65 + k * 0.16), s.z);
+        obj.scale.set(s.h * 0.34 * (1 - k * 0.2), s.h * 0.65, s.h * 0.34 * (1 - k * 0.2));
+        obj.updateMatrix();
+        crowns.setMatrixAt(i * 2 + k, obj.matrix);
+      }
+    });
+    varySceneryInstances(trunks, spots, 'wood');
+    spots.forEach((s, i) => {
+      const tint = sceneryTint('leaf', s.x, s.z);
+      for (let k = 0; k < 2; k++) crowns.setColorAt(i * 2 + k, tint);
+    });
+    trunkMaterial.userData.detail = 'wood';
+    crownsMaterial.userData.detail = 'leaf';
+    trunks.castShadow = true;
+    crowns.castShadow = true;
+    this.terrain.add(trunks, crowns);
+    this.crowns = crowns;
+    this.treeTrunks = trunks;
+    const stones = new T.InstancedMesh(new T.DodecahedronGeometry(1), this.rock, rocks.length);
+    rocks.forEach((s, i) => {
+      obj.position.set(s.x, 0.5 * s.r, s.z);
+      obj.rotation.set(i * 0.13, i * 0.5, 0.2);
+      obj.scale.set(s.r, s.r * 0.8, s.r);
+      obj.updateMatrix();
+      stones.setMatrixAt(i, obj.matrix);
+    });
+    varySceneryInstances(stones, rocks, 'stone');
+    this.rock.userData.detail = 'stone';
+    stones.castShadow = true;
+    this.terrain.add(stones);
+    this.baseStones = stones;
+    for (let c = 0; c < 17; c++)
+      for (const side of [-1, 1]) {
+        const hill = this.mesh(
+          new T.SphereGeometry(1, 10, 7),
+          this.mat(c % 2 ? p.stone : p.grass),
+          side * (41 + (c % 3) * 7),
+          3 + (c % 4),
+          -c * 43 + 10,
+          this.terrain,
+        );
+        hill.scale.set(18, 10 + (c % 3) * 3, 30);
+        this.legacyLandscape.push(hill);
+      }
+    this.contactShade = makeContactShade();
+    this.scene.add(this.contactShade);
+    this.distantSolids = [
+      ...spots.map(s => ({ x: s.x, z: s.z, r: 0.3, top: s.h * 0.6 })),
+      ...rocks.map(s => ({ x: s.x, z: s.z, r: s.r, top: s.r * 1.4 })),
+    ];
+    this.environmentSolids = [
+      ...this.enclosure.userData.solids.map(s => ({ ...s, top: s.maxY })),
+      ...this.distantSolids,
+    ];
+    this.travelScenery = new Map();
+    this.landmarkGroups = [];
+    this.nodes = {};
+    this.propEntries = [];
+    this.forkSigns = new T.Group();
+    this.land.add(this.forkSigns);
+    this.beacon = new T.Group();
+    const glow = this.mat('#f1d694', { emissive: '#bf9b40', emissiveIntensity: 0.9 });
+    for (const side of [-1, 1])
+      this.mesh(new T.BoxGeometry(0.45, 3.5, 0.5), this.dark, side * 2.5, 1.75, END.z, this.terrain);
+    this.mesh(new T.BoxGeometry(5.7, 0.45, 0.65), glow, 0, 3.4, END.z, this.terrain);
+    this.orb = new T.Group();
+    this.wild = new T.Group();
+    this.land.add(this.orb, this.wild);
+    this.bridgePieces = [];
+    this.roofs = [];
+    this.cameraCast = (a, b, area = 0, r = 0.1) => castTrailCamera(this.nav, a, b, r);
+  }
+  makeAreaDetails() {
+    this.areaDetails = [new T.Group(), new T.Group(), new T.Group()];
+    this.regionSolids = [[], [], []];
+    this.areaDetails.forEach(g => this.land.add(g));
+    for (let c = 0; c < 5; c++)
+      for (const side of [-1, 1])
+        for (let k = 0; k < 3; k++) {
+          const x = side * (16 + k * 2.8),
+            z = stretchZ(-c * 132 - 16 - k * 28);
+          this.mesh(new T.CylinderGeometry(0.4, 0.65, 2.6, 7), this.mat('#b8c6bf'), x, 1.3, z, this.areaDetails[1]);
+          const ring = this.mesh(
+            new T.TorusGeometry(0.75, 0.09, 5, 18),
+            this.mat('#d8c397', { metalness: 0.2 }),
+            x,
+            3,
+            z,
+            this.areaDetails[1],
+          );
+          ring.rotation.y = 0.4;
+          this.regionSolids[1].push({ x, z, r: 0.8, top: 3.8 });
+          const crystal = this.mesh(
+            new T.OctahedronGeometry(0.8),
+            this.mat('#b1a5d4', { emissive: '#655387', emissiveIntensity: 0.35 }),
+            x,
+            1.5,
+            z,
+            this.areaDetails[2],
+          );
+          crystal.scale.y = 2;
+          this.regionSolids[2].push({ x, z, r: 0.85, top: 3.2 });
+        }
+    this.areaDetails.forEach((g, i) => (g.visible = i === this.nav.state.area));
+    this.arenaArtGroups = [0, 1, 2].map(i => {
+      const g = makeArenaArt(i);
+      g.visible = i === this.nav.state.area;
+      this.land.add(g);
+      return g;
+    });
+    this.expeditionArt = makeExpeditionArt();
+    this.expeditionArt.visible = this.nav.state.area === 0;
+    this.land.add(this.expeditionArt);
+    this.regionSolids[0] = this.expeditionArt.userData.solids;
+  }
+  setComposedEnclosure() {
+    const desired = this.area === 0 && this.nav.state.adventureVersion === 2,
+      reveals = this.nav.state.adventureVersion === 2;
+    if (
+      !this.enclosure ||
+      (!!this.enclosure.userData.composed === desired && !!this.enclosure.userData.reveals === reveals)
+    )
+      return;
+    this.land.remove(this.enclosure);
+    this.disposeModel(this.enclosure);
+    this.enclosure = makeCorridorEnclosure({ composed: desired, reveals });
+    this.land.add(this.enclosure);
+    tintCliffs(this.enclosure, this.area);
+    this.environmentSolids = [
+      ...this.enclosure.userData.solids.map(s => ({ ...s, top: s.maxY })),
+      ...(this.distantSolids || []),
+    ];
+  }
+  ensureEnvironment() {
+    if (!this.land || !this.nav) return;
+    this.environmentFields ??= new Map();
+    const e = this.nav.state,
+      area = this.area ?? e.area,
+      key = [area, e.adventureVersion, e.terrainVersion || 0].join(':');
+    let field = this.environmentFields.get(key);
+    if (!field) {
+      field = makeEnvironmentField({ ...e, area });
+      this.environmentFields.set(key, field);
+      this.land.add(field);
+    }
+    for (const other of this.environmentFields.values()) other.visible = other === field;
+    this.environmentField = field;
+    if (this.environmentJourney !== e) {
+      updateEnvironmentField(field, {
+        dt: 0,
+        expedition: e,
+        completed: e.completed || [],
+        player: this.nav.player,
+        reduced: true,
+        active: false,
+      });
+      this.environmentJourney = e;
+    }
+    this.environmentSolids = [
+      ...this.enclosure.userData.solids.map(s => ({ ...s, top: s.maxY })),
+      ...field.userData.solids,
+    ];
+    if (this.groundBase) this.groundBase.visible = false;
+  }
+  setSceneDetail(settings = {}) {
+    this.taskOcclusion?.clear();
+    const enriched = !!this.environmentField,
+      composed = enriched || this.area === 0,
+      shaped = this.area === 0 && this.nav?.state?.adventureVersion === 2,
+      low = settings?.preset === 'low';
+    if (this.grass?.userData.ground) this.grass.userData.ground.uComposition.value = shaped ? 1 : 0;
+    for (const mesh of [
+      this.crowns,
+      this.treeTrunks,
+      this.baseStones,
+      ...(this.legacyVerge || []),
+      ...(this.legacyLandscape || []),
+    ])
+      if (mesh) mesh.visible = !composed;
+    if (this.dressing) {
+      this.dressing.visible = !shaped;
+      for (const m of this.dressing.children || []) m.visible = !low || m.name.startsWith('trail-pebbles');
+    }
+    if (this.edgeGrassMesh) this.edgeGrassMesh.visible = !shaped && !low;
+    if (this.nearPathDetails) {
+      this.nearPathDetails.visible = shaped;
+      configurePathDetail(this.nearPathDetails, settings);
+    }
+  }
+  movementInput(dt) {
+    const runner = this.nav.runner;
+    if (runner?.running) {
+      const yaw = runner.forwardYaw;
+      this.controlHeading = yaw;
+      this.viewRig.yaw = yaw;
+      this.viewRig.inputYaw = null;
+      const flick = this.input.x > 0.6 ? 1 : this.input.x < -0.6 ? -1 : 0;
+      if (flick && flick !== this.runnerFlick) runner.shift(flick);
+      this.runnerFlick = flick;
+      globalThis.document?.body?.classList.add('runner-running');
+      if (this.locomotion) this.locomotion.override = { speed: Math.min(runner.speed, 9), heading: yaw };
+      const run = runner.section.run,
+        pace = Math.max(0, Math.min(1, (runner.speed - run.start) / (run.top - run.start)));
+      this.fovKick = 5 * pace + (runner.burst > 0 || runner.has('dash') ? 6 : 0);
+      this.updateRunnerFx(runner);
+      return { input: { x: 0, z: 0 }, heading: yaw };
+    }
+    this.runnerFlick = 0;
+    this.fovKick = 0;
+    this.updateRunnerFx(null);
+    if (this.locomotion) this.locomotion.override = null;
+    if (RUNNER) globalThis.document?.body?.classList.remove('runner-running');
+    const rival = this.nav.combat?.blocking,
+      crystal = this.nav.trials?.focus,
+      target = rival?.active ? rival : crystal;
+    if (target) {
+      const heading = Math.atan2(target.x - this.nav.player.x, target.z - this.nav.player.z),
+        x =
+          this.input.x +
+          (this.keys.has('d') || this.keys.has('ArrowRight') ? 1 : 0) -
+          (this.keys.has('a') || this.keys.has('ArrowLeft') ? 1 : 0),
+        z =
+          this.input.z +
+          (this.keys.has('s') || this.keys.has('ArrowDown') ? 1 : 0) -
+          (this.keys.has('w') || this.keys.has('ArrowUp') ? 1 : 0);
+      this.controlHeading = heading;
+      this.viewRig.yaw = heading;
+      const touch = Math.hypot(this.input.x, this.input.z) > 0.05;
+      if (!touch) this.viewRig.inputYaw = null;
+      const held = touch ? this.viewRig.movement(this.input.x, this.input.z) : null,
+        kx = x - this.input.x,
+        kz = z - this.input.z;
+      const input = {
+        x: (held?.x || 0) - kx * Math.cos(heading) - kz * Math.sin(heading),
+        z: (held?.z || 0) + kx * Math.sin(heading) - kz * Math.cos(heading),
+      };
+      if (Math.hypot(x, z) > 0.05) this.nav.stop();
+      return { input, heading };
+    }
+    const motion = desktopSteering(this.keys, this.nav.heading, dt);
+    if (motion.active) {
+      this.nav.stop();
+      this.viewRig.inputYaw = null;
+      this.controlHeading = motion.heading;
+      return motion;
+    }
+    if (Math.hypot(this.input.x, this.input.z) > 0.05 || this.nav.path.length) {
+      if (this.controlHeading != null && this.locomotion) this.locomotion.heading = this.nav.heading;
+      this.controlHeading = null;
+    }
+    return { input: this.viewRig.movement(this.input.x, this.input.z) };
+  }
+  setView(home, focus = null, battle = false) {
+    if (this.guardianStage) {
+      this.guardianStage.dispose();
+      this.guardianStage = null;
+    }
+    if (home || focus || battle) {
+      if (this.nav.combat) {
+        this.nav.combat.projectiles = [];
+        this.nav.combat.attack = null;
+      }
+      this.elementalFX?.clear();
+    }
+    this.nav.rush?.reset();
+    this.controlHeading = null;
+    if (this.locomotion) this.locomotion.heading = this.nav.heading;
+    if (home || (!focus && !battle)) this.hideMechanism();
+    this.frameFocus = true;
+    super.setView(home, focus, battle);
+    this.container.style.height = '';
+    this.container.style.width = '';
+    if (!home && !focus && !battle) {
+      this.creature.rotation.y = this.nav.heading - (this.locomotion?.forwardYaw || 0);
+      this.returnCameraReset = true;
+    }
+    this.resize();
+  }
+  mechanismKey(node) {
+    return [this.partner || this.nav.partner || 'hufflepuff', this.nav.state.id, node.side, node.index, node.type].join(
+      '|',
+    );
+  }
+  getContinuous(node, completed = false) {
+    this.continuous ??= new Map();
+    const key = this.mechanismKey(node);
+    let host = this.continuous.get(key);
+    if (!host) {
+      host = new ContinuousMechanism(this.land, node, this.area || 0, completed);
+      this.continuous.set(key, host);
+    }
+    return host;
+  }
+  hasMechanismPreview(id) {
+    return [...(this.continuous?.values() || [])].some(h => h.node.id === id && h.prepared);
+  }
+  prepareMechanismPreview(task) {
+    const node = activeNode(this.nav.state);
+    if (!node || node.type === 'exit' || task.nodeId !== `${this.nav.state.id}:${this.nav.state.index}`) return;
+    return this.getContinuous(node).prepare(task, {
+      width: this.container.clientWidth,
+      height: this.container.clientHeight,
+    });
+  }
+  showMechanism(task) {
+    const node = this.mechanismNode(task),
+      viewport = { width: this.container.clientWidth, height: this.container.clientHeight };
+    if (String(task.nodeId).includes(':battle:')) {
+      this.mechanism ??= new WorldMechanism(this.scene);
+      this.mechanism.readingViewport = viewport;
+      this.mechanism.area = this.area || 0;
+      return this.mechanism.render(task, node);
+    }
+    const host = this.getContinuous(node);
+    host.bodyBounds = this.bodyBounds || this.nav.pickupBounds;
+    host.bodyHeight = this.nav.height;
+    this.mechanism = host.stage;
+    this.mechanism.onSeat = this.onMechanismSeat;
+    this.rival.visible = false;
+    return host.enter(task, viewport);
+  }
+  // Trail tasks are built at their trail node. Guardian rounds (offered at the run's chest, where no trail node is
+  // active) and any task without a node are built just ahead of the creature, which stays where it is.
+  mechanismNode(task) {
+    const e = this.nav.state,
+      node = String(task?.nodeId || '').includes(':battle:') ? null : activeNode(e);
+    if (node) return node;
+    const p =
+      this.mechanism?.root && this.mechanism.node?.id === 'battle-' + e.id
+        ? this.mechanism.node
+        : { id: 'battle-' + e.id, index: 0, type: task?.type, x: this.nav.player.x, z: this.nav.player.z - 4.45 };
+    return p;
+  }
+  hideMechanism() {
+    this.taskOcclusion?.clear();
+    this.taskCameraKey = null;
+    if (this.mechanism?.mount) this.mechanism.mount.leave();
+    else this.mechanism?.clear();
+    this.mechanism = null;
+  }
+  adoptForm(form) {
+    this.quietMoments?.reset();
+    this.combatExpression?.reset();
+    this.attackPose?.reset();
+    const model = super.adoptForm(form);
+    this.creatureLook = creatureRim(model, this.elementColor);
+    this.proceduralMotion = needsProceduralMotion(form.partner, model)
+      ? new ProceduralMotion(model, {
+          partner: form.partner,
+          forward: form.forwardVector || [Math.sin(form.forwardYaw || 0), 0, Math.cos(form.forwardYaw || 0)],
+        })
+      : null;
+    this.hatMesh = null;
+    this.applyCosmetics();
+    this.attackPose = new PartnerAttackPose(model, form.attackProfile, form.forwardYaw);
+    this.bodyMotion = new BodyMotion(model, this.nav.height);
+    this.quietMoments = new QuietMoments(model, form.attackProfile);
+    this.combatExpression = new CreatureExpression(model, form.attackProfile, form.forwardYaw);
+    return model;
+  }
+  celebrate() {
+    this.quietMoments?.acknowledge();
+    this.reaction = 0.35;
+  }
+  updatePresentation(dt) {
+    if (typeof document !== 'undefined') {
+      this.threatOverlay ??= new ThreatOverlay(document.querySelector('#threat-layer'));
+      const shown = !this.home && !this.focus && !this.battle && !this.evolution && !this.paused,
+        pins = shown
+          ? threatPins(this.combatThreats || [], this.camera, this.container.getBoundingClientRect(), this.cameraCast)
+          : [];
+      this.threatOverlay.update(pins);
+    }
+
+    this.combatExpression?.update(dt, {
+      enabled: !this.home && !this.evolution && (!this.paused || !!this.mechanism?.root),
+      attack: !!this.nav.combat?.attack,
+      airborne: !this.mechanism?.root && !this.nav.grounded,
+      reduced: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+    });
+    const q = this.quietMoments,
+      p = this.nav.player,
+      active = !!this.nav.combat?.blocking?.active;
+    if (q) {
+      if (this.wasPresentationCombat && !active) q.settle();
+      this.wasPresentationCombat = active;
+      if (active && this.combatThreats?.length) {
+        const t = this.combatThreats[0];
+        q.observe('rival-' + t.id, Math.cos(this.nav.heading) * (t.x - p.x) - Math.sin(this.nav.heading) * (t.z - p.z));
+      }
+      const node = this.mechanism?.root ? this.mechanism.node : activeNode(this.nav.state);
+      if (node && !active && Math.hypot(node.x - p.x, node.z - p.z) < 8)
+        q.observe(node.id, Math.cos(this.nav.heading) * (node.x - p.x) - Math.sin(this.nav.heading) * (node.z - p.z));
+      q.update(dt, {
+        enabled: !this.home && !this.evolution && (!this.paused || !!this.mechanism?.root),
+        moving: !this.mechanism?.root && this.nav.moving,
+        attack: !!this.nav.combat?.attack,
+        airborne: !this.mechanism?.root && !this.nav.grounded,
+        reduced: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      });
+    }
+    if (this.contactShade) {
+      const task = !!this.mechanism?.root,
+        position = this.creature.position,
+        support = task
+          ? this.mechanism.root.position.y
+          : (this.nav.support?.(position) ?? (this.nav.support ? null : 0));
+      updateContactShade(this.contactShade, {
+        position,
+        footY: position.y,
+        support,
+        radius: this.nav.radius,
+        height: this.nav.height,
+        shadows: this.graphics?.shadows ?? true,
+        visible: this.creature.visible && !this.evolution && !this.battle,
+      });
+    }
+  }
+  // The Elemental Shrine on the path (shrine-stage.js): the creature waits beside the plaza, the camera frames it.
+  showShrine(options) {
+    this.hideShrine();
+    this.shrineStage = new ShrineStage(this, { ...options, effects: this.graphics?.effects || 'medium' });
+    const spot = this.shrineStage.creatureSpot,
+      c = this.shrineStage.center;
+    this.nav.stop?.();
+    this.nav.player = { x: spot.x, z: spot.z };
+    this.nav.heading = Math.atan2(c.x - spot.x, c.z - spot.z);
+    if (this.locomotion) this.locomotion.heading = this.nav.heading;
+    this.setInput?.(0, 0);
+    return this.shrineStage;
+  }
+  hideShrine() {
+    this.shrineStage?.dispose();
+    this.shrineStage = null;
+  }
+  afterCamera(dt) {
+    if (this.shrineStage && !this.guardianStage?.active && !this.evolution) {
+      this.shrineStage.update(dt);
+      this.shrineStage.frameCamera(this.camera, dt);
+    }
+  }
+  startGuardian(state, options) {
+    this.hideShrine();
+    this.guardianStage?.dispose();
+    this.guardianStage = new GuardianStage(this, state, options);
+    this.paused = false;
+    return this.guardianStage;
+  }
+  jump() {
+    if (this.guardianStage?.active) return !this.paused && this.guardianStage.combat.jump();
+    return super.jump();
+  }
+  attack(target = null) {
+    if (this.guardianStage?.active) return !this.paused && this.guardianStage.combat.attack();
+    if (this.nav.runner?.running && !this.paused) return this.nav.runner.cast();
+    return !this.home && !this.focus && !this.battle && !this.paused && this.nav.requestRanged(target);
+  }
+  attackEffect(a) {
+    if (a.ranged) return;
+    const p = this.nav.player,
+      h = Math.min(1.1, this.nav.height * 0.55),
+      radius = 0.42 + this.nav.radius * 0.6;
+    for (let i = 0; i < 2; i++) {
+      const m = new T.Mesh(
+        new T.TorusGeometry(radius + i * 0.12, 0.022, 4, 18, Math.PI * 1.15),
+        new T.MeshBasicMaterial({
+          color: this.elementColor || '#d4f2dc',
+          transparent: true,
+          opacity: 0.65,
+          side: T.DoubleSide,
+          depthWrite: false,
+        }),
+      );
+      m.position.set(
+        p.x + Math.sin(a.heading) * (0.45 + this.nav.radius),
+        this.nav.y + h + i * 0.08,
+        p.z + Math.cos(a.heading) * (0.45 + this.nav.radius),
+      );
+      m.rotation.set(Math.PI / 2, 0, -a.heading + (a.kind === 'turn' ? 0.6 : 0));
+      this.effects.add(m);
+      this.pulses.push({
+        m,
+        v: new T.Vector3(Math.sin(a.heading) * 0.6, 0.12, Math.cos(a.heading) * 0.6),
+        age: 0,
+        life: 0.32,
+        alpha: 0.65,
+      });
+    }
+  }
+  combatEffect(point, hit = true) {
+    for (let i = 0; i < (this.visualFocus > 0.5 ? (hit ? 4 : 2) : hit ? 8 : 4); i++) {
+      const m = new T.Mesh(
+        new T.OctahedronGeometry(hit ? 0.065 : 0.04),
+        new T.MeshBasicMaterial({
+          color: hit ? this.elementColor || '#e6f6d1' : '#e9b573',
+          transparent: true,
+          opacity: 0.9,
+        }),
+      );
+      m.position.set(point.x, point.y, point.z);
+      this.effects.add(m);
+      const a = (i * Math.PI * 2) / 8;
+      this.pulses.push({
+        m,
+        v: new T.Vector3(Math.cos(a) * 1.4, 0.3 + Math.random() * 0.6, Math.sin(a) * 1.4),
+        age: 0,
+        life: 0.45,
+        alpha: 0.9,
+      });
+    }
+  }
+  cameraUpdate(dt) {
+    if (!this.evolution) for (const host of this.continuous?.values() || []) host.update(dt);
+    if (this.guardianStage?.active && !this.evolution) {
+      this.guardianStage.update(dt);
+      return;
+    }
+    this.quietMoments?.reset();
+    this.combatExpression?.reset();
+    this.visualHierarchy ??= new VisualHierarchy();
+    const visual = this.visualHierarchy.update(this.paused ? 0 : dt, this.nav, {
+      enabled: !this.home && !this.focus && !this.battle && !this.evolution,
+    });
+    this.visualFocus = visual.strength;
+    updateEnvironmentField(this.environmentField, {
+      player: this.nav.player,
+      dt,
+      completed: this.nav.state.completed,
+      expedition: this.nav.state,
+      threat: !!this.nav.combat?.blocking?.active,
+      preset: this.graphics?.preset,
+      strength: visual.strength,
+      reduced:
+        this.environmentReducedMotion ||
+        (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches),
+      active: !this.paused && !this.home && !this.evolution,
+    });
+    updatePathDetail(this.nearPathDetails, {
+      time: this.time || 0,
+      strength: visual.strength,
+      x: visual.x,
+      z: visual.z,
+      radius: visual.radius,
+    });
+    const grassQuiet = this.edgeGrassMesh?.material.userData.sway;
+    if (grassQuiet?.uQuietness) {
+      grassQuiet.uQuietness.value = visual.strength;
+      grassQuiet.uQuietCenter.value.set(visual.x, visual.z);
+      grassQuiet.uQuietRadius.value = visual.radius;
+    }
+
+    if (this.chest) this.chest.userData.update(this.time || 0, this.chestOpen ? 1 : 0);
+    if (this.campGroup) {
+      this.campGroup.visible = !!this.home && !this.evolution;
+      if (this.campGroup.visible) {
+        this.campGroup.position.set(this.nav.player.x, this.nav.y || 0, this.nav.player.z);
+        animateCamp(this.campGroup, this.time || 0);
+      }
+    }
+    if (this.sky) this.sky.position.copy(this.camera.position);
+    if (this.edgeGrassMesh) this.edgeGrassMesh.material.userData.sway.uTime.value = this.time || 0;
+    WORLD_TIME.value = this.time || 0;
+    this.elementalFX ??= new ElementalFX(this.scene);
+    this.elementalFX.update(
+      this.paused ? 0 : dt,
+      this.nav.combat?.projectiles || [],
+      this.nav.combat?.attack,
+      { ...this.nav.player, y: this.nav.y + Math.min(0.9, this.nav.height * 0.55) },
+      !this.home && !this.focus && !this.battle && !this.evolution,
+      this.visualFocus > 0.5 ? 'low' : this.graphics?.effects,
+    );
+    this.restorationClock = (this.restorationClock || 0) + dt;
+    if (this.restorationClock > 0.4) {
+      this.restorationClock = 0;
+      this.updateRestoration();
+    }
+    if (!this.paused && !this.evolution && this.arenaArtGroups?.[this.area])
+      updateArenaArt(this.arenaArtGroups[this.area], visual.scenicTime);
+    if (this.expeditionArt && this.area === 0)
+      updateExpeditionArt(this.expeditionArt, {
+        player: this.nav.player,
+        time: visual.scenicTime,
+        low: this.graphics?.preset === 'low',
+        strength: visual.strength,
+      });
+    this.bodyMotion?.reset();
+    this.attackPose?.reset();
+    this.combatThreats = combatThreats(this.nav.combat, this.nav.player);
+    const combatRival = !this.home && !this.focus && !this.battle && this.nav.combat?.blocking,
+      crystalFocus = !this.home && !this.focus && !this.battle && this.nav.trials?.focus;
+    this.combatBlend =
+      (this.combatBlend || 0) +
+      ((combatRival?.active || crystalFocus ? 1 : 0) - (this.combatBlend || 0)) * (1 - Math.exp(-dt * 4));
+    if (combatRival)
+      this.combatFocus = { x: combatRival.x, z: combatRival.z, r: (combatRival.spec?.radius || 0.6) + 0.25, h: 1.7 };
+    else if (crystalFocus) this.combatFocus = { x: crystalFocus.x, z: crystalFocus.z, r: 2.4, h: 2.2 };
+    const goal = activeNode(this.nav.state);
+    this.cameraGoal = goal ? { x: goal.x, z: goal.z } : null;
+    this.scenicFocus = sceneryFocus(this.nav.state, this.nav.section, this.nav.player);
+    if (this.combatBlend < 0.001) {
+      this.combatBlend = 0;
+      this.combatFocus = null;
+    }
+    for (const entry of this.traversalEntries || []) {
+      const group = [
+        ...(entry.enemy ? [{ id: entry.section.enemy.id, mesh: entry.enemy }] : []),
+        ...(entry.reinforcements || []),
+      ];
+      for (const item of group) {
+        const runtime = this.nav.combat?.enemies.get(item.id);
+        if (runtime) {
+          item.mesh.visible =
+            !this.home &&
+            !this.focus &&
+            !this.battle &&
+            Math.hypot(this.nav.player.x - runtime.x, this.nav.player.z - runtime.z) < 65;
+          updatePathEnemy(
+            item.mesh,
+            { ...runtime, ...this.nav.combat.gateState(entry.section) },
+            { time: this.nav.courseTime, playerRadius: this.nav.radius },
+          );
+        }
+      }
+    }
+
+    const collected = new Set(this.nav.state.travel?.collected || []);
+    for (const entry of this.traversalEntries || []) {
+      const q = courseCoordinates(entry.section, this.nav.player),
+        near = localPoint(entry.section, Math.max(0, Math.min(entry.section.length, q.s)));
+      entry.scenery.visible = Math.hypot(this.nav.player.x - near.x, this.nav.player.z - near.z) < 80;
+      if (entry.extra) {
+        entry.extra.visible = entry.scenery.visible;
+        if (entry.extra.visible)
+          updateTrialScenery(entry.extra, {
+            time: this.nav.courseTime || 0,
+            crystals: this.nav.state.travel?.crystals || {},
+            collected,
+            playerRadius: this.nav.radius,
+          });
+      }
+      if (entry.scenery.visible && entry.scenery.userData.runner)
+        updateRunnerScenery(entry.scenery.userData.runner, {
+          time: this.time || 0,
+          runner: this.nav.runner,
+          collected,
+          grounded: (this.nav.y || 0) < 0.08,
+        });
+      if (entry.scenery.visible)
+        updateTraversalScenery(entry.scenery, {
+          time: this.nav.courseTime || 0,
+          collected,
+          completed: this.nav.state.travel?.completed.includes(entry.section.index) || false,
+          crumble: this.nav.crumble,
+          playerRadius: this.nav.radius,
+        });
+    }
+    this.updateTrackVeil();
+    if (this.nav.moving && !this.home && !this.focus && !this.battle && this.nav.grounded && this.visualFocus < 0.2) {
+      this.trailClock = (this.trailClock || 0) + dt;
+      if (this.trailClock > 0.14) {
+        this.trailClock = 0;
+        const m = new T.Mesh(
+          new T.IcosahedronGeometry(0.04, 0),
+          new T.MeshBasicMaterial({ color: this.trailColor || '#d6f4df', transparent: true, opacity: 0.6 }),
+        );
+        m.position.set(this.nav.player.x, this.nav.y + 0.07, this.nav.player.z);
+        this.effects.add(m);
+        this.pulses.push({ m, v: new T.Vector3(0, 0.18, 0), age: 0, life: 0.65, alpha: 0.6 });
+      }
+    }
+    // Trail hardware restores the exact accepted work; the expedition remains the authority on passage.
+    for (const b of this.barrierEntries || []) {
+      if (b.host) {
+        b.value = b.display = b.host.value;
+        continue;
+      }
+      const shown = b.barrier.visible && b.group?.visible !== false;
+      if (b.target === 1) {
+        if (shown && b.display < 1) {
+          b.display = Math.min(1, b.display + dt / (b.barrier.userData.themed ? 2.2 : 1.1));
+          setRouteBarrierProgress(b.barrier, b.display);
+          if (b.display === 1 && this.openingGate === b.node.id) this.openingGate = null;
+        }
+      } else if (Math.abs(b.target - b.value) > 0.001) {
+        b.value += (b.target - b.value) * (1 - Math.exp(-dt * 7));
+        if (Math.abs(b.target - b.value) < 0.005) b.value = b.target;
+        b.display = b.value;
+        setRouteBarrierProgress(b.barrier, b.display);
+      }
+      if (
+        b.barrier.userData.themed &&
+        shown &&
+        Math.hypot(b.node.x - this.nav.player.x, b.node.z - this.nav.player.z) < 45
+      )
+        animateRouteBarrier(b.barrier, this.time || 0);
+    }
+    for (const entry of this.restorationEntries?.values() || [])
+      for (const child of entry.children) if (child.userData.themed) animateRouteBarrier(child, this.time || 0);
+    const zoomTarget = this.home
+      ? this.homeZoom || 1
+      : crystalFocus?.x !== undefined
+        ? 0.76
+        : !this.home &&
+            !this.focus &&
+            !this.battle &&
+            (!!this.nav.section?.trial ||
+              ['rocks', 'plants'].includes(this.nav.section?.kind) ||
+              this.nav.combat?.blocking)
+          ? 0.88
+          : 1;
+    this.zoom +=
+      ((this.nav.rushEnabled && this.nav.rush?.speed > 4.5 && !this.focus && !this.battle
+        ? zoomTarget * 0.9
+        : zoomTarget) -
+        (this.zoom || 1)) *
+      (1 - Math.exp(-dt * 3));
+    if (!this.mechanism?.root || this.evolution) {
+      this.taskOcclusion?.clear();
+      this.taskCameraKey = null;
+      super.cameraUpdate(dt);
+      const attack = this.nav.combat?.attack;
+      if (attack && !this.home && !this.focus && !this.battle) {
+        if (attack.ranged || !this.locomotion?.actions?.has('Strike')) this.attackPose?.apply(attack);
+        this.creature.rotation.y = attack.heading - (this.locomotion?.forwardYaw || 0);
+      }
+      this.terrainResponse ??= new TerrainResponse();
+      const groundResponse = this.terrainResponse.update(dt, this.nav, {
+        enabled: !this.home && !this.focus && !this.battle && !this.paused && !this.nav.combat?.attack,
+      });
+      this.bodyMotion?.update(dt, {
+        ...groundResponse,
+        reduced: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+        stage: this.nav.jumpStage,
+        phase: this.nav.jumpAnimation,
+        moving: this.nav.moving,
+        heading: this.nav.heading,
+        partner: this.partner,
+        attack: this.nav.combat?.attack,
+        enabled: !this.home && !this.focus && !this.battle && !this.paused,
+      });
+      this.proceduralMotion?.update(dt, {
+        moving: this.nav.moving && !this.home && !this.focus && !this.battle,
+        speed: this.locomotion?.speed ?? 2.6,
+        stage: this.home || this.focus || this.battle ? 'ground' : this.nav.jumpStage,
+        attack: this.nav.combat?.attack,
+      });
+      const q =
+        !this.home && !this.focus && !this.battle && !this.evolution && this.juice
+          ? this.juice.squashScale(this.partner, this.level)
+          : null;
+      const rr = this.nav.runner,
+        sliding = rr?.running && rr.sliding > 0,
+        trip = rr?.running && rr.stun > 0 ? Math.sin(Math.min(1, (0.7 - rr.stun) / 0.7) * Math.PI) : 0,
+        skid = rr?.arrival ? Math.min(1, rr.arrival.speed / 6) : 0;
+      // Runner poses: a slide is a low, long belly-slide leaning forward; a stumble pitches the creature over and wobbles it.
+      this.runnerSquash =
+        (this.runnerSquash ?? 1) +
+        ((sliding ? 0.48 : 1 - skid * 0.18) - (this.runnerSquash ?? 1)) * Math.min(1, dt * 16);
+      this.runnerPitch =
+        (this.runnerPitch ?? 0) +
+        ((sliding ? 0.38 : 0) + trip * 0.8 - skid * 0.34 - (this.runnerPitch ?? 0)) * Math.min(1, dt * 14);
+      const stretch = 1 + (1 - this.runnerSquash) * 0.7;
+      this.creature.scale.set(
+        (q ? q.xz : 1) * (2 - this.runnerSquash) ** 0.3,
+        (q ? q.y : 1) * this.runnerSquash,
+        (q ? q.xz : 1) * stretch,
+      );
+      this.creature.rotation.order = 'YXZ';
+      this.creature.rotation.x = this.runnerPitch;
+      this.creature.rotation.z = trip ? Math.sin((this.time || 0) * 32) * 0.14 * trip : 0;
+      this.updatePresentation(dt);
+      return;
+    }
+    const size = this.mechanism.readingViewport;
+    if (size && (size.width !== this.container.clientWidth || size.height !== this.container.clientHeight)) {
+      this.mechanism.readingViewport = { width: this.container.clientWidth, height: this.container.clientHeight };
+      this.mechanism.render(this.mechanism.task, this.mechanism.node);
+    }
+    const layer = typeof document === 'undefined' ? null : document.querySelector('#task-layer'),
+      viewport = measuredTaskRect(this.container, layer),
+      pose = this.mechanism.cameraPose(this.container.clientWidth, this.container.clientHeight, {
+        reserved: true,
+        viewport,
+      }),
+      p = this.nav.player;
+    // Home/evolution lens offsets must never leak into a reading shot. Establish the
+    // plate's frontal angle immediately, rather than orbiting through a wall.
+    this.viewShift = 0;
+    this.camera.clearViewOffset();
+    this.camera.setViewOffset(
+      this.container.clientWidth,
+      this.container.clientHeight,
+      pose.offset.x,
+      pose.offset.y,
+      this.container.clientWidth,
+      this.container.clientHeight,
+    );
+    this.locomotion?.update(dt, p, false, null);
+    this.proceduralMotion?.update(dt, {});
+    const entry = gateEntry(this.mechanism.entryAge || 0, {
+        reduced: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      }),
+      safeEye = pose.target.clone().lerp(pose.position, entry.pullback);
+    this.camera.position.copy(safeEye);
+    this.target.copy(pose.target);
+    this.camera.lookAt(this.target);
+    this.camera.fov = pose.fov;
+    this.camera.updateProjectionMatrix();
+
+    const node = this.mechanism.node,
+      key = this.mechanism.id,
+      seat = this.mechanism.root.localToWorld(
+        new T.Vector3(-0.8, 0, Math.max(3.1, (this.bodyBounds?.halfDepth || 0) + 1)),
+      );
+    if (this.taskCameraKey !== key) this.creature.position.copy(seat);
+    else this.creature.position.lerp(seat, 1 - Math.exp(-dt * 7));
+    this.taskCameraKey = key;
+    this.creature.visible = true;
+    const yaw =
+      (this.mechanism.mount?.root.rotation.y ?? this.mechanism.root.rotation.y) - (this.locomotion?.forwardYaw || 0);
+    this.creature.rotation.y +=
+      Math.atan2(Math.sin(yaw - this.creature.rotation.y), Math.cos(yaw - this.creature.rotation.y)) *
+      (1 - Math.exp(-dt * 8));
+    this.creature.scale.set(1, 1, 1);
+    if (this.model) {
+      this.model.rotation.x = 0;
+      this.model.rotation.z = this.reaction > 0 ? Math.sin(this.time * 14) * 0.025 : 0;
+    }
+    this.sun.position.set(node.x - 12, 25, node.z + 13);
+    this.sun.target.position.set(node.x, 0, node.z);
+    this.camera.updateMatrixWorld(true);
+    this.taskOcclusion ??= new TaskOcclusion();
+    this.taskOcclusion.update(this.camera, this.mechanism, this.land);
+    this.mechanism.update(dt, this.camera, this.container, layer);
+    this.updatePresentation(dt);
+  }
+  setArea(i) {
+    this.area = i;
+    this.brickStyle?.setArea(i);
+    this.nav.setArea(i);
+    this.setComposedEnclosure();
+    this.ensureEnvironment();
+    this.palette = PALETTES[i];
+    this.areaDetails.forEach((g, n) => (g.visible = n === i));
+    const p = this.palette;
+    this.scene.background.set(p.sky);
+    this.scene.fog?.color.set(p.sky);
+    const art = this.arenaArtGroups?.[i];
+    this.arenaArtGroups?.forEach((g, n) => (g.visible = n === i && i !== 0));
+    if (this.expeditionArt) this.expeditionArt.visible = i === 0;
+    this.setSceneDetail(this.graphics);
+    const light = ENVIRONMENT_LIGHTING[i] || art?.userData.lighting;
+    if (light) {
+      this.scene.background.set(light.sky);
+      if (this.scene.fog) {
+        this.scene.fog.color.set(light.fog);
+        this.scene.fog.near = light.near;
+        this.scene.fog.far = light.far;
+      }
+      const hemi = this.scene.children.find(o => o.isHemisphereLight);
+      if (hemi) {
+        hemi.color.set(light.hemisphereSky);
+        hemi.groundColor.set(light.hemisphereGround);
+        hemi.intensity = light.hemisphereIntensity ?? 1.55;
+      }
+      if (this.sun) {
+        this.sun.color.set(light.sun);
+        this.sun.intensity = light.sunIntensity;
+      }
+      if (this.renderer) this.renderer.toneMappingExposure = light.exposure;
+    }
+    tintCliffs(this.enclosure, i);
+    this.dressing?.userData.materials.stone.color.set(ARENA_LOOKS[i]?.pathStone || ARENA_LOOKS[0].pathStone);
+    this.dressing?.userData.materials.fern.color.set(ARENA_LOOKS[i]?.kit.fern || ARENA_LOOKS[0].kit.fern);
+    this.grass.color.copy(terrainTint(0, 0, -0.015, i));
+    this.grass.userData.ground?.uPathColor.value.copy(
+      this.environmentField._environment.ground.userData.ground.uPathColor.value,
+    );
+    this.edgeGrassMesh?.material.color.set(p.grass).multiplyScalar(0.82);
+    this.post?.grade(i);
+    if (this.sky && light) {
+      const u = this.sky.userData.sky;
+      u.uHorizon.value.set(light.fog);
+      u.uTop.value.set(SKY_ZENITH[i]);
+      u.uSun.value.set(light.sun);
+    }
+    this.rock.color.set(p.stone);
+    this.crowns.material.color.set(p.leaves);
+    for (const mesh of this.paths.children) mesh.material.color.set(p.path);
+    if (this.propEntries) this.refresh();
+  }
+  refresh() {
+    this.setComposedEnclosure();
+    this.ensureEnvironment();
+    const e = this.nav.state,
+      chapter = chapterOf(e);
+    const routeKey = [this.partner || this.nav.partner || 'hufflepuff', e.id].join('|');
+    if (this.continuousRoute !== routeKey) {
+      for (const h of this.continuous?.values() || []) h.dispose();
+      this.continuous = new Map();
+      this.continuousRoute = routeKey;
+    }
+    for (const h of this.continuous.values()) h.root.removeFromParent();
+    for (const g of this.landmarkGroups) {
+      this.land.remove(g);
+      this.disposeModel(g);
+    }
+    this.landmarkGroups = [];
+    this.nodes = {};
+    this.propEntries = [];
+    this.barrierEntries = [];
+    if (this.nav.course) this.nav.enableTraversal(this.nav.mode);
+    this.points = {};
+    if (this.branchClosures) {
+      this.land.remove(this.branchClosures);
+      this.disposeModel(this.branchClosures);
+    }
+    this.branchClosures = new T.Group();
+    this.land.add(this.branchClosures);
+    const solids = [...this.environmentSolids, ...(this.regionSolids[this.area] || [])],
+      keep = new Set();
+    for (const side of ['left', 'right']) {
+      const group = new T.Group();
+      group.visible = !e.choices[chapter] || e.choices[chapter] === side;
+      this.land.add(group);
+      this.landmarkGroups.push(group);
+      for (const node of nodesFor(e, chapter, side)) {
+        const done = node.index < e.index,
+          host = this.getContinuous(node, done),
+          prop = host.root;
+        keep.add(this.mechanismKey(node));
+        group.add(prop);
+        if (done) host.target = 1;
+        const box = new T.Box3().setFromObject(prop);
+        prop.userData.frameBounds = {
+          min: { x: box.min.x, y: box.min.y, z: box.min.z },
+          max: { x: box.max.x, y: box.max.y, z: box.max.z },
+        };
+        this.barrierEntries.push({
+          node,
+          barrier: host.gate.group,
+          host,
+          group,
+          value: host.value,
+          target: host.target,
+          display: host.value,
+        });
+        this.propEntries.push({ node, prop, host, group });
+        if (group.visible) {
+          this.nodes[node.id] = prop;
+          this.points[node.id] = prop.position.clone();
+          solids.push(...host.solids());
+        }
+      }
+    }
+    for (let c = 0; c < 5; c++)
+      if (e.choices[c]) {
+        const closure = makeBranchClosure(c, e.choices[c] === 'left' ? 'right' : 'left');
+        this.branchClosures.add(closure);
+        solids.push(...closure.userData.solids.map(s => ({ ...s, top: s.maxY })));
+      }
+    this.refreshTraversalScenery(chapter);
+    for (const entry of this.traversalEntries) {
+      solids.push(...entry.scenery.userData.solids.map(s => ({ ...s, top: s.maxY || s.top || 1.1 })));
+      if (entry.section.trial?.kind === 'wind')
+        solids.push(...entry.section.trial.covers.map(c => ({ ...c, top: 1.4, kind: 'wind-cover' })));
+      if (entry.section.enemy)
+        for (const side of [-1, 1]) {
+          const p = localPoint(entry.section, entry.section.enemy.gateS, side * 2.9);
+          solids.push({ ...p, r: 0.3, top: 3.2, kind: 'rival-gate-post' });
+        }
+    }
+    this.storySites = restoredSites(e);
+    this.restorationEntries = new Map();
+    for (const site of this.storySites) {
+      const placement = mechanismPlacement(site),
+        sn = Math.sin(placement.yaw),
+        cs = Math.cos(placement.yaw);
+      for (const x of [-3.35, 3.35])
+        solids.push({
+          x: placement.position.x + x * cs + 0.6 * sn,
+          z: placement.position.z - x * sn + 0.6 * cs,
+          r: 0.1,
+          top: 3.35,
+          kind: 'restored-mechanism-post',
+        });
+      if (Math.hypot(this.nav.player.x - site.x, this.nav.player.z - site.z) > 75) continue;
+      const host = this.getContinuous(site, true);
+      keep.add(this.mechanismKey(site));
+      this.land.add(host.root);
+      this.restorationEntries.set(site.id, host.root);
+      solids.push(...host.solids());
+    }
+    for (const [key, host] of this.continuous)
+      if (!keep.has(key)) {
+        host.dispose();
+        this.continuous.delete(key);
+      }
+    this.nav.solids = solids;
+    const active = activeNode(e);
+    if (active) {
+      this.points[active.id] ??= new T.Vector3(active.x, 0, active.z);
+      this.activeProp = this.propEntries.find(p => p.node.id === active.id && p.group.visible)?.prop;
+    }
+    if (e.active && active?.type !== 'exit') this.prepareMechanismPreview(e.active);
+    this.buildFork(chapter);
+    this.placeChest();
+    this.setSceneDetail(this.graphics);
+    stylizeProps(this.land);
+  }
+  updateRestoration() {
+    this.restorationEntries ??= new Map();
+    for (const site of this.storySites || []) {
+      const d = Math.hypot(this.nav.player.x - site.x, this.nav.player.z - site.z),
+        key = this.mechanismKey(site);
+      if (d < 50) {
+        const host = this.getContinuous(site, true);
+        if (!host.root.parent) this.land.add(host.root);
+        this.restorationEntries.set(site.id, host.root);
+      } else if (d > 95) {
+        const host = this.continuous?.get(key);
+        if (host && !host.reading) {
+          host.dispose();
+          this.continuous.delete(key);
+          this.restorationEntries.delete(site.id);
+        }
+      }
+    }
+    for (const host of this.continuous?.values() || [])
+      if (!host.reading)
+        host.root.visible = Math.hypot(this.nav.player.x - host.node.x, this.nav.player.z - host.node.z) < 75;
+  }
+  refreshTraversalScenery(chapter) {
+    this.travelScenery ??= new Map();
+    const e = this.nav.state,
+      keep = new Set();
+    for (let c = 0; c <= chapter; c++) {
+      const sides = e.choices[c] ? [e.choices[c]] : c === chapter ? ['left', 'right'] : [];
+      for (const side of sides)
+        for (let i = c * perChapter(e); i < (c + 1) * perChapter(e); i++) {
+          const section = sectionFor(e, i, this.nav.mode, side);
+          section.enemies = enemiesFor(section, this.nav.mode, e);
+          section.enemy = section.enemies[0] || null;
+          const key =
+            (this.partner || this.nav.partner || 'hufflepuff') +
+            ':' +
+            section.id +
+            ':' +
+            side +
+            ':pv' +
+            (e.pathVersion || 0) +
+            ':' +
+            this.nav.mode +
+            ':' +
+            (section.enemy?.kind || 'none') +
+            ':' +
+            (section.trial?.kind || 'base') +
+            ':' +
+            section.enemies.length +
+            ':rush' +
+            (e.rushVersion || 0) +
+            (section.run
+              ? ':run' +
+                (section.run.word?.id || '') +
+                ':' +
+                (this.nav.height || 0).toFixed(2) +
+                (this.graphics?.preset === 'low' ? ':low' : '')
+              : '');
+          keep.add(key);
+          if (!this.travelScenery.has(key)) {
+            const scenery = makeTraversalScenery(section, {
+              mode: this.nav.mode,
+              ground: this.grass?.userData.ground ? this.grass : null,
+              creatureHeight: this.nav.height,
+              low: this.graphics?.preset === 'low',
+            });
+            this.land.add(scenery);
+            const extra = section.trial ? makeTrialScenery(section) : null;
+            if (extra) this.land.add(extra);
+            const enemy = section.enemy ? makePathEnemy(section) : null;
+            if (enemy) this.land.add(enemy);
+            const reinforcements = section.enemies.slice(1).map(spec => {
+              const mesh = makePathEnemy({ ...section, enemy: spec });
+              this.land.add(mesh);
+              return { id: spec.id, mesh };
+            });
+            this.travelScenery.set(key, { section, scenery, enemy, extra, reinforcements });
+          }
+        }
+    }
+    // Runner mode: after the last gate, the final chase toward the guardian's arena gets its own track.
+    {
+      const finale = this.nav.runner?.finale(e, this.nav.mode);
+      if (finale) {
+        const key =
+          'finale:' +
+          finale.id +
+          ':' +
+          this.nav.mode +
+          ':' +
+          (this.nav.height || 0).toFixed(2) +
+          (this.graphics?.preset === 'low' ? ':low' : '');
+        keep.add(key);
+        if (!this.travelScenery.has(key)) {
+          const scenery = makeTraversalScenery(finale, {
+            mode: this.nav.mode,
+            creatureHeight: this.nav.height,
+            low: this.graphics?.preset === 'low',
+          });
+          this.land.add(scenery);
+          this.travelScenery.set(key, { section: finale, scenery, enemy: null, extra: null, reinforcements: [] });
+        }
+      }
+    }
+    for (const [key, entry] of this.travelScenery)
+      if (!keep.has(key)) {
+        this.land.remove(entry.scenery);
+        this.disposeModel(entry.scenery);
+        if (entry.extra) {
+          this.land.remove(entry.extra);
+          this.disposeModel(entry.extra);
+        }
+        if (entry.enemy) {
+          this.land.remove(entry.enemy);
+          this.disposeModel(entry.enemy);
+        }
+        for (const follower of entry.reinforcements || []) {
+          this.land.remove(follower.mesh);
+          this.disposeModel(follower.mesh);
+        }
+        this.travelScenery.delete(key);
+      }
+    this.traversalEntries = [...this.travelScenery.values()];
+  }
+  buildFork(chapter) {
+    for (const child of [...this.forkSigns.children]) {
+      this.forkSigns.remove(child);
+      this.disposeModel(child);
+    }
+    const z = -chapter * CHAPTER_LENGTH + 1;
+    for (const side of [-1, 1]) {
+      const g = new T.Group();
+      g.position.set(side * 2.7, 0, z);
+      this.mesh(new T.CylinderGeometry(0.07, 0.11, 1.6, 7), this.mat('#7d6b4f'), 0, 0.8, 0, g);
+      const arrow = this.mesh(new T.BoxGeometry(1.15, 0.35, 0.12), this.mat('#dacda5'), 0, 1.5, 0, g);
+      arrow.rotation.z = -side * 0.15;
+      this.forkSigns.add(g);
+    }
+  }
+  progress(type, fraction) {
+    const node = activeNode(this.nav.state),
+      b = this.barrierEntries?.find(b => b.node.id === node?.id);
+    if (b) {
+      b.target = fraction;
+      b.host.target = fraction;
+      if (this.nav.state.active) b.host.gate.setTask(this.nav.state.active, { immediate: false });
+    }
+    if (fraction === 1 && node) this.openingGate = node.id;
+  }
+  updateOcclusion(dt) {
+    this.updateBrickStyle(dt);
+    if (this.evolution || this.guardianStage?.active) {
+      this.occlusionFade?.clear();
+      return;
+    }
+    this.occlusionTime = (this.occlusionTime || 0) + dt;
+    if (this.occlusionTime < 0.16) return;
+    this.occlusionTime = 0;
+    const p = this.nav.player,
+      head = new T.Vector3(p.x, this.nav.y + this.nav.height * 0.6, p.z),
+      delta = this.camera.position.clone().sub(head),
+      ray = new T.Raycaster(head, delta.clone().normalize(), 0, Math.max(0, delta.length() - 0.1)),
+      blocked = ray.intersectObject(this.crowns, false).length > 0;
+    this.crowns.material.transparent = true;
+    this.crowns.material.opacity = blocked ? 0.25 : 1;
+    this.crowns.material.depthWrite = !blocked;
+    // Task views frame the mechanism on purpose (TaskOcclusion handles their labels); only free movement fades blockers.
+    this.occlusionFade ??= new OcclusionFade();
+    if (this.mechanism?.root || this.focus || this.home || this.battle) {
+      this.occlusionFade.clear();
+      return;
+    }
+    this.occlusionFade.update(
+      this.scene,
+      head,
+      this.camera.position,
+      new Set(
+        [this.creature, this.crowns, this.sky, this.terrain, this.paths, this.effects, this.rival].filter(Boolean),
+      ),
+    );
+  }
+
+  // Brick prototype: patch newly built scenery a couple of times a second (gates, trials and areas appear lazily).
+  updateBrickStyle(dt) {
+    if (!BRICK_WORLD) return;
+    this.brickTime = (this.brickTime ?? 1) + dt;
+    if (this.brickTime < 0.5) return;
+    this.brickTime = 0;
+    // Whisperwood is rebuilt from real bricks; other arenas (for now) keep the brick finish only.
+    const skip = {
+      roots: new Set([this.creature, this.sky, this.effects, this.rival, this.brickWorld?.group].filter(Boolean)),
+      terrain: this.terrain,
+    };
+    if (this.brickWorld && this.brickWorld.area !== (this.area || 0)) {
+      this.brickWorld.dispose();
+      this.brickWorld = null;
+    }
+    if (!this.brickWorld && (this.area || 0) === 0 && !this.loading) {
+      this.brickWorld = new BrickWorld(0);
+      this.brickWorld.area = 0;
+      this.scene.add(this.brickWorld.build(this.scene, skip));
+      globalThis.console?.warn?.('Brick world ' + JSON.stringify(this.brickWorld.stats));
+    } else if (this.brickWorld?.sweep(this.scene, skip)) {
+      globalThis.console?.warn?.('Brick world rebuild');
+      this.brickWorld.dispose();
+      this.brickWorld = null;
+    }
+    this.brickStyle ??= new BrickStyle();
+    this.brickStyle.apply(this.scene, { area: this.area || 0, skip: [...skip.roots], creature: this.model });
+  }
+  // While the track slides under the creature, the valley's own plants, grass and props near the path would stand
+  // still and give the treadmill away, so they step aside; the moving walls and backdrop take their place. They
+  // return for the run's final real metres. (Cliffs, landmarks and the gate ahead stay as distant anchors.)
+  veilFixed(grow, visible, gatesVisible = visible) {
+    for (const entry of this.travelScenery?.values() || []) {
+      const f = (entry.fixed ??= entry.scenery?.getObjectByName?.('fixed-scenery'));
+      if (!f) continue;
+      f.userData.baseY ??= f.scale.y;
+      f.scale.y = f.userData.baseY * Math.max(0.001, grow);
+      f.visible = visible;
+    }
+    // Task gates already passed (the one just opened stands right behind the creature, between it and the camera,
+    // for the whole slide) step aside too; only the gate this run leads to stays in view.
+    const target = this.nav?.state ? activeNode(this.nav.state)?.id : null;
+    for (const host of this.continuous?.values() || [])
+      if (host.root && host.node?.id !== target) host.root.visible = gatesVisible;
+  }
+  updateTrackVeil() {
+    const r = this.nav.runner,
+      run = r?.running && r.section?.run,
+      veil = !!run && r.s < run.length - run.real - 1,
+      dt = Math.min(0.05, this.trackVeilClock ? this.time - this.trackVeilClock : 0);
+    this.trackVeilClock = this.time;
+    // The veil eases in and out (plants sink into the ground and grow back) instead of vanishing at once, and the
+    // fog draws in while the track slides so new track pieces emerge from haze rather than popping in.
+    if (veil && !this.trackVeil) {
+      const field = this.environmentField,
+        targets = [
+          ...(field?.children || []).filter(c => c.name === 'valley-meadow'),
+          this.crowns,
+          this.treeTrunks,
+          this.dressing,
+          this.edgeGrassMesh,
+          this.nearPathDetails,
+          this.legacyVerge,
+          this.expeditionArt,
+          this.arenaArtGroups?.[this.area],
+        ].filter(o => o?.isObject3D);
+      this.trackVeil = targets.map(o => [o, o.visible, o.scale.y]);
+      this.fogBase = { near: this.scene.fog?.near ?? 30, far: this.scene.fog?.far ?? 140 };
+      this.veilAmount = 0;
+    }
+    if (!this.trackVeil) return;
+    this.veilAmount = Math.max(0, Math.min(1, (this.veilAmount || 0) + (veil ? 1 : -1) * dt * 2.4));
+    const a = this.veilAmount,
+      k = a * a * (3 - 2 * a),
+      grow = Math.max(0.001, 1 - k);
+    for (const [o, was, y] of this.trackVeil) {
+      o.visible = was && a < 0.999;
+      o.scale.y = y * grow;
+    }
+    for (const c of this.environmentField?.children || [])
+      if (c.name.startsWith('environment-cluster')) {
+        c.scale.y = grow;
+        if (a >= 0.999) c.visible = false;
+      }
+    // Each run's fixed ground pieces (approach ramps, stone pads, rock lumps) stand at real positions too, so they would
+    // ride along under the creature's feet while the track slides. They step aside with the plants; checked every frame
+    // because a run's scenery (the final chase's, for one) can be built after the veil began.
+    this.veilFixed(grow, a < 0.999, !veil);
+    if (this.scene.fog) {
+      this.scene.fog.near = this.fogBase.near + (22 - this.fogBase.near) * k;
+      this.scene.fog.far = this.fogBase.far + (82 - this.fogBase.far) * k;
+    }
+    if (!veil && a <= 0) {
+      this.veilFixed(1, true);
+      for (const [o, was, y] of this.trackVeil) {
+        o.visible = was;
+        o.scale.y = y;
+      }
+      for (const c of this.environmentField?.children || [])
+        if (c.name.startsWith('environment-cluster')) c.scale.y = 1;
+      if (this.scene.fog) {
+        this.scene.fog.near = this.fogBase.near;
+        this.scene.fog.far = this.fogBase.far;
+      }
+      this.trackVeil = null;
+    }
+  }
+  // Runner power-up looks: a shield bubble around the creature, and a dash trail in the creature's element colour.
+  updateRunnerFx(runner) {
+    const shield = !!runner?.power?.shield;
+    if (shield && !this.shieldBubble) {
+      this.shieldBubble = new T.Mesh(
+        new T.SphereGeometry(1, 24, 16),
+        new T.MeshBasicMaterial({
+          color: '#7fd8ff',
+          transparent: true,
+          opacity: 0.28,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
+      this.shieldBubble.name = 'runner-shield';
+      this.scene.add(this.shieldBubble);
+    }
+    if (this.shieldBubble) {
+      this.shieldBubble.visible = shield;
+      if (shield) {
+        const p = this.nav.player,
+          h = this.nav.height || 0.65;
+        this.shieldBubble.position.set(p.x, (this.nav.y || 0) + h * 0.5, p.z);
+        this.shieldBubble.scale.setScalar(h * 0.85 + 0.25 + Math.sin((this.time || 0) * 6) * 0.03);
+      }
+    }
+    if (runner?.has?.('dash') || runner?.burst > 0) {
+      this.dashClock = (this.dashClock || 0) + 1;
+      if (this.dashClock % 2 === 0) {
+        const p = this.nav.player,
+          color = runner.has('dash') ? this.elementColor || '#b0ff4a' : '#ffffff',
+          m = new T.Mesh(
+            new T.OctahedronGeometry(0.09),
+            new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, toneMapped: false }),
+          );
+        m.position.set(
+          p.x + (Math.random() - 0.5) * 0.6,
+          (this.nav.y || 0) + 0.2 + Math.random() * (this.nav.height || 0.65),
+          p.z,
+        );
+        this.effects.add(m);
+        const f = runner.section.forward,
+          back = Math.min(10, runner.speed) * 0.7;
+        this.pulses.push({
+          m,
+          v: new T.Vector3(-f.x * back + (Math.random() - 0.5) * 0.6, 0.4, -f.z * back),
+          age: 0,
+          life: 0.45,
+          alpha: 0.85,
+        });
+      }
+    }
+  }
+  walkTo() {
+    this.nav.approach();
+  }
+  project(id) {
+    const point = this.points[id]?.clone();
+    if (!point) return { visible: false };
+    point.y += 2.5;
+    point.project(this.camera);
+    return {
+      x: (point.x * 0.5 + 0.5) * innerWidth,
+      y: (-point.y * 0.5 + 0.5) * innerHeight,
+      visible: point.z < 1 && Math.abs(point.x) < 1 && Math.abs(point.y) < 1,
+    };
+  }
+  coinEffect(coin) {
+    this.reaction = 0.25;
+    for (let i = 0; i < 3; i++) {
+      const m = new T.Mesh(
+        new T.OctahedronGeometry(0.045),
+        new T.MeshBasicMaterial({ color: '#f4d275', transparent: true, opacity: 0.8 }),
+      );
+      m.position.set(coin.x, coin.y, coin.z);
+      this.effects.add(m);
+      this.pulses.push({ m, v: new T.Vector3((i - 1) * 0.4, 0.65, 0), age: 0, life: 0.45, alpha: 0.8 });
+    }
+  }
+  retryEffect(reason) {
+    this.locomotion?.hit();
+    this.bodyMotion?.impact();
+    this.reaction = 0.7;
+    this.setInput(0, 0);
+    this.keys.clear();
+    this.controlHeading = this.nav.heading;
+  }
+  feed() {
+    this.reaction = 1.2;
+    this.celebrate();
+  }
+  // Run reward chest at the end of the current chapter (or the sanctuary at the end of the week).
+  placeChest() {
+    const e = this.nav.state,
+      pending = chestPending(e);
+    if (!pending) {
+      if (this.chest) {
+        this.land.remove(this.chest);
+        this.disposeModel(this.chest);
+        this.chest = null;
+      }
+      this.chestPoint = null;
+      this.chestOpen = false;
+      return;
+    }
+    const c = runChapter(e),
+      p = c >= chapterCount(e) - 1 && e.index >= gateCount(e) ? { x: 0, z: endPoint(e).z + 3.2 } : chestPoint(c);
+    if (!this.chest) {
+      this.chest = makeChest();
+      this.land.add(this.chest);
+    }
+    this.chest.position.set(p.x, 0, p.z);
+    this.chest.rotation.y = 0;
+    this.chestPoint = p;
+    this.chestOpen = false;
+  }
+  openChest() {
+    this.chestOpen = true;
+    if (this.chest) {
+      const p = this.chest.position;
+      for (let i = 0; i < 16; i++) {
+        const m = new T.Mesh(
+          new T.OctahedronGeometry(0.07),
+          new T.MeshBasicMaterial({ color: i % 3 ? '#ffd86a' : '#fff6c8', transparent: true }),
+        );
+        m.position.set(p.x, 0.8, p.z);
+        this.effects.add(m);
+        const a = (i / 16) * Math.PI * 2;
+        this.pulses.push({
+          m,
+          v: new T.Vector3(Math.cos(a) * 1.3, 2.2 + Math.random(), Math.sin(a) * 1.3),
+          age: 0,
+          life: 0.9,
+          alpha: 1,
+        });
+      }
+    }
+    this.juice?.shake(0.18);
+  }
+  // Hat, coat colour and camp decorations from the wallet. Cosmetic only.
+  setCosmetics(look = {}) {
+    this.look = { hat: look.hat || null, coat: look.coat || null, camp: [...(look.camp || [])] };
+    this.applyCosmetics();
+  }
+  applyCosmetics() {
+    const look = this.look || {},
+      coat = cosmetic(look.coat);
+    if (this.creatureLook) {
+      this.creatureLook.rim.value.set(coat?.color || this.elementColor || '#d6f4df');
+      const c = new T.Color(coat?.color || '#ffffff');
+      this.creatureLook.tint.value.set(c.r, c.g, c.b, coat?.kind === 'coat' ? 0.36 : 0);
+    }
+    if (this.hatMesh) {
+      this.creature.remove(this.hatMesh);
+      this.disposeModel(this.hatMesh);
+      this.hatMesh = null;
+    }
+    if (look.hat && this.model) {
+      this.hatMesh = makeHat(look.hat);
+      this.creature.add(this.hatMesh);
+      placeHat(this.creature, this.model, this.hatMesh);
+    }
+    if (this.campGroup) {
+      for (const child of [...this.campGroup.children]) {
+        this.campGroup.remove(child);
+        this.disposeModel(child);
+      }
+      const scale = Math.max(1, (this.nav.height || 0.65) / 0.9);
+      for (const id of look.camp || []) {
+        const spot = CAMP_SPOTS[id];
+        if (!spot) continue;
+        const decor = makeCampDecor(id);
+        decor.position.set(spot[0] * scale, 0, spot[1] * scale);
+        decor.rotation.y = spot[2] || 0;
+        this.campGroup.add(decor);
+      }
+    }
+  }
+}

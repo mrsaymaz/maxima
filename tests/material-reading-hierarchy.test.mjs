@@ -1,9 +1,9 @@
-import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import{execFileSync}from'node:child_process';import * as T from'../dist/vendor/three.module.min.js';
-import{SURFACES,surfaceMaterial,assignSurface,cueMaterial}from'../dist/surface-materials.js';import{propKind,stylizeProps,edgeGrass}from'../dist/world-style.js';
-import{VisualHierarchy,demandingEncounter}from'../dist/visual-hierarchy.js';import{makeTask,actTask}from'../dist/trail-tasks.js';import{mechanismPlan,mechanismMarkup,WorldMechanism}from'../dist/world-mechanisms.js';
-import{freshJourney,freshExpedition}from'../dist/expedition.js';import{sectionsFor,localPoint}from'../dist/traversal-layout.js';import{makeTrialScenery}from'../dist/path-trial-props.js';
-import{makeTraversalScenery}from'../dist/traversal-props.js';import{makeTaskGate}from'../dist/task-gates.js';import{makeArenaArt}from'../dist/arena-art.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import{execFileSync}from'node:child_process';import * as T from'../src/vendor/three.module.min.js';
+import{SURFACES,surfaceMaterial,assignSurface,cueMaterial}from'../src/surface-materials.js';import{propKind,stylizeProps,edgeGrass}from'../src/world-style.js';
+import{VisualHierarchy,demandingEncounter}from'../src/visual-hierarchy.js';import{makeTask,actTask}from'../src/trail-tasks.js';import{mechanismPlan,mechanismMarkup,WorldMechanism}from'../src/world-mechanisms.js';
+import{freshJourney,freshExpedition}from'../src/expedition.js';import{sectionsFor,localPoint}from'../src/traversal-layout.js';import{makeTrialScenery}from'../src/path-trial-props.js';
+import{makeTraversalScenery}from'../src/traversal-props.js';import{makeTaskGate}from'../src/task-gates.js';import{makeArenaArt}from'../src/arena-art.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units;
 test('surface identity, roughness and texture scale depend on authored roles rather than colour',()=>{
  for(const color of['#64d645','#a57531','#3c88d9']){for(const kind of['stone','wood','foliage','metal']){const m=surfaceMaterial(kind,color);assert.equal(m.userData.surface,kind);assert.equal(m.roughness,SURFACES[kind].roughness);assert.equal(m.metalness,SURFACES[kind].metalness);assert.equal(propKind(m),SURFACES[kind].detail||null);}}
  for(const color of['#64d645','#a57531'])assert.equal(propKind(new T.MeshStandardMaterial({color})),null,'unknown material must not be guessed');

@@ -1,13 +1,3 @@
-// Presentation only: keep saved task strings and answer identities unchanged.
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const WH='how often|how many|how much|how long|how far|how old|what time|what kind of|what type of|where|when|who|whose|which|what|why|how';
-export function splitQuestion(value){
- const text=String(value??'').trim();
- const lines=text.split(/\n+/);if(lines.length>1&&lines.at(-1).includes('?'))return{context:lines.slice(0,-1).join('\n'),question:lines.at(-1)};
- const start=new RegExp('(?:[.!]\\s+)(?=(?:'+WH+'|do|does|did|is|are|can|will|would|should)\\b[^?]*\\?\\s*$)','i').exec(text);
- return start?{context:text.slice(0,start.index+1),question:text.slice(start.index+start[0].length)}:{context:'',question:text};
-}
-export function questionText(value){const {context,question}=splitQuestion(value);return context?context+'\n'+question:question;}
-export function questionMarkup(value){const {context,question}=splitQuestion(value),m=new RegExp('^('+WH+')\\b','i').exec(question);const q=m?`<mark class="question-cue">${esc(m[0])}</mark>${esc(question.slice(m[0].length))}`:esc(question);return `${context?`<span class="question-context">${esc(context)}</span>`:''}<span class="question-line">${q}</span>`;}
-// Old saved signposts have full-sentence options but no separate source template.
-export function grammarTarget(q){if(q.sourceSentence)return q.sourceSentence;const lists=(q.options||[]).map(s=>s.split(/\s+/));if(!lists.length)return q.prompt;let a=0,z=0;while(lists.every(s=>s[a]!==undefined&&s[a]===lists[0][a]))a++;while(lists.every(s=>s.length-z-1>=a&&s.at(-1-z)===lists[0].at(-1-z)))z++;return[...lists[0].slice(0,a),'___',...(z?lists[0].slice(-z):[])].join(' ');}
+var u=Object.defineProperty;var i=(o,e)=>u(o,"name",{value:e,configurable:!0});const c=i(o=>String(o??"").replace(/[&<>"']/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[e]),"esc"),r="how often|how many|how much|how long|how far|how old|what time|what kind of|what type of|where|when|who|whose|which|what|why|how";function l(o){const e=String(o??"").trim(),t=e.split(/\n+/);if(t.length>1&&t.at(-1).includes("?"))return{context:t.slice(0,-1).join(`
+`),question:t.at(-1)};const n=new RegExp("(?:[.!]\\s+)(?=(?:"+r+"|do|does|did|is|are|can|will|would|should)\\b[^?]*\\?\\s*$)","i").exec(e);return n?{context:e.slice(0,n.index+1),question:e.slice(n.index+n[0].length)}:{context:"",question:e}}i(l,"splitQuestion");function h(o){const{context:e,question:t}=l(o);return e?e+`
+`+t:t}i(h,"questionText");function w(o){const{context:e,question:t}=l(o),n=new RegExp("^("+r+")\\b","i").exec(t),s=n?`<mark class="question-cue">${c(n[0])}</mark>${c(t.slice(n[0].length))}`:c(t);return`${e?`<span class="question-context">${c(e)}</span>`:""}<span class="question-line">${s}</span>`}i(w,"questionMarkup");function p(o){if(o.sourceSentence)return o.sourceSentence;const e=(o.options||[]).map(s=>s.split(/\s+/));if(!e.length)return o.prompt;let t=0,n=0;for(;e.every(s=>s[t]!==void 0&&s[t]===e[0][t]);)t++;for(;e.every(s=>s.length-n-1>=t&&s.at(-1-n)===e[0].at(-1-n));)n++;return[...e[0].slice(0,t),"___",...n?e[0].slice(-n):[]].join(" ")}i(p,"grammarTarget");export{p as grammarTarget,w as questionMarkup,h as questionText,l as splitQuestion};

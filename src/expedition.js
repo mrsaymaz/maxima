@@ -1,0 +1,535 @@
+import { validSpecialList } from './specials.js';
+import { gateCount, perChapter, chapterCount, chapterOf, slotOf, shortPath } from './path-shape.js';
+import { RUNNER, stretchZ } from './runner-mode.js';
+import { validGuardian, guardianDefeated } from './guardian-combat.js';
+import { newFormatPlan, validPractice } from './practice-selection.js';
+import { upgradePathGrowth, recordPathGrowth, recordGuardianGrowth, validPathGrowth } from './path-growth.js';
+import { validPartners, validTeamProgress, allJourneyMaps } from './partners.js';
+import { freshWallet, validTravel, validWallet } from './traversal.js';
+import { masteryReady, validMastery } from './mastery.js';
+import { validDaily } from './daily.js';
+// Twenty permanent language/world associations, shared by every arena.
+export const ACTIVITIES = [
+  ['translation', 'Twin rune stones', 'Match English and Turkish', 'Connect meanings to open the woodland gate.', '↔'],
+  ['definition', 'Word pillars', 'Match words and definitions', 'Awaken the forgotten word pillars.', '◇'],
+  ['picture', 'Picture crates', 'Match pictures and English', 'Unlock supplies for the trail.', '▧'],
+  ['qa-pairs', 'Message perches', 'Match questions and answers', 'Reconnect the creatures’ messages.', '?'],
+  ['halves', 'Split-log bridge', 'Match sentence halves', 'Join the broken logs with complete sentences.', '⌁'],
+  ['ending', 'Fruit tree', 'Choose a sentence ending', 'Complete the sentence, pick fruit and feed your partner.', '♧'],
+  [
+    'sentence',
+    'Stepping-stone crossing',
+    'Order sentence fragments',
+    'Connect the stones to rebuild the crossing.',
+    '⋯',
+  ],
+  ['gap', 'Water channel', 'Fill the missing word', 'Fit the missing word to restore the stream.', '≈'],
+  ['correct', 'Enchanted signpost', 'Choose the correct sentence', 'Read the inscriptions to reveal the trail.', '↟'],
+  ['repair', 'Ability seal', 'Find and repair the mistake', 'Replace the broken word to restore your wind seal.', '✧'],
+  [
+    'answer',
+    'Woodland visitor',
+    'Answer the question',
+    'Understand the creature and choose an appropriate reply.',
+    '!',
+  ],
+  ['sort', 'Supply shelves', 'Sort words into categories', 'Organise the supplies before the journey continues.', '▦'],
+  [
+    'intruder',
+    'Invasive brambles',
+    'Remove words that do not belong',
+    'Clear the wrong words from the living trail.',
+    '❧',
+  ],
+  [
+    'spelling',
+    'Corrupted mushrooms',
+    'Find the misspelled word',
+    'Cleanse the mushrooms by spotting faulty spellings.',
+    '✓',
+  ],
+  ['clue', 'Hidden cache', 'Identify the word from a clue', 'Interpret the clue to uncover a hidden cache.', '⌕'],
+  [
+    'listen-word',
+    'Echo flowers',
+    'Listen and identify the word',
+    'Listen to the flower and choose the matching word.',
+    '♪',
+  ],
+  [
+    'listen-tr',
+    'Whisper crystals',
+    'Listen and match Turkish meanings',
+    'Connect each spoken English word with its Turkish meaning.',
+    '♫',
+  ],
+  [
+    'listen-multi',
+    'Creature supply request',
+    'Listen and select requested items',
+    'Listen carefully and bring both requested items.',
+    '♬',
+  ],
+  ['numbers', 'Quantity scales', 'Match numbers and number words', 'Balance the trail supplies.', '№'],
+  [
+    'instructions',
+    'Packing station',
+    'Follow written instructions',
+    'Read the request and pack the correct objects.',
+    '▣',
+  ],
+].map(([id, object, label, story, symbol], index) => ({ id, object, label, story, symbol, index }));
+export const TASK_TYPES = ACTIVITIES.map(a => a.id);
+export const CLASSIC_STORE = 'maxima.corridor.arena-evolution.v2',
+  STORE = RUNNER ? 'solmaxima.save.v1' : CLASSIC_STORE;
+// solMaxima 0.56 starts on a clean slate: saves from earlier builds (20-gate areas) are left untouched and not loaded.
+export const EARLIER_STORES = ['maxima.runner.prototype.v1'];
+export const LEGACY_STORE = 'maxima.save.v1';
+export const activity = id => ACTIVITIES.find(a => a.id === id);
+export const required = j => j.level + 1; // Legacy set counters remain available for compatible backups.
+export const ready = j => (j.progressionVersion === 2 ? j.level === 10 : masteryReady(j));
+export const unlocked = j => (j.guardians.includes(1) ? 2 : j.guardians.includes(0) ? 1 : 0);
+export const gate = j => [2, 5, 10].includes(j.level);
+export const guardianReady = (j, e = j.expeditions?.[unlocked(j)]) =>
+  j.progressionVersion === 2
+    ? !j.completed &&
+      !!e &&
+      e.area === unlocked(j) &&
+      !j.guardians.includes(e.area) &&
+      e.index === gateCount(e) &&
+      (e.chests || []).includes(chapterCount(e) - 1) &&
+      j.level === [3, 7, 9][e.area]
+    : ready(j) && gate(j) && !j.completed && !j.guardians.includes(j.level === 2 ? 0 : j.level === 5 ? 1 : 2);
+export const progress = j => TASK_TYPES.reduce((n, k) => n + Math.min(j.sets[k] || 0, required(j)), 0);
+export const maximum = j => TASK_TYPES.length * required(j);
+export function freshJourney() {
+  return {
+    progressionVersion: 2,
+    pathSteps: 0,
+    level: 0,
+    sets: Object.fromEntries(TASK_TYPES.map(t => [t, 0])),
+    guardians: [],
+    completed: false,
+    seen: {},
+    stats: { correct: 0, mistakes: 0, hints: 0 },
+    history: [],
+    runs: 0,
+    serial: 0,
+    expeditions: {},
+    mastery: {},
+    runCount: 0,
+    formatCursor: 0,
+  };
+}
+export function freshSave() {
+  return {
+    version: 2,
+    evolutionVersion: 2,
+    selected: 'g5u1',
+    grade: 5,
+    mode: 'relaxed',
+    area: 0,
+    nickname: 'Hufflepuff',
+    partner: 'hufflepuff',
+    journeyTeam: 'hufflepuff',
+    teamProgressVersion: 1,
+    teamProgress: {},
+    partnerNames: { hufflepuff: 'Hufflepuff' },
+    muted: true,
+    journeys: {},
+    tutorial: false,
+    wallet: freshWallet(),
+  };
+}
+// One expedition is a week of five runs. Each run is a chapter: four tasks, one rival group, one trial and a reward chest.
+export function freshExpedition(j, unitId, area) {
+  const serial = ++j.serial;
+  return {
+    ...(j.practice ? newFormatPlan(TASK_TYPES, j) : {}),
+    version: 1,
+    layoutVersion: 2,
+    adventureVersion: 2,
+    pacingVersion: 2,
+    continuityVersion: 1,
+    terrainVersion: 1,
+    legacyThrough: -1,
+    formatOffset: (j.formatCursor || 0) % 5,
+    chests: [],
+    id: `${unitId}:${j.runs}:${j.level}:${area}:${serial}`,
+    unitId,
+    area,
+    level: j.level,
+    serial,
+    index: 0,
+    choices: [null, null, null, null, null],
+    completed: [],
+    position: { x: 0, z: 6 },
+    heading: Math.PI,
+    active: null,
+    battle: null,
+    phase: 'trail',
+    checkpoint: null,
+    checkpointHistory: [],
+    revision: 0,
+  };
+}
+export function expedition(j, unitId, area) {
+  let e = j.expeditions[area];
+  if (!e || (e.phase === 'closed' && j.progressionVersion !== 2))
+    e = j.expeditions[area] = freshExpedition(j, unitId, area);
+  return e;
+}
+export function orderFor(e, chapter) {
+  if (e.varietyVersion === 1) {
+    const per = perChapter(e),
+      group = e.formatOrder.slice(chapter * per, chapter * per + per);
+    return e.choices[chapter] === 'right' ? group.reverse() : group;
+  }
+  const g = (chapter + (e.formatOffset || 0)) % 5,
+    group = TASK_TYPES.slice(g * 4, g * 4 + 4),
+    rotate = (e.level + e.serial + chapter) % 4,
+    shifted = group.slice(rotate).concat(group.slice(0, rotate));
+  return e.choices[chapter] === 'right' ? shifted.slice().reverse() : shifted;
+}
+export function currentType(e) {
+  if (e.index >= gateCount(e)) return null;
+  const chapter = chapterOf(e);
+  return e.choices[chapter] ? orderFor(e, chapter)[slotOf(e)] : null;
+}
+// The game turns every brand-new expedition (no gate played yet) into a six-gate area (path-shape.js) with a shuffled
+// gate order, so each play-through meets different gates; expeditions already under way keep their shape.
+export function shuffleGates(j, e, { six = true } = {}) {
+  if (
+    !e ||
+    e.index !== 0 ||
+    e.completed?.length ||
+    e.active ||
+    (e.varietyVersion === 1 && (e.pathVersion === 3 || !six))
+  )
+    return false;
+  if (e.varietyVersion !== 1) Object.assign(e, newFormatPlan(TASK_TYPES, j));
+  if (six) e.pathVersion = 3;
+  e.revision = (e.revision || 0) + 1;
+  return true;
+}
+// No fork stop: a chapter's path side is picked as soon as the chapter begins, varied per expedition.
+export function autoBranch(e) {
+  const chapter = chapterOf(e);
+  if (e.index >= gateCount(e) || slotOf(e) !== 0 || e.choices[chapter]) return false;
+  let h = 2166136261;
+  for (const c of String(e.contentSeed || e.id) + ':' + chapter) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return chooseBranch(e, (h >>> 0) % 2 ? 'right' : 'left');
+}
+export function chooseBranch(e, side) {
+  const chapter = chapterOf(e);
+  if (e.index >= gateCount(e) || slotOf(e) !== 0 || e.choices[chapter] || !['left', 'right'].includes(side))
+    return false;
+  e.choices[chapter] = side;
+  e.revision++;
+  return true;
+}
+export function milestone(j, e, type, position = e.position, heading = e.heading) {
+  if (
+    e.index >= gateCount(e) ||
+    currentType(e) !== type ||
+    !e.active?.complete ||
+    e.active.type !== type ||
+    e.active.nodeId !== `${e.id}:${e.index}`
+  )
+    return { changed: false };
+  const id = `${e.id}:${e.index}`;
+  if (e.completed.some(c => c.id === id)) return { changed: false };
+  j.sets[type] = Math.min(required(j), (j.sets[type] || 0) + 1);
+  const record = { id, index: e.index, type, at: Date.now() };
+  e.completed.push(record);
+  e.index++;
+  e.active = null;
+  e.position = { x: position.x, z: position.z };
+  e.heading = heading;
+  e.checkpoint = { ...record, position: { ...e.position }, heading, nextIndex: e.index };
+  e.checkpointHistory.push(e.checkpoint);
+  e.checkpointHistory = e.checkpointHistory.slice(-20);
+  e.revision++;
+  if (e.index === gateCount(e)) e.phase = 'end';
+  const growth = j.progressionVersion === 2 ? recordPathGrowth(j, e) : { evolved: false };
+  return { changed: true, expeditionComplete: e.index === gateCount(e), ready: ready(j), ...growth };
+}
+export function finishExpedition(j, e) {
+  if (j.progressionVersion === 2) {
+    if (e.index !== gateCount(e) || e.phase !== 'end') return { changed: false };
+    return guardianReady(j, e) ? { changed: true, guardian: true } : { changed: false };
+  }
+  if (j.completed || e.index !== gateCount(e) || e.phase !== 'end') return { changed: false };
+  if (!ready(j)) return { changed: true, nextExpedition: true };
+  if (gate(j)) return { changed: true, guardian: true };
+  e.phase = 'closed';
+  advance(j);
+  return { changed: true, evolved: true };
+}
+export const runChapter = e =>
+  e.index >= gateCount(e) ? chapterCount(e) - 1 : Math.floor(e.index / perChapter(e)) - 1;
+// A reward chest waits at the clearing after the fourth task of a run.
+export function chestPending(e) {
+  const gates = gateCount(e);
+  return (
+    e.index > 0 &&
+    e.index <= gates &&
+    slotOf(e) === 0 &&
+    !(e.chests || []).includes(runChapter(e)) &&
+    (e.index < gates || e.phase === 'end')
+  );
+}
+// The route level is an immutable layout/order snapshot. Evolution changes the
+// journey level used by new tasks, never the route or its completed mechanisms.
+function retainRoute(e) {
+  e.continuityVersion = 1;
+  e.phase = e.index < gateCount(e) ? 'trail' : 'closed';
+}
+// Ends a run at its chest: advances the format rotation, then levels up when mastery allows.
+export function finishRun(j, e) {
+  if (!chestPending(e)) return { changed: false };
+  const chapter = runChapter(e);
+  e.chests = [...(e.chests || []), chapter];
+  j.runCount = (j.runCount || 0) + 1;
+  j.formatCursor = (j.formatCursor || 0) + 1;
+  e.revision++;
+  if (j.progressionVersion === 2) {
+    if (e.index === gateCount(e)) {
+      if (guardianReady(j, e)) return { changed: true, chapter, guardian: true };
+      e.phase = 'closed';
+      return { changed: true, chapter, weekComplete: true };
+    }
+    return { changed: true, chapter, next: true };
+  }
+  if (!j.completed && ready(j)) {
+    if (gate(j)) return { changed: true, chapter, guardian: true };
+    retainRoute(e);
+    advance(j);
+    return { changed: true, chapter, evolved: true };
+  }
+  if (e.index >= gateCount(e)) {
+    e.phase = 'closed';
+    return { changed: true, chapter, weekComplete: true };
+  }
+  return { changed: true, chapter, next: true };
+}
+export function advance(j) {
+  if (j.level >= 10) return false;
+  j.level++;
+  j.sets = Object.fromEntries(TASK_TYPES.map(t => [t, 0]));
+  return true;
+}
+export function winGuardian(j, e) {
+  if (j.progressionVersion === 2) {
+    if (!guardianReady(j, e) || !guardianDefeated(e.battle)) return false;
+    j.guardians.push(e.area);
+    recordGuardianGrowth(j, e);
+    e.battle = null;
+    retainRoute(e);
+    if (e.area === 2) {
+      j.completed = true;
+      j.history.push({ completedAt: new Date().toISOString(), correct: j.stats.correct, mistakes: j.stats.mistakes });
+    }
+    return true;
+  }
+  if (!guardianReady(j) || !e.battle || !guardianDefeated(e.battle)) return false;
+  const area = j.level === 2 ? 0 : j.level === 5 ? 1 : 2;
+  if (j.guardians.includes(area)) return false;
+  j.guardians.push(area);
+  e.battle = null;
+  retainRoute(e);
+  if (j.level === 10) {
+    j.completed = true;
+    j.history.push({ completedAt: new Date().toISOString(), correct: j.stats.correct, mistakes: j.stats.mistakes });
+  } else advance(j);
+  return true;
+}
+export function restart(j) {
+  return {
+    ...freshJourney(),
+    history: [...j.history],
+    runs: j.runs + 1,
+    ...(j.practice ? { practice: JSON.parse(JSON.stringify(j.practice)) } : {}),
+  };
+}
+// Earlier progression is deliberately not migrated in this fresh-start release.
+export function migrate() {
+  return freshSave();
+}
+export function validSave(s, units) {
+  if (
+    !s ||
+    s.evolutionVersion !== 2 ||
+    !validPartners(s) ||
+    !validTeamProgress(s) ||
+    !validDaily(s) ||
+    s.version !== 2 ||
+    !s.journeys ||
+    typeof s.journeys !== 'object' ||
+    Array.isArray(s.journeys) ||
+    !units.some(u => u.id === s.selected) ||
+    !['relaxed', 'challenge'].includes(s.mode) ||
+    typeof s.nickname !== 'string' ||
+    s.nickname.length > 30 ||
+    !Number.isInteger(s.area) ||
+    s.area < 0 ||
+    s.area > 2 ||
+    !validWallet(s.wallet)
+  )
+    return false;
+  return allJourneyMaps(s).every(journeys => validJourneys(journeys, units));
+}
+function validJourneys(journeys, units) {
+  const ids = new Set(units.map(u => u.id));
+  for (const [id, j] of Object.entries(journeys)) {
+    if (
+      !ids.has(id) ||
+      !j ||
+      !Number.isInteger(j.level) ||
+      j.level < 0 ||
+      j.level > 10 ||
+      !j.sets ||
+      !TASK_TYPES.every(k => Number.isInteger(j.sets[k]) && j.sets[k] >= 0 && j.sets[k] <= required(j)) ||
+      !Array.isArray(j.guardians) ||
+      j.guardians.some(g => ![0, 1, 2].includes(g)) ||
+      !j.expeditions ||
+      !Array.isArray(j.history) ||
+      !j.stats ||
+      !j.seen ||
+      !Number.isInteger(j.serial) ||
+      j.serial < 0 ||
+      !validMastery(j) ||
+      !validPathGrowth(j) ||
+      !validPractice(j)
+    )
+      return false;
+    if (
+      (j.progressionVersion !== 2 &&
+        ((j.level >= 3 && !j.guardians.includes(0)) || (j.level >= 6 && !j.guardians.includes(1)))) ||
+      (j.guardians.includes(1) && !j.guardians.includes(0)) ||
+      (j.completed && (j.level !== 10 || !j.guardians.includes(2)))
+    )
+      return false;
+    for (const e of Object.values(j.expeditions)) {
+      if (
+        !e ||
+        (e.varietyVersion !== undefined &&
+          (e.varietyVersion !== 1 ||
+            typeof e.contentSeed !== 'string' ||
+            !e.contentSeed.length ||
+            e.contentSeed.length > 160 ||
+            !Array.isArray(e.formatOrder) ||
+            e.formatOrder.length !== 20 ||
+            new Set(e.formatOrder).size !== 20 ||
+            e.formatOrder.some(t => !TASK_TYPES.includes(t)))) ||
+        (e.terrainVersion !== undefined && e.terrainVersion !== 1) ||
+        (e.pacingVersion !== undefined && ![1, 2].includes(e.pacingVersion)) ||
+        (e.continuityVersion !== undefined && e.continuityVersion !== 1) ||
+        !validTravel(e) ||
+        e.version !== 1 ||
+        (e.formatOffset !== undefined &&
+          (!Number.isInteger(e.formatOffset) || e.formatOffset < 0 || e.formatOffset > 4)) ||
+        (e.chests !== undefined &&
+          (!Array.isArray(e.chests) ||
+            e.chests.length > chapterCount(e) ||
+            new Set(e.chests).size !== e.chests.length ||
+            e.chests.some(
+              c => !Number.isInteger(c) || c < 0 || c >= chapterCount(e) || (c + 1) * perChapter(e) > e.index,
+            ))) ||
+        e.unitId !== id ||
+        !Number.isInteger(e.index) ||
+        e.index < 0 ||
+        e.index > gateCount(e) ||
+        (e.pathVersion !== undefined && (e.pathVersion !== 3 || e.varietyVersion !== 1)) ||
+        (e.specials !== undefined && (e.pathVersion !== 3 || !validSpecialList(e.specials))) ||
+        (e.lives !== undefined && (e.pathVersion !== 3 || !Number.isInteger(e.lives) || e.lives < 0 || e.lives > 5)) ||
+        (e.coinStart !== undefined && (!Number.isInteger(e.coinStart) || e.coinStart < 0)) ||
+        !Number.isInteger(e.area) ||
+        e.area < 0 ||
+        e.area > 2 ||
+        !Number.isInteger(e.level) ||
+        e.level < 0 ||
+        e.level > 10 ||
+        !Array.isArray(e.choices) ||
+        e.choices.length !== 5 ||
+        e.choices.some(c => c !== null && !['left', 'right'].includes(c)) ||
+        !Array.isArray(e.completed) ||
+        e.completed.length !== e.index ||
+        e.completed.some(
+          (c, i) => c.index !== i || c.type !== orderFor(e, chapterOf(e, i))[slotOf(e, i)] || c.id !== `${e.id}:${i}`,
+        ) ||
+        new Set(e.completed.map(c => c.id)).size !== e.completed.length ||
+        !e.position ||
+        !Number.isFinite(e.position.x) ||
+        !Number.isFinite(e.position.z) ||
+        Math.abs(e.position.x) > 35 ||
+        e.position.z > 12 ||
+        e.position.z < stretchZ(-700)
+      )
+        return false;
+      if (
+        e.pendingEvolution &&
+        (!Number.isInteger(e.pendingEvolution.from) ||
+          !Number.isInteger(e.pendingEvolution.to) ||
+          e.pendingEvolution.from < 0 ||
+          e.pendingEvolution.to > j.level ||
+          e.pendingEvolution.from >= e.pendingEvolution.to ||
+          !Number.isInteger(e.pendingEvolution.checkpoint) ||
+          e.pendingEvolution.checkpoint < 1 ||
+          e.pendingEvolution.checkpoint > e.index)
+      )
+        return false;
+      if (
+        e.battle &&
+        (e.battle.version === 2
+          ? !validGuardian(e.battle) || !!e.active
+          : !Number.isInteger(e.battle.round) ||
+            e.battle.round < 0 ||
+            e.battle.round > 2 ||
+            !Number.isFinite(e.battle.hp) ||
+            e.battle.hp <= 0 ||
+            e.battle.hp > 100)
+      )
+        return false;
+      if (e.active) {
+        const t = e.active;
+        if (
+          !TASK_TYPES.includes(t.type) ||
+          t.nodeId !== (e.battle ? `${e.id}:battle:${e.battle.round}` : `${e.id}:${e.index}`) ||
+          (!e.battle && t.type !== currentType(e)) ||
+          !['pairs', 'rounds'].includes(t.kind) ||
+          typeof t.complete !== 'boolean' ||
+          !Array.isArray(t.used) ||
+          !Array.isArray(t.picked) ||
+          !Array.isArray(t.matched) ||
+          (t.parts !== undefined && (e.battle || !shortPath(e) || t.parts !== 2 || ![1, 2].includes(t.part))) ||
+          (t.parts === undefined && t.part !== undefined)
+        )
+          return false;
+        if (
+          t.kind === 'pairs' &&
+          (!Array.isArray(t.pairs) ||
+            t.pairs.length !== 3 ||
+            !Array.isArray(t.leftOrder) ||
+            !Array.isArray(t.rightOrder) ||
+            t.matched.some(i => !Number.isInteger(i) || i < 0 || i > 2) ||
+            new Set(t.matched).size !== t.matched.length)
+        )
+          return false;
+        if (
+          t.kind === 'rounds' &&
+          (!Array.isArray(t.rounds) ||
+            t.rounds.length !== 3 ||
+            !Number.isInteger(t.round) ||
+            t.round < 0 ||
+            t.round >= 3)
+        )
+          return false;
+      }
+    }
+  }
+  return true;
+}
+export function encode(s) {
+  return JSON.stringify(s);
+}

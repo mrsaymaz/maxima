@@ -1,11 +1,11 @@
-import{pathLevel}from'../dist/path-growth.js';
+import{pathLevel}from'../src/path-growth.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {freshSave,freshJourney,freshExpedition,expedition,orderFor,chooseBranch,currentType,milestone,finishRun,validSave,restart,TASK_TYPES} from '../dist/expedition.js';
-import {makeTask,actTask} from '../dist/trail-tasks.js';
-import {upgradePractice,completePractice,notePracticeMistake,practiceKey,PRACTICE_ROLES,validPractice} from '../dist/practice-selection.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+import {freshSave,freshJourney,freshExpedition,expedition,orderFor,chooseBranch,currentType,milestone,finishRun,validSave,restart,TASK_TYPES} from '../src/expedition.js';
+import {makeTask,actTask} from '../src/trail-tasks.js';
+import {upgradePractice,completePractice,notePracticeMistake,practiceKey,PRACTICE_ROLES,validPractice} from '../src/practice-selection.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units;
 function solve(t){
  let guard=0;
  while(!t.complete&&guard++<100){

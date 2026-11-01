@@ -1,0 +1,653 @@
+import { surfaceMaterial, assignSurfaceRoles, replaceCueMaterials } from './surface-materials.js';
+import { bevelBox, carvedCylinder, roundBoulderGeometry, rockLump } from './prop-art.js';
+import * as T from './vendor/three.module.min.js';
+import { boulderPose, gustState, thornState, movingPose, crystalState } from './path-trials-layout.js';
+
+const STATES = new WeakMap(),
+  TAU = Math.PI * 2;
+const finite = (n, f = 0) => (Number.isFinite(n) ? n : f);
+// Numeric stamping keeps the additional animated cues allocation-free.
+function stamp(state, mesh, index, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0, ry = state.yaw, rz = 0) {
+  const o = state.object;
+  o.position.set(x, y, z);
+  o.rotation.set(rx, ry, rz);
+  o.scale.set(sx, sy, sz);
+  o.updateMatrix();
+  mesh.setMatrixAt(index, o.matrix);
+}
+const phaseAt = (time, phase, period) => (((time + phase) % period) + period) % period;
+const PALETTES = [
+  ['#8a8574', '#b9b29c', '#5f8452', '#725d48'],
+  ['#a39a82', '#d3c8aa', '#7f9a6c', '#726956'],
+  ['#7b7d92', '#b0b1c4', '#6f8199', '#625a69'],
+];
+function merge(root) {
+  root.updateMatrixWorld(true);
+  const inverse = root.matrixWorld.clone().invert(),
+    batches = new Map();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    geo.applyMatrix4(inverse.clone().multiply(o.matrixWorld));
+    if (!batches.has(o.material)) batches.set(o.material, { p: [], n: [] });
+    const a = batches.get(o.material);
+    for (const v of geo.attributes.position.array) a.p.push(v);
+    for (const v of geo.attributes.normal.array) a.n.push(v);
+    geo.dispose();
+  });
+  root.clear();
+  for (const [material, data] of batches) {
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(data.p, 3));
+    geo.setAttribute('normal', new T.Float32BufferAttribute(data.n, 3));
+    const mesh = new T.Mesh(geo, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    root.add(mesh);
+  }
+}
+function leafGeo() {
+  const points = [
+      [0, 0, 0],
+      [-0.2, 0, 0.27],
+      [0, 0.06, 0.57],
+      [0.2, 0, 0.27],
+      [0, 0.07, 0.27],
+    ],
+    faces = [
+      [0, 1, 4],
+      [1, 2, 4],
+      [2, 3, 4],
+      [3, 0, 4],
+    ],
+    p = [];
+  for (const f of faces) for (const i of f) p.push(...points[i]);
+  const g = new T.BufferGeometry();
+  g.setAttribute('position', new T.Float32BufferAttribute(p, 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+export function makeTrialScenery(section) {
+  const trial = section?.trial;
+  if (!trial || !['boulders', 'wind', 'moving', 'thorns', 'crystals', 'bonus'].includes(trial.kind))
+    throw new Error('Unknown path trial');
+  const group = new T.Group();
+  group.name = 'path-trial-' + trial.kind;
+  const palette = PALETTES[section.area] || PALETTES[0],
+    cache = new Map();
+  const material = (color, extra = {}) => surfaceMaterial('stone', color, extra);
+  const m = {
+    stone: material(palette[0]),
+    pale: material(palette[1]),
+    moss: material(palette[2]),
+    root: material(palette[3]),
+    air: material('#91d9cf', { emissive: '#68a69b', emissiveIntensity: 0.5, roughness: 0.45 }),
+    gold: material('#dfbc65', { emissive: '#a47f31', emissiveIntensity: 0.28, metalness: 0.18, roughness: 0.5 }),
+    amber: material('#f4bd59', { emissive: '#d79030', emissiveIntensity: 0.65 }),
+    green: material('#a7d18a', { emissive: '#6a9f62', emissiveIntensity: 0.45 }),
+    warning: material('#f4bd59', {
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+      emissive: '#e4a749',
+      emissiveIntensity: 0.6,
+      side: T.DoubleSide,
+    }),
+    safe: material('#8ec77d', {
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+      emissive: '#69ad63',
+      emissiveIntensity: 0.38,
+      side: T.DoubleSide,
+    }),
+    shield: material('#9fded5', {
+      transparent: true,
+      opacity: 0.19,
+      depthWrite: false,
+      emissive: '#64bcb4',
+      emissiveIntensity: 0.45,
+      side: T.DoubleSide,
+    }),
+    shell: material(palette[1]),
+    crystal: material('#a8e8d9', { emissive: '#77cbb5', emissiveIntensity: 0.75, roughness: 0.35 }),
+    dark: material('#465954'),
+  };
+  assignSurfaceRoles(m, {
+    stone: ['stone', 'pale', 'shell', 'dark'],
+    foliage: ['moss'],
+    wood: ['root'],
+    metal: ['gold'],
+    effect: ['air', 'amber', 'green'],
+    cue: ['warning', 'safe', 'shield'],
+    glass: ['crystal'],
+  });
+  replaceCueMaterials(m, ['warning', 'safe', 'shield']);
+  const geo = (key, fn) => {
+    if (!cache.has(key)) cache.set(key, fn());
+    return cache.get(key);
+  };
+  const box = (w, h, d) => geo(`b${w},${h},${d}`, () => bevelBox(w, h, d));
+  const cyl = (a, b, h, n = 12) => geo(`c${a},${b},${h},${n}`, () => carvedCylinder(a, b, h, n));
+  const octa = r => geo('o' + r, () => new T.OctahedronGeometry(r, 0));
+  const rock = r => geo('r' + r, () => new T.DodecahedronGeometry(r, 0));
+  const torus = (r, t = 0.018) => geo(`t${r},${t}`, () => new T.TorusGeometry(r, t, 4, 40));
+  const mesh = (geometry, mat, x = 0, y = 0, z = 0, parent = group) => {
+    const o = new T.Mesh(geometry, mat);
+    o.position.set(x, y, z);
+    o.castShadow = true;
+    o.receiveShadow = true;
+    parent.add(o);
+    return o;
+  };
+  const instances = (geometry, mat, count, name) => {
+    const o = new T.InstancedMesh(geometry, mat, count);
+    o.name = name;
+    o.frustumCulled = false;
+    o.castShadow = true;
+    o.receiveShadow = true;
+    group.add(o);
+    return o;
+  };
+  const at = (s, l = 0) => ({
+      x: section.start.x + section.forward.x * s + section.right.x * l,
+      z: section.start.z + section.forward.z * s + section.right.z * l,
+    }),
+    yaw = Math.atan2(-section.right.z, section.right.x),
+    object = new T.Object3D(),
+    fixed = new T.Group();
+  fixed.name = 'fixed-trial-scenery';
+  group.add(fixed);
+  const pad = (s, l, r = 0.65) => {
+    const p = at(s, l);
+    mesh(cyl(r, r, 0.012, 20), m.safe, p.x, 0.043, p.z, fixed).castShadow = false;
+    const rim = mesh(torus(r - 0.024, 0.018), m.green, p.x, 0.052, p.z, fixed);
+    rim.rotation.x = Math.PI / 2;
+    rim.castShadow = false;
+  };
+  const arrowTemplate = new T.Group();
+  mesh(box(0.6, 0.025, 0.1), m.air, 0, 0, 0, arrowTemplate);
+  const point = mesh(new T.ConeGeometry(0.15, 0.28, 3), m.air, 0.35, 0, 0, arrowTemplate);
+  point.rotation.z = -Math.PI / 2;
+  point.rotation.y = Math.PI / 2;
+  merge(arrowTemplate);
+  const arrowGeo = arrowTemplate.children[0].geometry;
+  const state = { section, trial, m, object, at, yaw };
+  if (trial.kind === 'boulders') {
+    const stones = instances(
+        geo('round-boulder', () => roundBoulderGeometry(section.area + 1, palette[2])),
+        material('#bdb6a4', { vertexColors: true, roughness: 0.95 }),
+        trial.lanes.length,
+        'rolling-boulders',
+      ),
+      patchTemplate = new T.Group();
+    for (let i = 0; i < 3; i++) {
+      const p = mesh(rock(0.13), m.moss, (i - 1) * 0.18, 0.905, -0.06 + (i % 2) * 0.1, patchTemplate);
+      p.scale.set(1, 0.3, 0.85);
+    }
+    merge(patchTemplate);
+    const moss = instances(patchTemplate.children[0].geometry, m.moss, trial.lanes.length, 'boulder-moss');
+    moss.visible = false;
+    const rails = instances(box(6.4, 0.008, 1), m.warning, trial.lanes.length, 'cross-trail-warning-rails'),
+      marks = instances(arrowGeo, m.amber, trial.lanes.length * 3, 'boulder-direction-arrows');
+    for (const shelter of trial.shelters || []) pad(shelter.s, shelter.lateral, shelter.r);
+    // The visible mouths sit at the SAME ±4 endpoints used by boulderPose.
+    const mouths = [],
+      lampSites = [];
+    m.root.color.set('#263a33');
+    for (const lane of trial.lanes)
+      for (const end of [-1, 1]) {
+        const lateral = end * 4,
+          p = at(lane.s, end * 3.17),
+          face = at(lane.s, end * 3.27);
+        const opening = mesh(box(0.07, 1.82, lane.r * 2 + 0.3), m.root, face.x, 0.94, face.z, fixed);
+        opening.rotation.y = yaw;
+        mouths.push({
+          laneId: lane.id,
+          lateral,
+          ...at(lane.s, lateral),
+          faceX: face.x,
+          faceZ: face.z,
+          role: end < 0 ? 'entrance' : 'exit',
+        });
+        for (const side of [-1, 1]) {
+          const q = at(lane.s + side * (lane.r + 0.17), end * 3.17),
+            post = mesh(box(0.2, 1.94, 0.32), m.root, q.x, 0.98, q.z, fixed);
+          post.rotation.y = yaw;
+        }
+        for (let j = 0; j < 9; j++) {
+          const a = Math.PI * (j / 8),
+            half = lane.r + 0.42,
+            q = at(lane.s + Math.cos(a) * half, end * 3.3),
+            r = 0.25 + ((j * 7) % 5) * 0.035,
+            o = mesh(rockLump((j % 5) + 1), m.stone, q.x, 0.12 + Math.sin(a) * 2.02, q.z, fixed);
+          o.scale.set(r, r * (0.8 + (j % 3) * 0.1), r * 0.9);
+          o.rotation.set(j * 0.7, j * 1.3, 0);
+        }
+        const beam = mesh(box(lane.r * 2 + 0.54, 0.22, 0.36), m.pale, p.x, 2.0, p.z, fixed);
+        beam.rotation.y = yaw + Math.PI / 2;
+        const bed = mesh(box(lane.r * 2 + 0.35, 0.025, 0.9), m.stone, p.x, 0.04, p.z, fixed);
+        bed.rotation.y = yaw + Math.PI / 2;
+        if (end < 0)
+          for (let j = 0; j < 3; j++) {
+            const q = at(lane.s + (j - 1) * 0.43, end * 3.05);
+            lampSites.push({ x: q.x, y: 2.15, z: q.z });
+          }
+      }
+    const lamps = instances(octa(0.105), m.amber, lampSites.length, 'boulder-countdown-lamps'),
+      statuses = trial.lanes.map(lane => ({
+        id: lane.id,
+        visible: false,
+        warning: false,
+        warningStep: 0,
+        secondsToRoll: 0,
+      }));
+    group.userData.boulderMouths = mouths;
+    group.userData.boulders = statuses;
+    Object.assign(state, { stones, moss, rails, marks, lamps, lampSites, statuses });
+  } else if (trial.kind === 'wind') {
+    for (const cover of trial.covers) {
+      const p = { x: cover.x, z: cover.z };
+      mesh(cyl(0.46, cover.r, 1.24, 8), m.stone, p.x, 0.66, p.z, fixed);
+      mesh(cyl(0.51, 0.48, 0.1, 8), m.moss, p.x, 1.29, p.z, fixed);
+      for (let j = 0; j < 5; j++) {
+        const a = j * 1.3 + cover.s,
+          lump = mesh(
+            rockLump(j + 1),
+            m.stone,
+            p.x + Math.cos(a) * cover.r * 0.92,
+            0.1,
+            p.z + Math.sin(a) * cover.r * 0.92,
+            fixed,
+          );
+        lump.scale.set(0.24, 0.3, 0.22);
+        lump.rotation.y = a;
+      }
+      const crest = mesh(rock(0.1), m.pale, p.x + 0.1, 1.32, p.z, fixed);
+      crest.scale.y = 0.7;
+      const center = at(cover.s - 1.475, cover.lateral),
+        footprint = mesh(box(2, 0.012, 2.45), m.safe, center.x, 0.044, center.z, fixed);
+      footprint.rotation.y = yaw;
+      footprint.castShadow = false;
+      for (const edge of [-1, 1]) {
+        const q = at(cover.s - 1.475, cover.lateral + edge),
+          border = mesh(box(0.025, 0.018, 2.45), m.green, q.x, 0.055, q.z, fixed);
+        border.rotation.y = yaw;
+        border.castShadow = false;
+      }
+      for (const end of [-2.7, -0.25]) {
+        const q = at(cover.s + end, cover.lateral),
+          border = mesh(box(2, 0.018, 0.025), m.green, q.x, 0.055, q.z, fixed);
+        border.rotation.y = yaw;
+        border.castShadow = false;
+      }
+    }
+    const flagSites = [];
+    for (const s of [2, section.length - 2])
+      for (const side of [-1, 1]) {
+        const p = at(s, side * 2.75);
+        mesh(cyl(0.035, 0.06, 1.4, 6), m.root, p.x, 0.73, p.z, fixed);
+        flagSites.push(p);
+      }
+    const flagGeometry = new T.BufferGeometry();
+    flagGeometry.setAttribute(
+      'position',
+      new T.Float32BufferAttribute([0, 0, 0, 0.58, -0.045, 0.025, 0.02, -0.29, 0], 3),
+    );
+    flagGeometry.computeVertexNormals();
+    const flagMat = m.air.clone();
+    flagMat.side = T.DoubleSide;
+    const flags = instances(flagGeometry, flagMat, flagSites.length, 'gust-pennants'),
+      arrows = instances(arrowGeo, m.air, 6, 'gust-flow-arrows');
+    Object.assign(state, { flags, flagSites, arrows, flagMat });
+    group.userData.shelterFootprints = trial.covers.map(c => ({
+      id: c.id,
+      from: c.s - 2.7,
+      to: c.s - 0.25,
+      lateral: c.lateral,
+      halfWidth: 1,
+    }));
+    group.userData.windDirection = { x: 0, z: 0, warning: false };
+  } else if (trial.kind === 'moving') {
+    const moving = section.platforms.filter(p => p.motion),
+      limits = [];
+    for (const platform of moving) {
+      const ends = [
+        movingPose(section, platform, ((Math.PI * 1.5 - platform.motion.phase) / TAU) * platform.motion.period),
+        movingPose(section, platform, ((Math.PI * 0.5 - platform.motion.phase) / TAU) * platform.motion.period),
+      ];
+      const dx = ends[1].x - ends[0].x,
+        dz = ends[1].z - ends[0].z,
+        d = Math.hypot(dx, dz),
+        nx = -dz / d,
+        nz = dx / d;
+      limits.push({
+        id: platform.id,
+        min: { ...ends[0] },
+        max: { ...ends[1] },
+        r: platform.r,
+        normal: { x: nx, z: nz },
+        beaconOffset: platform.r + 0.22,
+      });
+      for (const side of [-1, 1]) {
+        const edge = side * (platform.r + 0.12),
+          curve = new T.LineCurve3(
+            new T.Vector3(ends[0].x + nx * edge, 0.095, ends[0].z + nz * edge),
+            new T.Vector3(ends[1].x + nx * edge, 0.095, ends[1].z + nz * edge),
+          );
+        mesh(new T.TubeGeometry(curve, 1, 0.022, 5, false), m.air, 0, 0, 0, fixed).castShadow = false;
+      }
+      for (const p of ends) {
+        const anchor = mesh(torus(0.105, 0.025), m.gold, p.x, 0.11, p.z, fixed);
+        anchor.rotation.x = Math.PI / 2;
+        anchor.castShadow = false;
+        const tick = mesh(box(platform.r * 2 + 0.44, 0.025, 0.055), m.gold, p.x, 0.102, p.z, fixed);
+        tick.rotation.y = Math.atan2(-nz, nx);
+        tick.castShadow = false;
+        for (const side of [-1, 1]) {
+          const x = p.x + nx * side * (platform.r + 0.22),
+            z = p.z + nz * side * (platform.r + 0.22);
+          mesh(cyl(0.035, 0.065, 0.28, 6), m.gold, x, 0.2, z, fixed);
+          mesh(octa(0.085), m.air, x, 0.39, z, fixed);
+        }
+      }
+    }
+    const markers = instances(torus(1, 0.016), m.air, moving.length, 'moving-platform-track-markers');
+    state.moving = moving;
+    state.markers = markers;
+    group.userData.platformTravelLimits = limits;
+  } else if (trial.kind === 'thorns') {
+    const curve = new T.CatmullRomCurve3([
+        new T.Vector3(-0.5, 0.11, 0),
+        new T.Vector3(-0.25, 0.18, 0.07),
+        new T.Vector3(0, 0.11, -0.07),
+        new T.Vector3(0.25, 0.18, 0.05),
+        new T.Vector3(0.5, 0.11, 0),
+      ]),
+      rootGeo = new T.TubeGeometry(curve, 16, 0.105, 5, false);
+    rootGeo.computeBoundingBox();
+    const bb = rootGeo.boundingBox;
+    rootGeo.translate(-(bb.min.x + bb.max.x) / 2, 0, 0);
+    rootGeo.scale(1 / (bb.max.x - bb.min.x), 1, 1);
+    const roots = instances(rootGeo, m.root, trial.rows.length * 2, 'blocked-root-bands'),
+      spikes = instances(new T.ConeGeometry(0.105, 0.46, 5), m.moss, trial.rows.length * 16, 'thorn-spikes'),
+      gaps = instances(box(1, 0.006, 0.55), m.safe, trial.rows.length, 'safe-root-openings'),
+      next = instances(box(1, 0.006, 0.31), m.warning, trial.rows.length, 'next-root-openings');
+    Object.assign(state, { roots, spikes, gaps, next });
+  } else if (trial.kind === 'crystals') {
+    const nodes = trial.nodes || [-1.8, 0, 1.8].map(lateral => ({ lateral, ...at(trial.s, lateral) }));
+    for (const node of nodes) {
+      mesh(cyl(0.38, 0.46, 0.22, 8), m.stone, node.x, 0.14, node.z, fixed);
+      const socket = mesh(torus(0.28, 0.025), m.gold, node.x, 0.27, node.z, fixed);
+      socket.rotation.x = Math.PI / 2;
+    }
+    const cores = instances(octa(0.31), m.crystal, nodes.length, 'crystal-nodes'),
+      shells = instances(box(0.42, 1.03, 0.68), m.shell, nodes.length * 2, 'retracting-crystal-shells'),
+      shards = instances(octa(0.085), m.dark, nodes.length * 3, 'spent-crystal-shards'),
+      cracks = instances(box(0.022, 0.44, 0.018), m.dark, nodes.length * 2, 'crystal-fractures');
+    const barrier = new T.Group();
+    barrier.name = 'protective-crystal-barrier';
+    const p = at(trial.s);
+    barrier.position.set(p.x, 0, p.z);
+    barrier.rotation.y = yaw;
+    group.add(barrier);
+    const film = mesh(box(6.4, 1.96, 0.025), m.shield, 0, 1.04, 0, barrier);
+    film.castShadow = false;
+    for (const y of [0.22, 1.02, 1.93]) mesh(box(6.4, 0.032, 0.045), m.air, 0, y, 0.01, barrier).castShadow = false;
+    merge(barrier);
+    const halos = instances(torus(0.405, 0.035), m.green, nodes.length, 'exposed-crystal-targets');
+    Object.assign(state, {
+      nodes,
+      cores,
+      shells,
+      shards,
+      cracks,
+      barrier,
+      halos,
+      aliveColor: new T.Color('#a4e8d7'),
+      spentColor: new T.Color('#5b6c66'),
+    });
+    group.userData.crystalTargets = nodes.map((node, i) => ({
+      index: i,
+      x: node.x,
+      z: node.z,
+      exposed: false,
+      intact: true,
+    }));
+  } else {
+    // Raised stones and coins belong to traversal-props; only route ornaments live here.
+    const left = at(1.2, -1.15),
+      leaf = mesh(leafGeo(), m.green, left.x, 0.055, left.z, fixed);
+    leaf.rotation.y = yaw;
+    leaf.scale.setScalar(1.05);
+    const right = at(1.2, 1.35),
+      coin = mesh(cyl(0.22, 0.22, 0.045, 12), m.gold, right.x, 0.087, right.z, fixed);
+    const rim = mesh(torus(0.25, 0.023), m.gold, right.x, 0.098, right.z, fixed);
+    rim.rotation.x = Math.PI / 2;
+    for (const platform of section.platforms) {
+      const edge = mesh(torus(platform.r - 0.005, 0.012), m.gold, platform.x, platform.y - 0.03, platform.z, fixed);
+      edge.rotation.x = Math.PI / 2;
+      edge.castShadow = false;
+    }
+    for (let i = 0; i < 3; i++) {
+      const p = at(2 + i * 0.5, -1.15),
+        a = mesh(arrowGeo, m.green, p.x, 0.055, p.z, fixed);
+      a.rotation.y = yaw + Math.PI / 2;
+      a.scale.setScalar(0.4);
+    }
+  }
+  merge(fixed);
+  Object.assign(group.userData, {
+    kind: trial.kind,
+    id: trial.id,
+    solids: [],
+    worldCoordinates: true,
+    drawMeshes: 0,
+    triangles: 0,
+  });
+  STATES.set(group, state);
+  updateTrialScenery(group, { time: 0 });
+  group.traverse(o => {
+    if (o.isMesh) {
+      group.userData.drawMeshes++;
+      group.userData.triangles +=
+        ((o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3) *
+        (o.isInstancedMesh ? o.count : 1);
+    }
+  });
+  return group;
+}
+
+export function updateTrialScenery(group, { time = 0, crystals = {}, collected = new Set(), playerRadius = 0 } = {}) {
+  const state = STATES.get(group);
+  if (!state) return group;
+  time = finite(time);
+  const { section, trial, m, object, at, yaw } = state;
+  const pose = (o, index, p, y, scale = { x: 1, y: 1, z: 1 }, rotation = { x: 0, y: yaw, z: 0 }) => {
+    object.position.set(p.x, y, p.z);
+    object.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
+    object.scale.set(scale.x, scale.y, scale.z);
+    object.updateMatrix();
+    o.setMatrixAt(index, object.matrix);
+  };
+  if (trial.kind === 'boulders') {
+    trial.lanes.forEach((lane, i) => {
+      const p = boulderPose(section, lane, time),
+        r = lane.r,
+        scale = p.visible ? r : 0,
+        phase = phaseAt(time, lane.phase, lane.period),
+        remaining = lane.period - phase,
+        step = p.warning ? Math.min(3, Math.max(1, Math.ceil(((1.1 - remaining) / 1.1) * 3))) : 0,
+        pulse = 0.88 + 0.12 * Math.sin(time * TAU * 3) ** 2;
+      object.position.set(p.x, r + 0.035, p.z);
+      object.rotation.set(0.08, yaw, -p.progress * 11);
+      object.scale.setScalar(scale);
+      object.updateMatrix();
+      state.stones.setMatrixAt(i, object.matrix);
+      state.moss.setMatrixAt(i, object.matrix);
+      const center = at(lane.s);
+      pose(state.rails, i, center, 0.055, {
+        x: p.warning ? pulse : 0,
+        y: p.warning ? 1 : 0,
+        z: p.warning ? 2 * (lane.r + playerRadius * 0.6) : 0,
+      });
+      for (let j = 0; j < 3; j++) {
+        pose(state.marks, i * 3 + j, at(lane.s, (j - 1) * 1.8), 0.075, {
+          x: p.warning ? 0.65 : 0,
+          y: p.warning ? 0.65 : 0,
+          z: p.warning ? 0.65 : 0,
+        });
+        const site = state.lampSites[i * 3 + j],
+          lit = p.visible || j < step,
+          v = lit ? 1 : 0.24;
+        stamp(state, state.lamps, i * 3 + j, site.x, site.y, site.z, v, v, v);
+      }
+      const status = state.statuses[i];
+      status.visible = p.visible;
+      status.warning = p.warning;
+      status.warningStep = step;
+      status.secondsToRoll = p.visible ? 0 : remaining;
+    });
+  } else if (trial.kind === 'wind') {
+    const wind = gustState(section, time),
+      color = wind.warning ? '#edb458' : wind.active ? '#9be4dc' : '#96b89d',
+      sign = wind.warning ? -wind.sign : wind.sign,
+      side = section.area > 0 ? sign * 0.65 : 0,
+      dx = -section.forward.x * 3.1 + section.right.x * side,
+      dz = -section.forward.z * 3.1 + section.right.z * side,
+      heading = Math.atan2(-dz, dx),
+      span = section.length - 4;
+    m.air.color.set(color);
+    state.flagMat.color.set(color);
+    m.air.emissiveIntensity = wind.active ? 0.85 : wind.warning ? 0.65 : 0.18;
+    state.flagSites.forEach((p, i) =>
+      pose(
+        state.flags,
+        i,
+        p,
+        1.39,
+        { x: wind.active ? 1 : wind.warning ? 0.85 : 0.58, y: 1, z: 1 },
+        { x: 0, y: heading, z: Math.sin(time * (wind.active ? 13 : 5) + i) * 0.08 },
+      ),
+    );
+    for (let i = 0; i < 6; i++) {
+      const s = 2 + (((((span * i) / 6 - time * 2.1) % span) + span) % span),
+        lateral = ((i % 3) - 1) * 1.35,
+        p = at(s, lateral),
+        scale = wind.active ? 0.65 : wind.warning ? 0.43 : 0;
+      pose(state.arrows, i, p, 0.62, { x: scale, y: scale, z: scale }, { x: 0, y: heading, z: 0 });
+    }
+    const direction = group.userData.windDirection;
+    direction.x = dx;
+    direction.z = dz;
+    direction.warning = wind.warning;
+    group.userData.gust = wind;
+  } else if (trial.kind === 'moving') {
+    state.moving.forEach((platform, i) => {
+      const p = movingPose(section, platform, time),
+        radius = platform.r + 0.06;
+      pose(state.markers, i, p, 0.105, { x: radius, y: radius, z: 1 }, { x: Math.PI / 2, y: 0, z: 0 });
+    });
+  } else if (trial.kind === 'thorns') {
+    const gaps = [];
+    trial.rows.forEach((row, i) => {
+      const current = thornState(row, time),
+        lo = current.gap - row.gapWidth / 2,
+        hi = current.gap + row.gapWidth / 2,
+        bands = [
+          [-3.2, lo],
+          [hi, 3.2],
+        ];
+      bands.forEach(([a, b], side) => {
+        const width = Math.max(0, b - a);
+        pose(state.roots, i * 2 + side, at(row.s, (a + b) / 2), 0.035, { x: width, y: 1, z: 1 });
+        for (let j = 0; j < 8; j++) {
+          const lateral = a + 0.115 + Math.max(0, width - 0.23) * (j / 7);
+          pose(
+            state.spikes,
+            i * 16 + side * 8 + j,
+            at(row.s, lateral),
+            0.47,
+            { x: width > 0 ? 0.72 : 0, y: 1, z: 1 },
+            { x: 0, y: yaw, z: (j % 2 ? 1 : -1) * 0.1 },
+          );
+        }
+      });
+      pose(state.gaps, i, at(row.s, current.gap), 0.052, { x: Math.max(0, row.gapWidth - playerRadius), y: 1, z: 1 });
+      pose(state.next, i, at(row.s - 0.7, current.nextGap), 0.055, {
+        x: current.warning ? row.gapWidth : 0,
+        y: current.warning ? 1 : 0,
+        z: current.warning ? 1 : 0,
+      });
+      gaps.push({ id: row.id, ...current, width: row.gapWidth });
+    });
+    group.userData.thornGaps = gaps;
+  } else if (trial.kind === 'crystals') {
+    const saved = crystals?.[trial.id] ?? crystals?.get?.(trial.id),
+      hp = Math.max(0, Math.min(3, Math.round(finite(saved?.hp, finite(trial.hp, 3))))),
+      cycle = crystalState(section, time),
+      open = hp === 0 || cycle.open;
+    state.barrier.visible = hp > 0;
+    m.shell.color.set(cycle.warning ? '#e2bd79' : PALETTES[section.area]?.[1] || PALETTES[0][1]);
+    m.crystal.emissiveIntensity = open
+      ? 1.12 + 0.16 * Math.sin(time * 6) ** 2
+      : cycle.warning
+        ? 0.36 + 0.16 * Math.sin(time * 9) ** 2
+        : 0.18;
+    const broken = [];
+    state.nodes.forEach((node, i) => {
+      const target = group.userData.crystalTargets[i];
+      target.intact = Array.isArray(saved?.broken) ? !saved.broken.includes(i) : i < hp;
+      target.exposed = target.intact && hp > 0 && cycle.open;
+      const ringX = node.x - section.forward.x * 0.38,
+        ringZ = node.z - section.forward.z * 0.38,
+        ringScale = target.exposed && target.intact ? 1 : 0;
+      stamp(state, state.halos, i, ringX, 0.8, ringZ, ringScale, ringScale, ringScale, 0, yaw, 0);
+      const intact = target.intact,
+        parted = open || !intact,
+        fade = intact ? 1 : 0.05;
+      if (!intact) broken.push(i);
+      pose(state.cores, i, node, intact ? 0.8 : 0.24, { x: fade, y: fade * 1.5, z: fade });
+      state.cores.setColorAt(i, intact ? state.aliveColor : state.spentColor);
+      for (const side of [-1, 1]) {
+        const p = at(trial.s, node.lateral + side * (parted ? 0.67 : 0.19));
+        pose(
+          state.shells,
+          i * 2 + (side > 0 ? 1 : 0),
+          p,
+          parted ? 0.29 : 0.76,
+          { x: 1, y: parted ? 0.15 : 1, z: 1 },
+          { x: 0, y: yaw + side * (parted ? 0.38 : 0), z: 0 },
+        );
+        const crackP = at(trial.s - 0.28, node.lateral + side * 0.075);
+        pose(
+          state.cracks,
+          i * 2 + (side > 0 ? 1 : 0),
+          crackP,
+          0.8,
+          { x: intact && hp < 3 ? 1 : 0, y: intact && hp < 3 ? 1 : 0, z: intact && hp < 3 ? 1 : 0 },
+          { x: 0, y: yaw, z: side * 0.28 },
+        );
+      }
+      for (let j = 0; j < 3; j++) {
+        const p = at(trial.s + (j % 2 ? 0.17 : -0.12), node.lateral + (j - 1) * 0.15);
+        pose(state.shards, i * 3 + j, p, 0.22, { x: intact ? 0 : 1, y: intact ? 0 : 0.7, z: intact ? 0 : 1 });
+      }
+    });
+    state.cores.instanceColor.needsUpdate = true;
+    group.userData.crystalHp = hp;
+    group.userData.crystalBroken = broken;
+    group.userData.shellOpen = open;
+    group.userData.barrierOpen = hp === 0;
+  } else {
+    const bonus = section.coins.filter(c => c.minFootY !== undefined || c.id.includes(':bonus:'));
+    group.userData.bonusCollected = bonus.filter(c => collected?.has?.(c.id)).length;
+    m.gold.emissiveIntensity = bonus.length && group.userData.bonusCollected === bonus.length ? 0.12 : 0.28;
+  }
+  group.traverse(o => {
+    if (o.isInstancedMesh) o.instanceMatrix.needsUpdate = true;
+  });
+  group.userData.collectedCount = section.coins.filter(c => collected?.has?.(c.id)).length;
+  return group;
+}

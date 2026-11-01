@@ -1,6 +1,6 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import crypto from'node:crypto';
-import{pictureCandidates}from'../dist/picture-selection.js';import{makeTask,actTask}from'../dist/trail-tasks.js';import{freshJourney}from'../dist/expedition.js';import{upgradePractice}from'../dist/practice-selection.js';
-const data=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')),review=JSON.parse(fs.readFileSync('dist/data/picture-review.json')),assets=JSON.parse(fs.readFileSync('content/curriculum-v1/fluent-assets.json')),full=JSON.parse(fs.readFileSync('language-pack/authored-expansion.json'));
+import{pictureCandidates}from'../src/picture-selection.js';import{makeTask,actTask}from'../src/trail-tasks.js';import{freshJourney}from'../src/expedition.js';import{upgradePractice}from'../src/practice-selection.js';
+const data=JSON.parse(fs.readFileSync('content/data/expedition-language.json')),review=JSON.parse(fs.readFileSync('content/data/picture-review.json')),assets=JSON.parse(fs.readFileSync('content/curriculum-v1/fluent-assets.json')),full=JSON.parse(fs.readFileSync('language-pack/authored-expansion.json'));
 const added=data.units.flatMap(u=>u.vocabulary.filter(v=>v.id.includes('mx35')).map(v=>({unit:u,...v}))),byId=new Map(review.records.map(r=>[r.vocabularyId,r]));
 test('every expansion word has a sense-specific picture decision, with portable provenance for approved words',()=>{
  assert.equal(added.length,735);assert.equal(byId.size,735);assert.equal(added.filter(v=>v.picture).length,33);

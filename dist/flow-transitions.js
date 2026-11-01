@@ -1,4 +1,1 @@
-export const GATE_ENTER_SECONDS=.82;
-export const PLAY_RETURN_SECONDS=.48;
-export const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
-export function gateEntry(age,{reduced=false}={}){const p=smooth(age/(reduced?.18:GATE_ENTER_SECONDS));return{progress:p,ready:p>=.98,fold:reduced?0:(1-p)*Math.PI*.47,pullback:reduced?1:1.12-.12*p};}
+var r=Object.defineProperty;var n=(t,o)=>r(t,"name",{value:o,configurable:!0});const p=.82,e=.48,a=n(t=>(t=Math.max(0,Math.min(1,t)),t*t*(3-2*t)),"smooth");function N(t,{reduced:o=!1}={}){const E=a(t/(o?.18:.82));return{progress:E,ready:E>=.98,fold:o?0:(1-E)*Math.PI*.47,pullback:o?1:1.12-.12*E}}n(N,"gateEntry");export{p as GATE_ENTER_SECONDS,e as PLAY_RETURN_SECONDS,N as gateEntry,a as smooth};

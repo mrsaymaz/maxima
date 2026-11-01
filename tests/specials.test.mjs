@@ -1,9 +1,9 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import*as T from'../dist/vendor/three.module.min.js';
-import{SPECIALS,SPECIAL_PRICES,specialsFor,specialDamage,buySpecial,special,validSpecialList}from'../dist/specials.js';
-import{SpecialFX,SPECIAL_FX_IDS}from'../dist/special-fx.js';import{specialIcon}from'../dist/special-icons.js';import{shrineMarkup,specialBar}from'../dist/specials-ui.js';
-import{freshGuardian,GuardianCombat,validGuardian,guardianQuestion,BOSS}from'../dist/guardian-combat.js';
-const u=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units[0];
+import*as T from'../src/vendor/three.module.min.js';
+import{SPECIALS,SPECIAL_PRICES,specialsFor,specialDamage,buySpecial,special,validSpecialList}from'../src/specials.js';
+import{SpecialFX,SPECIAL_FX_IDS}from'../src/special-fx.js';import{specialIcon}from'../src/special-icons.js';import{shrineMarkup,specialBar}from'../src/specials-ui.js';
+import{freshGuardian,GuardianCombat,validGuardian,guardianQuestion,BOSS}from'../src/guardian-combat.js';
+const u=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units[0];
 const TEAMS=['gryffindor','ravenclaw','hufflepuff','slytherin'];
 const fight=(team,level=0,owned=specialsFor(team).map(s=>s.id))=>{const b=freshGuardian(u,'sp-'+team,{tough:true});b.specials=owned;b.specialsUsed=[];const events=[];const c=new GuardianCombat(b,{area:0,partner:team,event:(k,d)=>events.push([k,d])});b.phase='windup';b.timer=0;return{b,c,events};};
 const run=(c,s)=>{for(let t=0;t<s;t+=.016)c.step(.016,{x:0,z:0});};

@@ -1,16 +1,1 @@
-import * as T from'./vendor/three.module.min.js';import{surfaceMaterial}from'./surface-materials.js';
-export function transferPiece(type){
- const delivery=['sort','instructions','listen-multi'].includes(type),organic=['ending','intruder','spelling','listen-word'].includes(type),water=type==='gap',repair=['repair','correct'].includes(type),kind=delivery?'parcel':organic?'seed':water?'valve':repair?'key':'coupler';
- const root=new T.Group();root.name='accepted-'+kind;
- const material=surfaceMaterial(organic?'organic':delivery?'wood':'metal',organic?'#b3c989':delivery?'#aa8356':'#cfb67c'),dark=surfaceMaterial('metal','#635a43');
- const body=new T.Mesh(organic?new T.IcosahedronGeometry(.11,1):water?new T.TorusGeometry(.10,.025,5,12):new T.BoxGeometry(delivery?.22:.13,delivery?.17:.08,delivery?.18:.20),material);root.add(body);
- if(delivery){const band=new T.Mesh(new T.BoxGeometry(.035,.182,.192),dark);root.add(band);}else if(repair){const tooth=new T.Mesh(new T.BoxGeometry(.06,.12,.045),dark);tooth.position.set(.035,-.03,.075);root.add(tooth);}
- root.userData.kind=kind;root.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}});return root;
-}
-// Approach the socket from its front, then insert along its depth axis.
-export function transferPose(effect,age){
- const t=Math.min(1,Math.max(0,age/.62)),travel=Math.min(1,t/.72),ease=travel*travel*(3-2*travel),mouth=effect.end.clone().addScaledVector(effect.axis,.23);
- const p=effect.start.clone().lerp(mouth,ease);p.y+=Math.sin(travel*Math.PI)*.20;
- if(t>.72){const seat=(t-.72)/.28;p.copy(mouth).lerp(effect.end,seat*seat*(3-2*seat));}
- return{position:p,done:t===1};
-}
+var h=Object.defineProperty;var l=(e,n)=>h(e,"name",{value:n,configurable:!0});import*as t from"./vendor/three.module.min.js";import{surfaceMaterial as u}from"./surface-materials.js";function f(e){const n=["sort","instructions","listen-multi"].includes(e),r=["ending","intruder","spelling","listen-word"].includes(e),s=e==="gap",d=["repair","correct"].includes(e),i=n?"parcel":r?"seed":s?"valve":d?"key":"coupler",o=new t.Group;o.name="accepted-"+i;const c=u(r?"organic":n?"wood":"metal",r?"#b3c989":n?"#aa8356":"#cfb67c"),m=u("metal","#635a43"),p=new t.Mesh(r?new t.IcosahedronGeometry(.11,1):s?new t.TorusGeometry(.1,.025,5,12):new t.BoxGeometry(n?.22:.13,n?.17:.08,n?.18:.2),c);if(o.add(p),n){const a=new t.Mesh(new t.BoxGeometry(.035,.182,.192),m);o.add(a)}else if(d){const a=new t.Mesh(new t.BoxGeometry(.06,.12,.045),m);a.position.set(.035,-.03,.075),o.add(a)}return o.userData.kind=i,o.traverse(a=>{a.isMesh&&(a.castShadow=!1,a.receiveShadow=!0)}),o}l(f,"transferPiece");function x(e,n){const r=Math.min(1,Math.max(0,n/.62)),s=Math.min(1,r/.72),d=s*s*(3-2*s),i=e.end.clone().addScaledVector(e.axis,.23),o=e.start.clone().lerp(i,d);if(o.y+=Math.sin(s*Math.PI)*.2,r>.72){const c=(r-.72)/.28;o.copy(i).lerp(e.end,c*c*(3-2*c))}return{position:o,done:r===1}}l(x,"transferPose");export{f as transferPiece,x as transferPose};

@@ -1,8 +1,8 @@
 // Bake conservative, in-place Idle, Walk and Jump clips into the actual Level 0 rig.
 // No mesh, texture, rest pose or skin weights are replaced.
 import {readFileSync,writeFileSync} from 'node:fs';
-import * as T from '../dist/vendor/three.module.min.js';
-const path=process.argv[2]||'dist/assets/creatures/hufflepuff-0.glb';
+import * as T from '../src/vendor/three.module.min.js';
+const path=process.argv[2]||'art/creatures/hufflepuff-0.glb';
 const raw=readFileSync(path);let json,binary;for(let o=12;o<raw.length;){const n=raw.readUInt32LE(o),kind=raw.readUInt32LE(o+4);const chunk=raw.subarray(o+8,o+8+n);if(kind===0x4e4f534a)json=JSON.parse(chunk);if(kind===0x004e4942)binary=chunk;o+=8+n;}
 if(json.skins?.[0]?.joints.length!==28||json.nodes[27]?.name!=='tripo::Root')throw Error('This baker is specific to the supplied Level 0 Hufflepuff rig.');
 const original=json.extras?.maximaLocomotion?.original||{binaryLength:json.buffers[0].byteLength,bufferViews:json.bufferViews.length,accessors:json.accessors.length};binary=binary.subarray(0,original.binaryLength);json.bufferViews=json.bufferViews.slice(0,original.bufferViews);json.accessors=json.accessors.slice(0,original.accessors);delete json.animations;

@@ -1,7 +1,7 @@
-import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
-import{ARENA_LOOKS,arenaLook}from'../dist/arena-palette.js';import{installVividToneMapping,VIVID_GRADE_GLSL}from'../dist/color-grade.js';
-import{applyGraphics}from'../dist/render-quality.js';import{ENVIRONMENT_LIGHTING}from'../dist/environment-field.js';import{environmentPalette}from'../dist/environment-materials.js';
-import{SKY_ZENITH}from'../dist/world-style.js';import{CLIFF_TINTS}from'../dist/cliff-art.js';import{terrainTint}from'../dist/valley-terrain.js';
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../src/vendor/three.module.min.js';
+import{ARENA_LOOKS,arenaLook}from'../src/arena-palette.js';import{installVividToneMapping,VIVID_GRADE_GLSL}from'../src/color-grade.js';
+import{applyGraphics}from'../src/render-quality.js';import{ENVIRONMENT_LIGHTING}from'../src/environment-field.js';import{environmentPalette}from'../src/environment-materials.js';
+import{SKY_ZENITH}from'../src/world-style.js';import{CLIFF_TINTS}from'../src/cliff-art.js';import{terrainTint}from'../src/valley-terrain.js';
 
 const hsl=c=>{const o={};new T.Color(c).getHSL(o);return o;};
 test('each arena look is complete, frozen and actually used by sky, light, kit, terrain and cliffs',()=>{
@@ -24,7 +24,7 @@ test('turning shadows off also stops the sun casting, so Low is not left in a st
  applyGraphics(world,{preset:'balanced'},1);assert.equal(world.renderer.shadowMap.enabled,true);assert.equal(world.sun.castShadow,true);
 });
 test('near-camera coin dissolve uses the distance in front of the camera and only affects close fragments',async()=>{
- const{fadeNearCamera}=await import('../dist/prop-art.js');const m=new T.MeshStandardMaterial();fadeNearCamera(m,1.3,3);fadeNearCamera(m);
+ const{fadeNearCamera}=await import('../src/prop-art.js');const m=new T.MeshStandardMaterial();fadeNearCamera(m,1.3,3);fadeNearCamera(m);
  const shader={fragmentShader:'#include <clipping_planes_fragment>',vertexShader:'',uniforms:{}};m.onBeforeCompile(shader);
  assert.ok(shader.fragmentShader.includes('float maximaDepth = vViewPosition.z;'),'vViewPosition is -mvPosition, so its z is the forward distance');
  assert.ok(shader.fragmentShader.includes('if ( maximaDepth < 3.00 )'));assert.ok(m.customProgramCacheKey().endsWith('|near-fade'));

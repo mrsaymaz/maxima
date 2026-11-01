@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{GUIDE_POSES,guideSrc,guideFigure,homeGuideLine,homeGuideMarkup,guideCameo}from'../dist/guide.js';
-import{tutorialMarkup}from'../dist/controls-tutorial.js';
-import{lessonMarkup,lessonPlan}from'../dist/danger-lessons.js';
+import{GUIDE_POSES,guideSrc,guideFigure,homeGuideLine,homeGuideMarkup,guideCameo}from'../src/guide.js';
+import{tutorialMarkup}from'../src/controls-tutorial.js';
+import{lessonMarkup,lessonPlan}from'../src/danger-lessons.js';
 const dist=new URL('../dist/',import.meta.url);
 test('every Mr. Saymaz pose ships as a small WebP and is cached for offline play',()=>{const shell=JSON.parse(fs.readFileSync(new URL('offline-shell.json',dist))).files;
  for(const p of GUIDE_POSES){const f=guideSrc(p),size=fs.statSync(new URL(f,dist)).size;assert.ok(size<80_000,`${f} is ${size} bytes`);assert.ok(shell.includes(f),f);}

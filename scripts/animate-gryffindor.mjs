@@ -4,7 +4,7 @@
 // Anatomy maps were inspected against weighted rest-space vertices, not names.
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {resolve,join,dirname} from 'node:path';
-import * as T from '../dist/vendor/three.module.min.js';
+import * as T from '../src/vendor/three.module.min.js';
 
 const PROFILES={
  0:{joints:29,root:28,body:27,head:13,tail:10,fore:[[17,16,15],[21,20,19]],hind:[[2,1,0],[5,4,3]]},

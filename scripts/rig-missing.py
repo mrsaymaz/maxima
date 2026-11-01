@@ -7,13 +7,13 @@ import json,struct,io,math
 import numpy as np
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'dist/assets/rigs';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT/'art/rigs';OUT.mkdir(parents=True,exist_ok=True)
 WIDTH={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4,'MAT4':16}
 DTYPE={5121:'u1',5123:'<u2',5125:'<u4',5126:'<f4'}
 def smooth(a,b,x):
  t=np.clip((x-a)/(b-a),0,1);return t*t*(3-2*t)
 def build(partner,level):
- stem=f'{partner}-{level}';raw=(ROOT/f'dist/assets/creatures/{stem}.glb').read_bytes();n=struct.unpack_from('<I',raw,12)[0];j=json.loads(raw[20:20+n]);offset=28+n;binary=raw[offset:];meta=j['extras']['maximaLocomotion'];H=meta['restDimensions']['height'];yaw=meta['forwardYaw'];f=np.array([math.sin(yaw),0,math.cos(yaw)]);r=np.array([f[2],0,-f[0]])
+ stem=f'{partner}-{level}';raw=(ROOT/f'art/creatures/{stem}.glb').read_bytes();n=struct.unpack_from('<I',raw,12)[0];j=json.loads(raw[20:20+n]);offset=28+n;binary=raw[offset:];meta=j['extras']['maximaLocomotion'];H=meta['restDimensions']['height'];yaw=meta['forwardYaw'];f=np.array([math.sin(yaw),0,math.cos(yaw)]);r=np.array([f[2],0,-f[0]])
  def acc(i):
   a=j['accessors'][i];v=j['bufferViews'][a['bufferView']];dt=np.dtype(DTYPE[a['componentType']]);w=WIDTH[a['type']];return np.ndarray((a['count'],w),dt,buffer=binary,offset=v.get('byteOffset',0)+a.get('byteOffset',0),strides=(v.get('byteStride',dt.itemsize*w),dt.itemsize)).copy()
  primitives=j['meshes'][0]['primitives'];points=np.concatenate([acc(p['attributes']['POSITION']) for p in primitives]);ground=float(points[:,1].min());center=(points.min(0)+points.max(0))/2

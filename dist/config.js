@@ -3,5 +3,5 @@
    student's grade and team. Set it to '' for a practice-only copy: no League panel, no Ulti messages and no
    network requests. */
 window.SOLMAXIMA_CONFIG = {
-  ultiApi: 'https://mrsaymaz.netlify.app/api/ulti'
+  ultiApi: 'https://mrsaymaz.netlify.app/api/ulti',
 };

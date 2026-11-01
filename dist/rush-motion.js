@@ -1,17 +1,1 @@
-// Speed belongs to movement, never to language mastery. All timers use active
-// simulation time; reading, menus and hidden tabs do not consume a chain/boost.
-export class RushMotion{
- constructor(){this.speed=2.6;this.fuel=.7;this.boost=0;this.chain=0;this.best=0;this.chainTime=0;this.coins=0;}
- start(){if(this.fuel<.25||this.boost>0)return false;this.boost=1.25;return true;}
- collect(){this.fuel=Math.min(1,this.fuel+.075);this.chain=this.chainTime>0?this.chain+1:1;this.best=Math.max(this.best,this.chain);this.chainTime=3.5;this.coins++;}
- reset(){this.speed=2.6;this.boost=0;this.chain=0;this.chainTime=0;}
- update(dt,{moving=false,safe=false,gateDistance=Infinity,blocked=false,recovery=false}={}){
-  dt=Math.max(0,Math.min(.05,dt));if(recovery||blocked){this.reset();return 2.6;}
-  if(this.chainTime>0){this.chainTime=Math.max(0,this.chainTime-dt);if(!this.chainTime)this.chain=0;}
-  const allowed=safe&&gateDistance>7;if(!allowed)this.boost=0;
-  if(this.boost>0&&moving){this.boost=Math.max(0,this.boost-dt);this.fuel=Math.max(0,this.fuel-dt*.38);if(this.fuel===0)this.boost=0;}
-  const target=!moving?0:!allowed?2.6:this.boost>0?8.5:5.6,rate=target<this.speed?22:5;
-  this.speed+=(target-this.speed)*(1-Math.exp(-dt*rate));if(!allowed)this.speed=Math.min(this.speed,2.6);
-  return Math.max(0,this.speed);
- }
-}
+var r=Object.defineProperty;var a=(s,t)=>r(s,"name",{value:t,configurable:!0});class u{static{a(this,"RushMotion")}constructor(){this.speed=2.6,this.fuel=.7,this.boost=0,this.chain=0,this.best=0,this.chainTime=0,this.coins=0}start(){return this.fuel<.25||this.boost>0?!1:(this.boost=1.25,!0)}collect(){this.fuel=Math.min(1,this.fuel+.075),this.chain=this.chainTime>0?this.chain+1:1,this.best=Math.max(this.best,this.chain),this.chainTime=3.5,this.coins++}reset(){this.speed=2.6,this.boost=0,this.chain=0,this.chainTime=0}update(t,{moving:h=!1,safe:o=!1,gateDistance:n=1/0,blocked:c=!1,recovery:f=!1}={}){if(t=Math.max(0,Math.min(.05,t)),f||c)return this.reset(),2.6;this.chainTime>0&&(this.chainTime=Math.max(0,this.chainTime-t),this.chainTime||(this.chain=0));const i=o&&n>7;i||(this.boost=0),this.boost>0&&h&&(this.boost=Math.max(0,this.boost-t),this.fuel=Math.max(0,this.fuel-t*.38),this.fuel===0&&(this.boost=0));const e=h?i?this.boost>0?8.5:5.6:2.6:0,l=e<this.speed?22:5;return this.speed+=(e-this.speed)*(1-Math.exp(-t*l)),i||(this.speed=Math.min(this.speed,2.6)),Math.max(0,this.speed)}}export{u as RushMotion};

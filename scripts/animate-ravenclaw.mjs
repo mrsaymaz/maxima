@@ -5,7 +5,7 @@
 // Forms9–10 retain their supplied bird skin, with small verified leg/wing motion.
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {resolve,join,dirname} from 'node:path';
-import * as T from '../dist/vendor/three.module.min.js';
+import * as T from '../src/vendor/three.module.min.js';
 const TAU=Math.PI*2,SAMPLES=48,WIDTH={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16},SIZE={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4};
 // Measured gold-beak outward normals, checked against actual textured front views.
 // Level10 sampling excludes the gold crown/armour and uses only the beak patch.

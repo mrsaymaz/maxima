@@ -1,8 +1,1 @@
-// Eligible pictures form conflict components. Shared files, explicit groups
-// (including group 0), and aliases can never compete on a matching board.
-export function pictureCandidates(vocabulary){
- const list=vocabulary.filter(v=>v.picture&&v.picturePolicy!=='text-only'),parent=list.map((_,i)=>i),owners=new Map();
- const root=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
- list.forEach((v,i)=>{const keys=['file:'+v.picture];if(v.pictureGroup!==undefined&&v.pictureGroup!==null)keys.push('group:'+String(v.pictureGroup));for(const k of keys){if(owners.has(k))parent[root(i)]=root(owners.get(k));else owners.set(k,i);}});
- return list.map((v,i)=>({...v,pictureIdentity:'picture:'+root(i)}));
-}
+var f=Object.defineProperty;var i=(u,p)=>f(u,"name",{value:p,configurable:!0});function a(u){const p=u.filter(t=>t.picture&&t.picturePolicy!=="text-only"),e=p.map((t,r)=>r),n=new Map,o=i(t=>{for(;e[t]!==t;)e[t]=e[e[t]],t=e[t];return t},"root");return p.forEach((t,r)=>{const s=["file:"+t.picture];t.pictureGroup!==void 0&&t.pictureGroup!==null&&s.push("group:"+String(t.pictureGroup));for(const c of s)n.has(c)?e[o(r)]=o(n.get(c)):n.set(c,r)}),p.map((t,r)=>({...t,pictureIdentity:"picture:"+o(r)}))}i(a,"pictureCandidates");export{a as pictureCandidates};

@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{CREATURE_WEB}from'../dist/creature-web-assets.js';
-import{creatureAsset,runtimeCreatureAsset}from'../dist/world-layout.js';
-import{configureModelDecoders,compressedModelsReady}from'../dist/asset-cache.js';
+import{CREATURE_WEB}from'../src/creature-web-assets.js';
+import{creatureAsset,runtimeCreatureAsset}from'../src/world-layout.js';
+import{configureModelDecoders,compressedModelsReady}from'../src/asset-cache.js';
 const json=file=>{const b=fs.readFileSync(file);if(file.endsWith('.gltf'))return JSON.parse(b);return JSON.parse(b.subarray(20,20+b.readUInt32LE(12)));};
 const PARTNERS=['gryffindor','hufflepuff','ravenclaw','slytherin'];
 test('every Level of every team has a compressed runtime model with meshopt geometry and a KTX2 texture',()=>{
@@ -10,12 +10,12 @@ test('every Level of every team has a compressed runtime model with meshopt geom
   const j=json('dist/'+file);for(const e of['EXT_meshopt_compression','KHR_mesh_quantization','KHR_texture_basisu'])assert.ok(j.extensionsRequired.includes(e),`${file} ${e}`);assert.deepEqual(j.images.map(i=>i.mimeType),['image/ktx2']);}
 });
 test('runtime models keep the locomotion and rig data, animation and bone names of the asset the game loaded before',()=>{
- for(const id of PARTNERS)for(let level=0;level<=10;level++){const src=json('dist/'+creatureAsset(level,id).split('?')[0]),out=json('dist/'+CREATURE_WEB[`${id}-${level}`]);
+ for(const id of PARTNERS)for(let level=0;level<=10;level++){const src=json('art/'+creatureAsset(level,id).split('?')[0]),out=json('dist/'+CREATURE_WEB[`${id}-${level}`]);
   assert.deepEqual(out.extras,src.extras,`${id}-${level} extras`);assert.ok(out.extras?.maximaLocomotion,`${id}-${level} locomotion`);
   assert.deepEqual(out.animations.map(a=>a.name).sort(),src.animations.map(a=>a.name).sort());assert.deepEqual(out.nodes.map(n=>n.name).filter(Boolean).sort(),src.nodes.map(n=>n.name).filter(Boolean).sort());}
 });
 test('the compressed set is at least 70% smaller than the sources and every file is under 600 KB',()=>{
- const report=JSON.parse(fs.readFileSync('docs/CREATURE-COMPRESSION.json'));let total=0;
+ const report=JSON.parse(fs.readFileSync('docs/audits/CREATURE-COMPRESSION.json'));let total=0;
  for(const f of Object.values(CREATURE_WEB)){const n=fs.statSync('dist/'+f).size;assert.ok(n<600_000,`${f} ${n}`);total+=n;}
  assert.equal(total,report.runtimeBytes);assert.ok(total<report.sourceBytes*.3,`${total} of ${report.sourceBytes}`);
 });

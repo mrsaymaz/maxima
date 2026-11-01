@@ -1,6 +1,6 @@
-import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../dist/vendor/three.module.min.js';
-import{freshExpedition,freshJourney,orderFor,TASK_TYPES}from'../dist/expedition.js';import{makeTask,actTask}from'../dist/trail-tasks.js';import{aqueductProgress,makeAqueductStory}from'../dist/aqueduct-story.js';import{mechanismPlan,WorldMechanism}from'../dist/world-mechanisms.js';import{nodesFor}from'../dist/trail-layout.js';import{themeStage}from'../dist/task-gates.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../src/vendor/three.module.min.js';
+import{freshExpedition,freshJourney,orderFor,TASK_TYPES}from'../src/expedition.js';import{makeTask,actTask}from'../src/trail-tasks.js';import{aqueductProgress,makeAqueductStory}from'../src/aqueduct-story.js';import{mechanismPlan,WorldMechanism}from'../src/world-mechanisms.js';import{nodesFor}from'../src/trail-layout.js';import{themeStage}from'../src/task-gates.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units;
 function route(){const e=freshExpedition(freshJourney(),'g5u1',0);e.choices.fill('left');e.index=4+orderFor(e,1).indexOf('sentence');return e;}
 function next(t){const q=t.rounds[t.round];return actTask(t,{kind:'block',index:q.blocks.findIndex((b,i)=>!t.used.includes(i)&&b.text===q.correct[t.used.length])});}
 

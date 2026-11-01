@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes dist/offline-shell.json (the app shell the service worker caches on install) and stamps a content hash
-// into dist/sw.js so browsers pick up each new build. Run after changing any shell file: `npm run offline`.
+// into sw.js (src/ and dist/) so browsers pick up each new build. Run after changing any shell file: `npm run offline`.
 // `npm run build` (scripts/verify.mjs) fails when the list or the hash is out of date.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,7 +22,7 @@ export function shellHash(files,dist=DIST){
 if(process.argv[1]===fileURLToPath(import.meta.url)){
  const files=shellFiles(),hash=shellHash(files);
  fs.writeFileSync(path.join(DIST,'offline-shell.json'),JSON.stringify({hash,files},null,1)+'\n');
- const sw=path.join(DIST,'sw.js'),source=fs.readFileSync(sw,'utf8').replace(/const SHELL_HASH='[^']*';/,`const SHELL_HASH='${hash}';`);
- fs.writeFileSync(sw,source);
+ // The hash goes into both the source and the built worker, so src/ and dist/ stay in step.
+ for(const sw of[path.join(DIST,'sw.js'),path.join(DIST,'..','src','sw.js')]){if(!fs.existsSync(sw))continue;const source=fs.readFileSync(sw,'utf8').replace(/const SHELL_HASH = ?'[^']*';|const SHELL_HASH='[^']*';/,m=>m.replace(/'[^']*'/,`'${hash}'`));fs.writeFileSync(sw,source);}
  console.log(`Offline shell: ${files.length} files, hash ${hash}`);
 }

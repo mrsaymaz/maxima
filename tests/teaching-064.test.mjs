@@ -1,11 +1,11 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{makeTask,actTask}from'../dist/trail-tasks.js';
-import{acceptedLines,pieceLine,revealMarkup,revealTime}from'../dist/task-voice.js';
-import{femaleEnglishVoice,englishVoice}from'../dist/voice-preference.js';
-import{lessonPlan,dangerLanes,DANGER_LESSONS,lessonMarkup,runDangerLesson}from'../dist/danger-lessons.js';
-import{sketchScene,creatureSvg}from'../dist/creature-sketch.js';
-import{CHASE_KITS}from'../dist/runner-course.js';
-import{explainMistake}from'../dist/mistakes.js';
+import{makeTask,actTask}from'../src/trail-tasks.js';
+import{acceptedLines,pieceLine,revealMarkup,revealTime}from'../src/task-voice.js';
+import{femaleEnglishVoice,englishVoice}from'../src/voice-preference.js';
+import{lessonPlan,dangerLanes,DANGER_LESSONS,lessonMarkup,runDangerLesson}from'../src/danger-lessons.js';
+import{sketchScene,creatureSvg}from'../src/creature-sketch.js';
+import{CHASE_KITS}from'../src/runner-course.js';
+import{explainMistake}from'../src/mistakes.js';
 const unit=JSON.parse(fs.readFileSync(new URL('../dist/data/lessons/g5u1.json',import.meta.url)));
 const clone=t=>JSON.parse(JSON.stringify(t));
 

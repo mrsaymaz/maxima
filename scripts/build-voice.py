@@ -28,7 +28,7 @@ def slug(text):
 
 
 def jobs(out):
-    data = json.load(open(os.path.join(ROOT, 'dist/data/expedition-language.json'), encoding='utf8'))
+    data = json.load(open(os.path.join(ROOT, 'content/data/expedition-language.json'), encoding='utf8'))
     seen, items = {}, []
     for unit in data['units']:
         for v in unit['vocabulary']:
@@ -80,7 +80,7 @@ def extended_lexicon(model, accent='us'):
             return [p for i, c in enumerate(word) for p in (lex[c] if i == len(word) - 1 else second(lex[c]))]
         return None
 
-    data = json.load(open(os.path.join(ROOT, 'dist/data/expedition-language.json'), encoding='utf8'))
+    data = json.load(open(os.path.join(ROOT, 'content/data/expedition-language.json'), encoding='utf8'))
     words = {w for u in data['units'] for v in u['vocabulary'] for w in re.split(r"[\s-]+", v['en'].lower()) if w}
     words |= {'please', 'select', 'and'}
     extra = {}

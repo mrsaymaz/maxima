@@ -1,9 +1,4 @@
-import * as T from './vendor/three.module.min.js';
-// One vivid colour response for every graphics preset. Low and Balanced use it as the renderer's tone mapping
-// (a few arithmetic operations per pixel, no extra pass); High's post-processing composite calls the same curve,
-// so all presets share a look. The include guard lets both copies meet in one shader. The curve keeps hues and saturation (unlike ACES, which washed the valley out),
-// then adds a gentle storybook grade: richer colour, a little contrast, warm light and cool shade.
-export const VIVID_GRADE_GLSL=`
+var c=Object.defineProperty;var r=(e,o)=>c(e,"name",{value:o,configurable:!0});import*as n from"./vendor/three.module.min.js";const l=`
 #ifndef MAXIMA_VIVID
 #define MAXIMA_VIVID
 vec3 maximaNeutral( vec3 color ) {
@@ -31,11 +26,5 @@ vec3 maximaVivid( vec3 color, float exposure ) {
 	p += vec3( -0.006, 0.0, 0.018 ) * ( 1.0 - smoothstep( 0.0, 0.5, l ) ) + vec3( 0.022, 0.012, -0.012 ) * smoothstep( 0.55, 1.0, l );
 	return pow( clamp( p, 0.0, 1.0 ), vec3( 2.2 ) );
 }
-#endif`;
-let installed=false;
-export function installVividToneMapping(renderer){
- const C=T.ShaderChunk,stub='vec3 CustomToneMapping( vec3 color ) { return color; }';
- if(!installed&&C.tonemapping_pars_fragment.includes(stub)){C.tonemapping_pars_fragment=C.tonemapping_pars_fragment.replace(stub,VIVID_GRADE_GLSL+'\nvec3 CustomToneMapping( vec3 color ) { return maximaVivid( color, toneMappingExposure ); }');installed=true;}
- if(renderer&&installed)renderer.toneMapping=T.CustomToneMapping;
- return installed;
-}
+#endif`;let a=!1;function i(e){const o=n.ShaderChunk,t="vec3 CustomToneMapping( vec3 color ) { return color; }";return!a&&o.tonemapping_pars_fragment.includes(t)&&(o.tonemapping_pars_fragment=o.tonemapping_pars_fragment.replace(t,l+`
+vec3 CustomToneMapping( vec3 color ) { return maximaVivid( color, toneMappingExposure ); }`),a=!0),e&&a&&(e.toneMapping=n.CustomToneMapping),a}r(i,"installVividToneMapping");export{l as VIVID_GRADE_GLSL,i as installVividToneMapping};

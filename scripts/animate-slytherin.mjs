@@ -4,7 +4,7 @@
 // Forms0–9 use a neutral whole-body sway pivot; form10 uses its supplied 22-joint rig.
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {resolve,join,dirname} from 'node:path';
-import * as T from '../dist/vendor/three.module.min.js';
+import * as T from '../src/vendor/three.module.min.js';
 const TAU=Math.PI*2,SAMPLES=48,WIDTH={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16},SIZE={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4};
 // Main-face orientation measured from original textured geometry; checked in portraits.
 const YAW=[-0.1294201312588322, 0.47801171464424147, 0.1434787629943768, 0.8426664958122152, 0.8328887556947253, -0.42799666198841424, 0.11799711954071172, 0.059945244659955765, 0.7944626124237779, 0.5750798175048585, 0.34481246630962714];

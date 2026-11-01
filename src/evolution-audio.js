@@ -1,0 +1,93 @@
+import { EVOLUTION_SCORES, evolutionElement } from './evolution-timeline.js';
+// Original, bounded Web Audio accents follow each element's actual visual score.
+export function evolutionAudio(context, offset = 0, { element = 'air' } = {}) {
+  const e = evolutionElement(element),
+    score = EVOLUTION_SCORES[e],
+    master = context.createGain();
+  master.gain.value = 0.18;
+  master.connect(context.destination);
+  const nodes = [],
+    now = context.currentTime;
+  let closed = false;
+  const tone = (at, length, hz, gain, type = 'sine') => {
+    if (at + length <= offset) return;
+    const duration = Math.min(length, at + length - offset),
+      start = now + Math.max(0, at - offset),
+      o = context.createOscillator(),
+      g = context.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(hz, start);
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(gain, start + Math.min(0.045, duration * 0.2));
+    g.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    o.connect(g).connect(master);
+    o.start(start);
+    o.stop(start + duration + 0.02);
+    nodes.push(o, g);
+  };
+  const roots = {
+      air: [196, 293.665, 391.995],
+      fire: [130.81, 196, 261.63],
+      nature: [146.83, 220, 293.66],
+      water: [174.61, 261.63, 349.23],
+    },
+    notes = roots[e];
+  notes.forEach(hz => tone(0.12, 2.9, hz, 0.045, e === 'water' ? 'sine' : 'triangle'));
+  const count = e === 'fire' ? 13 : e === 'water' ? 12 : 10;
+  for (let i = 0; i < count; i++) {
+    const u = i / (count - 1),
+      at = score.sparkEnd + 0.15 + u * (score.transform - score.sparkEnd - 0.3),
+      scale = e === 'water' ? [2, 1.5, 1, 2.5] : e === 'nature' ? [1, 1.5, 2, 1.25] : [1, 1.25, 1.5, 2],
+      hz = notes[2] * scale[i % 4];
+    tone(
+      at,
+      e === 'fire' ? 0.16 : 0.28,
+      hz,
+      e === 'fire' ? 0.035 : 0.04,
+      e === 'fire' || e === 'nature' ? 'triangle' : 'sine',
+    );
+  }
+  // The reveal chord begins as effects part, then settles before the clear final hold.
+  for (const [i, hz] of [523.25, 659.25, 783.99, 1046.5].entries()) tone(score.clear - 0.45 + i * 0.13, 0.7, hz, 0.1);
+  tone(score.swap, 0.3, e === 'nature' ? 98 : 65.4, 0.1, 'triangle');
+  const noiseStart = score.gatherEnd - 0.35,
+    noiseLength = 1.7;
+  if (offset < noiseStart + noiseLength) {
+    const length = Math.ceil(context.sampleRate * noiseLength),
+      buffer = context.createBuffer(1, length, context.sampleRate),
+      a = buffer.getChannelData(0);
+    let seed = 37 + e.length;
+    for (let i = 0; i < a.length; i++) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      a[i] = ((seed / 4294967296) * 2 - 1) * 0.2;
+    }
+    const source = context.createBufferSource(),
+      filter = context.createBiquadFilter(),
+      g = context.createGain(),
+      start = now + Math.max(0, noiseStart - offset),
+      seek = Math.max(0, offset - noiseStart),
+      remaining = noiseLength - seek;
+    source.buffer = buffer;
+    filter.type = e === 'fire' || e === 'nature' ? 'lowpass' : 'bandpass';
+    filter.frequency.setValueAtTime(e === 'fire' ? 150 : e === 'nature' ? 350 : 450, start);
+    filter.frequency.exponentialRampToValueAtTime(e === 'air' ? 1700 : e === 'water' ? 1300 : 800, start + remaining);
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.linearRampToValueAtTime(e === 'air' ? 0.08 : 0.045, start + Math.min(0.6, remaining * 0.4));
+    g.gain.linearRampToValueAtTime(0.0001, start + remaining);
+    source.connect(filter).connect(g).connect(master);
+    source.start(start, seek);
+    source.stop(start + remaining);
+    nodes.push(source, filter, g);
+  }
+  return () => {
+    if (closed) return;
+    closed = true;
+    for (const n of nodes) {
+      try {
+        n.stop?.();
+      } catch {}
+      n.disconnect();
+    }
+    master.disconnect();
+  };
+}

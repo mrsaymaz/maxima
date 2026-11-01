@@ -1,6 +1,6 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{classifyGesture,gestureContext,performGesture,installGestures,loadControls,saveControls,applyControls,rivalAt,SWIPE}from'../dist/gesture-controls.js';
-import{TUTORIAL_STEPS,tutorialMarkup,runControlsTutorial}from'../dist/controls-tutorial.js';
+import{classifyGesture,gestureContext,performGesture,installGestures,loadControls,saveControls,applyControls,rivalAt,SWIPE}from'../src/gesture-controls.js';
+import{TUTORIAL_STEPS,tutorialMarkup,runControlsTutorial}from'../src/controls-tutorial.js';
 
 const classes=(...names)=>{const set=new Set(names);return{contains:n=>set.has(n),toggle:(n,on)=>on?set.add(n):set.delete(n),add:n=>set.add(n),remove:n=>set.delete(n),has:n=>set.has(n)};};
 const docWith=(...names)=>({body:{classList:classes(...names)},querySelector:()=>null});

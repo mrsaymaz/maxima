@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';
-import{launchMarkup}from'../dist/launch-ui.js';import{growthBar}from'../dist/camp-ui.js';import{pathGrowthState}from'../dist/path-growth.js';import{freshJourney}from'../dist/expedition.js';
+import{launchMarkup}from'../src/launch-ui.js';import{growthBar}from'../src/camp-ui.js';import{pathGrowthState}from'../src/path-growth.js';import{freshJourney}from'../src/expedition.js';
 // Players see their creature's stage as "Level N" everywhere: no "Form N" text is left in the game's screens.
 test('no player-facing "Form N" text remains in the game screens',()=>{
  const files=fs.readdirSync('dist').filter(f=>/\.(js|html)$/.test(f));

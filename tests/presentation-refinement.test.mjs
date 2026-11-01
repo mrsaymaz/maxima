@@ -1,8 +1,8 @@
-import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
-import{feedbackStyle,Juice,burst,floatText,setFeedbackLevel,flyCoins}from'../dist/game-feel.js';
-import{controlLayout,updateTrailHint}from'../dist/control-layout.js';import{contactState,makeContactShade,updateContactShade}from'../dist/contact-shade.js';
-import{QuietMoments}from'../dist/quiet-moments.js';import{sceneryTint,varySceneryInstances,stylizeProps,propKind}from'../dist/world-style.js';import{gateKit}from'../dist/task-gates.js';
-import{icon}from'../dist/ui-icons.js';import{applyGraphics}from'../dist/render-quality.js';import{makeArenaArt}from'../dist/arena-art.js';
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../src/vendor/three.module.min.js';
+import{feedbackStyle,Juice,burst,floatText,setFeedbackLevel,flyCoins}from'../src/game-feel.js';
+import{controlLayout,updateTrailHint}from'../src/control-layout.js';import{contactState,makeContactShade,updateContactShade}from'../src/contact-shade.js';
+import{QuietMoments}from'../src/quiet-moments.js';import{sceneryTint,varySceneryInstances,stylizeProps,propKind}from'../src/world-style.js';import{gateKit}from'../src/task-gates.js';
+import{icon}from'../src/ui-icons.js';import{applyGraphics}from'../src/render-quality.js';import{makeArenaArt}from'../src/arena-art.js';
 test('answer feedback is shorter and smaller than major rewards at every quality; reduced motion suppresses travelling particles',()=>{
  for(const effects of['low','medium','full']){const step=feedbackStyle('step',effects,false),reward=feedbackStyle('reward',effects,false);assert.ok(step.count<reward.count);assert.ok(step.duration<reward.duration);assert.ok(step.spread<reward.spread);assert.equal(step.ring,false);assert.equal(feedbackStyle('step',effects,true).count,0);assert.equal(feedbackStyle('reward',effects,true).shake,0);}
  const q=new Juice();q.setLevel('low');q.hitstop(500);assert.ok(q.freeze<=.025);q.land(8);q.shake(20);for(let i=0;i<120;i++){q.step(1/60);assert.ok(Math.abs(q.squash)<=.025);assert.ok(Math.abs(q.offset.x)<.08);}assert.ok(Math.abs(q.squash)<.001);

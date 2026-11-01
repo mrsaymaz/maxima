@@ -1,7 +1,7 @@
-import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../dist/vendor/three.module.min.js';
-import{makeTask,actTask}from'../dist/trail-tasks.js';import{TASK_TYPES}from'../dist/expedition.js';import{mechanismPlan,mechanismMarkup,WorldMechanism}from'../dist/world-mechanisms.js';
-import{makeRouteBarrier,setRouteBarrierProgress,animateRouteBarrier}from'../dist/corridor-geometry.js';import{THEMED_GATES,makeTaskGate,themeStage}from'../dist/task-gates.js';
-const units=JSON.parse(fs.readFileSync('dist/data/expedition-language.json')).units;
+import{test}from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import * as T from'../src/vendor/three.module.min.js';
+import{makeTask,actTask}from'../src/trail-tasks.js';import{TASK_TYPES}from'../src/expedition.js';import{mechanismPlan,mechanismMarkup,WorldMechanism}from'../src/world-mechanisms.js';
+import{makeRouteBarrier,setRouteBarrierProgress,animateRouteBarrier}from'../src/corridor-geometry.js';import{THEMED_GATES,makeTaskGate,themeStage}from'../src/task-gates.js';
+const units=JSON.parse(fs.readFileSync('content/data/expedition-language.json')).units;
 const finite=g=>{g.updateMatrixWorld(true);g.traverse(o=>{assert.ok(o.matrixWorld.elements.every(Number.isFinite));if(o.geometry)assert.ok(o.geometry.attributes.position.array.every(Number.isFinite));});};
 function solve(t,stage,node){let guard=0,before=null;while(!t.complete&&guard++<80){before=stage?.object;if(t.kind==='pairs'){const i=t.leftOrder.find(i=>!t.matched.includes(i));actTask(t,{kind:'left',index:i});actTask(t,{kind:'right',index:i});}else{const q=t.rounds[t.round];if(q.kind==='repair'&&!t.repairFound)actTask(t,{kind:'find',text:q.broken});else if(['multi','sequence'].includes(q.kind)){for(const text of q.answer)actTask(t,{kind:'pick',text});actTask(t,{kind:'confirm'});}else if(q.kind==='blocks'){const i=q.blocks.findIndex((b,i)=>!t.used.includes(i)&&b.text===q.correct[t.used.length]);actTask(t,{kind:'block',index:i});}else actTask(t,{kind:'choice',text:q.answer});}stage?.render(t,node);}return before;}
 

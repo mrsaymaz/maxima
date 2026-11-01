@@ -1,7 +1,7 @@
-import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../dist/vendor/three.module.min.js';
-import{makePathDetail,configurePathDetail,updatePathDetail,pathDetailHeight,pathDetailPatch}from'../dist/path-detail.js';
-import{TrailWorld}from'../dist/trail-world.js';import{TrailNavigator}from'../dist/trail-nav.js';import{freshExpedition,freshJourney}from'../dist/expedition.js';
-import{sectionsFor,localPoint}from'../dist/traversal-layout.js';import{scenicRise}from'../dist/expedition-composition.js';
+import{test}from'node:test';import assert from'node:assert/strict';import * as T from'../src/vendor/three.module.min.js';
+import{makePathDetail,configurePathDetail,updatePathDetail,pathDetailHeight,pathDetailPatch}from'../src/path-detail.js';
+import{TrailWorld}from'../src/trail-world.js';import{TrailNavigator}from'../src/trail-nav.js';import{freshExpedition,freshJourney}from'../src/expedition.js';
+import{sectionsFor,localPoint}from'../src/traversal-layout.js';import{scenicRise}from'../src/expedition-composition.js';
 
 test('the real first-arena world shows path details on Balanced/High and keeps grounded relief on Low',()=>{
  const state=freshExpedition(freshJourney(),'g5u1',0),w=Object.create(TrailWorld.prototype);Object.assign(w,{nav:new TrailNavigator(state),land:new T.Group(),scene:new T.Scene(),rival:new T.Group()});w.scene.background=new T.Color();w.scene.fog=new T.Fog('#ffffff',40,125);w.makeLand();w.makeAreaDetails();w.setArea(0);const near=w.nearPathDetails,detail=near._pathDetail;

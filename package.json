@@ -1,1 +1,25 @@
-{"name":"maxima","version":"0.66.0","private":true,"type":"module","scripts":{"start":"node scripts/serve.mjs","test":"MAXIMA_MODE=runner node --test --test-skip-pattern='\\[classic\\]' tests/*.test.mjs","build":"node scripts/verify.mjs","curriculum":"python3 scripts/expand-curriculum.py && node scripts/split-lessons.mjs","rig":"node scripts/build-creature-rigs.mjs","split:lessons":"node scripts/split-lessons.mjs","offline":"node scripts/build-offline.mjs","test:classic":"MAXIMA_MODE=classic node --test --test-name-pattern='\\[classic\\]' tests/*.test.mjs","test:classic-all":"MAXIMA_MODE=classic node --test tests/*.test.mjs","creatures:web":"node scripts/build-web-creatures.mjs"}}
+{
+ "name": "maxima",
+ "version": "0.67.0",
+ "private": true,
+ "type": "module",
+ "scripts": {
+  "start": "node scripts/serve.mjs",
+  "build": "node scripts/build.mjs && node scripts/verify.mjs",
+  "verify": "node scripts/verify.mjs",
+  "format": "prettier --write \"src/**/*.{js,css,html}\"",
+  "test": "MAXIMA_MODE=runner node --test --test-skip-pattern='\\[classic\\]' tests/*.test.mjs",
+  "test:classic": "MAXIMA_MODE=classic node --test --test-name-pattern='\\[classic\\]' tests/*.test.mjs",
+  "test:classic-all": "MAXIMA_MODE=classic node --test tests/*.test.mjs",
+  "offline": "node scripts/build-offline.mjs",
+  "creatures:web": "node scripts/build-web-creatures.mjs",
+  "portraits": "python3 scripts/build-portraits.py",
+  "curriculum": "python3 scripts/expand-curriculum.py && node scripts/split-lessons.mjs",
+  "split:lessons": "node scripts/split-lessons.mjs",
+  "rig": "node scripts/build-creature-rigs.mjs"
+ },
+ "devDependencies": {
+  "esbuild": "^0.25.12",
+  "prettier": "^3.9.10"
+ }
+}

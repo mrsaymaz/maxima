@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import * as T from '../dist/vendor/three.module.min.js';
-import {makeSpringVisitor} from '../dist/spring-visitor.js';
+import * as T from '../src/vendor/three.module.min.js';
+import {makeSpringVisitor} from '../src/spring-visitor.js';
 
 function advance(v,seconds,options,step=1/60){for(let t=0;t<seconds;){const dt=Math.min(step,seconds-t);v.update(dt,options);t+=dt;}}
 function pose(v){v.root.updateMatrixWorld(true);const result=[];v.root.traverse(o=>{result.push(o.visible,...o.position.toArray(),...o.quaternion.toArray(),...o.scale.toArray());});return result;}

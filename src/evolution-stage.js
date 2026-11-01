@@ -1,0 +1,401 @@
+import { partnerInfo } from './partners.js';
+import * as T from './vendor/three.module.min.js';
+import { evolutionFrame, EVOLUTION_DURATION, EVOLUTION_SCORES, ease, evolutionElement } from './evolution-timeline.js';
+import { FORM_HEIGHTS } from './world-layout.js';
+import { framesBoxes } from './camera-rig.js';
+import { EvolutionEffects } from './evolution-effects.js';
+import { EvolutionPose } from './evolution-pose.js';
+import { Chrysalis } from './evolution-chrysalis.js';
+function glowTexture() {
+  const n = 128,
+    data = new Uint8Array(n * n * 4);
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < n; x++) {
+      const r = Math.hypot(((x + 0.5) / n) * 2 - 1, ((y + 0.5) / n) * 2 - 1),
+        i = (y * n + x) * 4;
+      data[i] = data[i + 1] = data[i + 2] = 255;
+      data[i + 3] = Math.round(Math.max(0, 1 - r) ** 2.4 * 255);
+    }
+  const tex = new T.DataTexture(data, n, n);
+  tex.magFilter = T.LinearFilter;
+  tex.minFilter = T.LinearMipmapLinearFilter;
+  tex.generateMipmaps = true;
+  tex.needsUpdate = true;
+  return tex;
+}
+export function fitEvolutionCamera(frame, bounds, aspect = 1) {
+  const position = { ...frame.camera },
+    target = { x: 0, y: frame.targetY, z: 0 },
+    pad = bounds.height * 0.08 + 0.06,
+    box = {
+      min: { x: -bounds.halfWidth - pad, y: -pad, z: -bounds.halfDepth - pad },
+      max: { x: bounds.halfWidth + pad, y: bounds.height + frame.lift + pad, z: bounds.halfDepth + pad },
+    };
+  for (let i = 0; i < 40 && !framesBoxes(position, target, [box], frame.fov, aspect, 0.86); i++) {
+    position.x *= 1.06;
+    position.z *= 1.06;
+    position.y = target.y + (position.y - target.y) * 1.06;
+  }
+  return position;
+}
+function formBounds(form) {
+  if (form.bodyBounds) return { ...form.bodyBounds, height: FORM_HEIGHTS[form.level] };
+  form.model.updateMatrixWorld(true);
+  const b = new T.Box3().setFromObject(form.model),
+    s = b.getSize(new T.Vector3());
+  return {
+    halfWidth: Math.max(s.x, s.z) / 2,
+    halfDepth: Math.max(s.x, s.z) / 2,
+    height: Math.max(s.y, FORM_HEIGHTS[form.level]),
+  };
+}
+// Backdrop dome: a vertical gradient from the horizon colour to a brighter top, seen from inside.
+function backdropDome(sky, radius) {
+  const g = new T.SphereGeometry(radius, 48, 24);
+  const m = new T.ShaderMaterial({
+    side: T.BackSide,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+    fog: false,
+    uniforms: {
+      top: { value: new T.Color(sky.top) },
+      horizon: { value: new T.Color(sky.horizon) },
+      opacity: { value: 0 },
+      radius: { value: radius },
+    },
+    vertexShader:
+      'varying vec3 vPos;void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:
+      'uniform vec3 top;uniform vec3 horizon;uniform float opacity;uniform float radius;varying vec3 vPos;float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}void main(){float y=vPos.y/radius;vec3 low=horizon*0.55;vec3 c=y>=0.0?mix(horizon,top,clamp(pow(y,0.7)*1.15,0.0,1.0)):mix(horizon,low,clamp(-y*2.5,0.0,1.0));c+=(hash(gl_FragCoord.xy)-0.5)/255.0;gl_FragColor=vec4(c,opacity);}',
+  });
+  Object.defineProperty(m, 'opacity', {
+    get() {
+      return m.uniforms?.opacity.value ?? 0;
+    },
+    set(v) {
+      if (m.uniforms) m.uniforms.opacity.value = v;
+    },
+    configurable: true,
+  });
+  const dome = new T.Mesh(g, m);
+  dome.renderOrder = -2;
+  dome.frustumCulled = false;
+  return dome;
+}
+function canvasTexture(size, draw) {
+  if (typeof document === 'undefined') return null;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new T.CanvasTexture(c);
+  t.colorSpace = T.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+// Soft rays fanning out behind the creature.
+function rayTexture() {
+  return canvasTexture(512, (g, s) => {
+    const h = s / 2;
+    g.filter = 'blur(3px)';
+    g.translate(h, h);
+    for (let i = 0; i < 18; i++) {
+      g.rotate((Math.PI * 2) / 18);
+      const r = g.createLinearGradient(0, 0, 0, -h);
+      r.addColorStop(0, 'rgba(255,255,255,.9)');
+      r.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = r;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(-h * 0.09, -h);
+      g.lineTo(h * 0.09, -h);
+      g.closePath();
+      g.fill();
+    }
+    const glow = g.createRadialGradient(0, 0, 0, 0, 0, h);
+    glow.addColorStop(0, 'rgba(255,255,255,.85)');
+    glow.addColorStop(0.35, 'rgba(255,255,255,.18)');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = glow;
+    g.fillRect(-h, -h, s, s);
+  });
+}
+// The floor fades out at its rim, so it melts into the backdrop.
+function floorFade() {
+  return canvasTexture(256, (g, s) => {
+    const r = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    r.addColorStop(0, '#fff');
+    r.addColorStop(0.55, '#bbb');
+    r.addColorStop(1, '#000');
+    g.fillStyle = r;
+    g.fillRect(0, 0, s, s);
+  });
+}
+
+export class EvolutionStage {
+  constructor(world, from, to, oldForm, newForm, { onFrame = () => {}, reduced = false } = {}) {
+    this.palette = partnerInfo(world.partner);
+    this.element = evolutionElement(this.palette.element);
+    this.world = world;
+    this.from = from;
+    this.to = to;
+    this.oldForm = oldForm;
+    this.newForm = newForm;
+    this.onFrame = onFrame;
+    this.reduced = reduced;
+    this.time = 0;
+    this.resolved = false;
+    this.disposed = false;
+    const a = formBounds(oldForm),
+      b = formBounds(newForm);
+    this.bounds = {
+      halfWidth: Math.max(a.halfWidth, b.halfWidth),
+      halfDepth: Math.max(a.halfDepth, b.halfDepth),
+      height: Math.max(a.height, b.height),
+    };
+    this.height = this.bounds.height;
+    this.size = Math.max(0.65, this.height * 0.72);
+    this.root = new T.Group();
+    this.root.position.set(world.nav.player.x, world.nav.y || 0, world.nav.player.z);
+    this.root.rotation.y = world.creature.rotation.y + (world.locomotion?.forwardYaw || 0);
+    world.scene.add(this.root);
+    this.saved = {
+      land: world.land.visible,
+      effects: world.effects.visible,
+      creature: world.creature.visible,
+      rival: world.rival.visible,
+      background: world.scene.background.clone(),
+      fog: world.scene.fog,
+      exposure: world.renderer.toneMappingExposure,
+      sky: world.sky?.visible,
+      view: world.camera.view ? { ...world.camera.view } : null,
+      viewShift: world.viewShift,
+    };
+    world.land.visible = false;
+    world.effects.visible = false;
+    world.creature.visible = false;
+    world.rival.visible = false;
+    if (world.sky) world.sky.visible = false;
+    world.scene.fog = null;
+    world.camera.clearViewOffset();
+    // The evolution is a simple scene: render it at full sharpness (up to 2× pixels), whatever the game's resolution.
+    this.savedRatio = world.renderer.getPixelRatio?.();
+    const sharp = Math.min(2, Math.max(1, globalThis.devicePixelRatio || 1));
+    if (this.savedRatio && sharp > this.savedRatio) {
+      world.renderer.setPixelRatio(sharp);
+      world.resize?.();
+    }
+    world.measurementPhase = null;
+    this.oldRoot = new T.Group();
+    this.newRoot = new T.Group();
+    this.oldRoot.add(oldForm.model);
+    this.newRoot.add(newForm.model);
+    this.oldRoot.rotation.y = -(oldForm.forwardYaw || 0);
+    this.newRoot.rotation.y = -(newForm.forwardYaw || 0);
+    this.root.add(this.oldRoot, this.newRoot);
+    this.oldPose = new EvolutionPose(oldForm);
+    this.newPose = new EvolutionPose(newForm);
+    this.originalMaterials = new Map();
+    this.originalShadows = new Map();
+    for (const form of [oldForm, newForm])
+      form.model.traverse(o => {
+        if (o.isMesh) {
+          this.originalMaterials.set(o, o.material);
+          this.originalShadows.set(o, [o.castShadow, o.receiveShadow]);
+          o.castShadow = false;
+          o.receiveShadow = false;
+        }
+      });
+    this.silhouette = new T.MeshBasicMaterial({ color: this.palette.color, toneMapped: false });
+    this.texture = glowTexture();
+    this.floor = new T.Mesh(
+      new T.CircleGeometry(this.size * 5, 48),
+      new T.MeshBasicMaterial({
+        color: '#17323a',
+        side: T.DoubleSide,
+        transparent: true,
+        alphaMap: floorFade(),
+        depthWrite: false,
+      }),
+    );
+    // A backdrop in the colour that contrasts with the creature's element, light rays turning behind it and a soft floor.
+    const sky = EVOLUTION_SCORES[this.element].sky;
+    this.backdrop = backdropDome(sky, this.size * 30);
+    this.root.add(this.backdrop);
+    this.rays = new T.Sprite(
+      new T.SpriteMaterial({
+        map: rayTexture(),
+        color: sky.glow,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: T.AdditiveBlending,
+        toneMapped: false,
+      }),
+    );
+    this.rays.scale.setScalar(this.size * 9);
+    this.rays.position.y = this.height * 0.55;
+    this.rays.renderOrder = -1;
+    this.root.add(this.rays);
+    this.floor.rotation.x = -Math.PI / 2;
+    this.floor.position.y = -0.025;
+    this.root.add(this.floor);
+    this.signature = new EvolutionEffects(this.element, this.palette, this.height, this.size, { reduced });
+    this.root.add(this.signature.root);
+    this.rings = this.signature.floor;
+    this.ribbons = this.signature.ribbons;
+    this.glows = [];
+    for (let i = 0; i < 2; i++) {
+      const sprite = new T.Sprite(
+        new T.SpriteMaterial({
+          map: this.texture,
+          color: i ? this.palette.accent : '#fff2d6',
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          blending: T.AdditiveBlending,
+          toneMapped: false,
+        }),
+      );
+      sprite.position.y = this.height * (i ? 0.35 : 0.65);
+      this.root.add(sprite);
+      this.glows.push(sprite);
+    }
+    this.chrysalis = new Chrysalis(this.element, this.palette, this.height, this.size, EVOLUTION_SCORES[this.element], {
+      reduced,
+    });
+    this.root.add(this.chrysalis.root);
+    this.light = new T.PointLight(this.palette.color, 0, this.height * 9, 1.5);
+    this.light.position.y = this.height * 0.65;
+    this.root.add(this.light);
+    this.eye = new T.Vector3();
+    this.target = new T.Vector3();
+    this.axis = new T.Vector3(0, 1, 0);
+    this.background = new T.Color();
+    this.promise = new Promise(resolve => (this.resolve = resolve));
+    this.update(0);
+  }
+  update(dt) {
+    if (this.disposed) return this.frame;
+    dt = Math.max(0, Math.min(0.1, Number.isFinite(dt) ? dt : 0));
+    this.time = Math.min(EVOLUTION_DURATION, this.time + dt);
+    const w = this.world,
+      f = evolutionFrame(this.time, this.from, this.to, {
+        element: this.element,
+        reduced: this.reduced,
+        aspect: w.camera.aspect,
+      });
+    this.frame = f;
+    w.land.visible = this.time < 0.85 && this.saved.land;
+    w.scene.background.copy(this.saved.background).lerp(this.background.set(f.score.background), ease(this.time / 1.0));
+    this.floor.material.color.set(f.score.floor);
+    const fade = ease(Math.min(1, this.time / 1.0));
+    this.backdrop.material.opacity = fade;
+    this.rays.material.opacity = fade * (this.reduced ? 0.25 : 0.42 + 0.25 * f.glow);
+    if (!this.reduced) this.rays.material.rotation += dt * 0.12;
+    this.oldRoot.visible = f.oldVisible;
+    this.newRoot.visible = f.newVisible;
+    for (const root of [this.oldRoot, this.newRoot]) {
+      root.position.y = f.lift;
+      root.scale.setScalar(f.scale);
+    }
+    this.oldRoot.rotation.x = f.pose.pitch;
+    this.oldRoot.rotation.z = f.pose.roll;
+    this.newRoot.rotation.x = f.pose.pitch * 0.45;
+    this.newRoot.rotation.z = f.pose.roll * 0.4;
+    this.oldPose.update(dt, f, false);
+    this.newPose.update(dt, f, true);
+    const silhouette = f.glow > 0.4;
+    for (const [o, material] of this.originalMaterials) o.material = silhouette ? this.silhouette : material;
+    this.silhouette.color.set(this.palette.color).lerp(this.background.set('#fff5dc'), f.glow * 0.88);
+    this.chrysalis.update(this.time);
+    this.light.intensity = f.charge * (f.major ? 3.8 : 2.8) + this.chrysalis.pulse * 4 + f.glow * 3;
+    this.signature.update(f);
+    this.glows.forEach((g, i) => {
+      g.visible = f.glow > 0.01 && f.effects > 0;
+      g.scale.setScalar(this.size * (i ? 1.4 : 2.4) * (1 + f.glow));
+      g.material.opacity = f.glow * (this.reduced ? 0.24 : i ? 0.22 : 0.48);
+    });
+    const bounds = {
+        halfWidth: Math.max(this.bounds.halfWidth, this.size * 1.15 * f.effects),
+        halfDepth: Math.max(this.bounds.halfDepth, this.size * 1.15 * f.effects),
+        height: this.height + 0.65 * f.effects,
+      },
+      camera = fitEvolutionCamera(f, bounds, w.camera.aspect);
+    this.eye.set(camera.x, camera.y, camera.z).applyAxisAngle(this.axis, this.root.rotation.y).add(this.root.position);
+    this.target.copy(this.root.position);
+    this.target.y += f.targetY;
+    if (this.time === 0 || f.done) w.camera.position.copy(this.eye);
+    else w.camera.position.lerp(this.eye, 1 - Math.exp(-Math.max(0.016, dt) * 8));
+    if (!this.reduced && this.chrysalis.shake > 0) {
+      const k = this.chrysalis.shake * this.height;
+      w.camera.position.x += Math.sin(this.time * 57) * k;
+      w.camera.position.y += Math.sin(this.time * 43 + 1) * k * 0.7;
+    }
+    w.target.copy(this.target);
+    w.camera.lookAt(this.target);
+    w.camera.fov = f.fov;
+    w.camera.updateProjectionMatrix();
+    this.onFrame(f);
+    if (f.done && !this.resolved) {
+      this.resolved = true;
+      this.resolve({ skipped: !!this.skipped });
+    }
+    return f;
+  }
+  skip() {
+    this.skipped = true;
+    this.time = EVOLUTION_DURATION;
+    this.update(0);
+  }
+  dispose({ keepNew = false } = {}) {
+    if (this.disposed) return;
+    this.disposed = true;
+    const w = this.world;
+    if (this.savedRatio && w.renderer.getPixelRatio?.() !== this.savedRatio) {
+      w.renderer.setPixelRatio(this.savedRatio);
+      w.resize?.();
+    }
+    this.oldPose.dispose();
+    this.newPose.dispose();
+    for (const [o, material] of this.originalMaterials) {
+      o.material = material;
+      const shadow = this.originalShadows.get(o);
+      [o.castShadow, o.receiveShadow] = shadow;
+    }
+    this.oldRoot.remove(this.oldForm.model);
+    this.newRoot.remove(this.newForm.model);
+    w.disposeModel(this.oldForm.model);
+    if (!keepNew) w.disposeModel(this.newForm.model);
+    this.signature.dispose();
+    this.chrysalis.dispose();
+    for (const o of [this.backdrop, this.rays]) {
+      o.geometry?.dispose?.();
+      o.material.map?.dispose?.();
+      o.material.dispose();
+    }
+    this.floor.material.alphaMap?.dispose?.();
+    this.floor.geometry.dispose();
+    this.floor.material.dispose();
+    this.glows.forEach(g => g.material.dispose());
+    this.texture.dispose();
+    this.silhouette.dispose();
+    w.scene.remove(this.root);
+    w.land.visible = this.saved.land;
+    w.effects.visible = this.saved.effects;
+    w.creature.visible = this.saved.creature;
+    w.rival.visible = this.saved.rival;
+    if (w.sky) w.sky.visible = this.saved.sky;
+    w.scene.background.copy(this.saved.background);
+    w.scene.fog = this.saved.fog;
+    w.renderer.toneMappingExposure = this.saved.exposure;
+    w.viewShift = this.saved.viewShift;
+    const v = this.saved.view;
+    if (v?.enabled) w.camera.setViewOffset(v.fullWidth, v.fullHeight, v.offsetX, v.offsetY, v.width, v.height);
+    else w.camera.clearViewOffset();
+    if (!this.resolved) {
+      this.resolved = true;
+      this.resolve({ cancelled: true });
+    }
+  }
+}

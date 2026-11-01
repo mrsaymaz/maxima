@@ -1,7 +1,7 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{freshJourney,freshExpedition,autoBranch,shuffleGates,orderFor,TASK_TYPES}from'../dist/expedition.js';
-import{sectionFor}from'../dist/traversal-layout.js';
-import{CHEST_CLEAR}from'../dist/runner-course.js';
+import{freshJourney,freshExpedition,autoBranch,shuffleGates,orderFor,TASK_TYPES}from'../src/expedition.js';
+import{sectionFor}from'../src/traversal-layout.js';
+import{CHEST_CLEAR}from'../src/runner-course.js';
 
 test('a new expedition becomes a six-gate area with six different, shuffled formats',()=>{
  const j=freshJourney(),orders=new Set();for(let i=0;i<12;i++){const e=freshExpedition(j,'g5u1',0);assert.ok(shuffleGates(j,e));assert.equal(e.pathVersion,3);assert.equal(shuffleGates(j,e),false,'only once');e.choices.fill('left');const six=[0,1,2].flatMap(c=>orderFor(e,c));assert.equal(six.length,6);assert.equal(new Set(six).size,6);assert.ok(six.every(t=>TASK_TYPES.includes(t)));orders.add(six.join());}

@@ -1,5 +1,5 @@
-import{test}from'node:test';import assert from'node:assert/strict';import*as T from'../dist/vendor/three.module.min.js';
-import{wallTile,makeFarLayer,updateFarLayer,makeDust,updateDust,PARALLAX,FAR_SPAN,TILE}from'../dist/runner-walls.js';
+import{test}from'node:test';import assert from'node:assert/strict';import*as T from'../src/vendor/three.module.min.js';
+import{wallTile,makeFarLayer,updateFarLayer,makeDust,updateDust,PARALLAX,FAR_SPAN,TILE}from'../src/runner-walls.js';
 const geos=new Map(),mats=new Map(),geo=(k,m)=>{if(!geos.has(k))geos.set(k,m());return geos.get(k);},mat=c=>{if(!mats.has(c))mats.set(c,new T.MeshStandardMaterial({color:c}));return mats.get(c);},mesh=(g,m,x=0,y=0,z=0)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);return o;};
 const tris=o=>{let n=0;o.traverse(m=>{if(m.isMesh){const g=m.geometry;n+=(g.index?g.index.count:g.attributes.position.count)/3;}});return n;};
 test('each area has its own sculpted walls on both sides, within a phone-friendly triangle budget, lighter still on Low',()=>{const looks=new Set();for(const area of[0,1,2]){const full=wallTile(area,{kit:{},low:false,mat,geo,mesh}),low=wallTile(area,{kit:{},low:true,mat,geo,mesh});

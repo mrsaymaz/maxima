@@ -1,11 +1,11 @@
 import{test}from'node:test';import assert from'node:assert/strict';
-import{freshSave,freshJourney,freshExpedition,currentType}from'../dist/expedition.js';
-import{pathLevel}from'../dist/path-growth.js';
-import{TrailNavigator}from'../dist/trail-nav.js';
-import{activeNode,approachPoint}from'../dist/trail-layout.js';
-import{sectionFor,localPoint}from'../dist/traversal-layout.js';
-import{gateRival}from'../dist/runner-course.js';
-import{RUNNER}from'../dist/runner-mode.js';
+import{freshSave,freshJourney,freshExpedition,currentType}from'../src/expedition.js';
+import{pathLevel}from'../src/path-growth.js';
+import{TrailNavigator}from'../src/trail-nav.js';
+import{activeNode,approachPoint}from'../src/trail-layout.js';
+import{sectionFor,localPoint}from'../src/traversal-layout.js';
+import{gateRival}from'../src/runner-course.js';
+import{RUNNER}from'../src/runner-mode.js';
 const dt=1/60,dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 // A current (runner) expedition standing at the start of stretch `index`.
 function journeyAt(index,{area=0,mode='relaxed'}={}){
