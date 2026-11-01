@@ -50,3 +50,15 @@ export function spokenRequest(text) {
     ? `Please select ${words.length > 1 ? words.slice(0, -1).join(', ') + ' and ' + words.at(-1) : words[0]}.`
     : String(text);
 }
+// Mr. Saymaz's story voice: a British male voice where the device has one (Apple Daniel, Arthur or Oliver;
+// Google UK English Male; Microsoft Ryan, Thomas or George), then any male English voice, then any British voice,
+// then any English voice. Voice lists expose no gender, so known names decide.
+const MALE = /\b(?:daniel|arthur|oliver|george|harry|ryan|thomas|alfie|brian|jamie|rishi|alex|fred|aaron|david|mark|guy|tom|evan|nathan|reed|rocko|eddy|male)\b/i,
+  FEMALE = /female|samantha|serena|karen|moira|tessa|victoria|kate|stephanie|martha|flo|sandy|shelley|aria|jenny|sonia|libby|hazel|susan|zira|ava|emma|allison|joanna|salli|kendra|kimberly|fiona|veena|catherine/i;
+export function storyVoice(voices = []) {
+  const english = voices.filter(v => /^en(?:[-_]|$)/i.test(v.lang)),
+    gb = v => /^en[-_]GB/i.test(v.lang),
+    male = v => MALE.test(v.name) && !FEMALE.test(v.name.replace(/\bmale\b/i, ''));
+  const rank = v => (gb(v) && male(v) ? 0 : male(v) ? 1 : gb(v) && !FEMALE.test(v.name) ? 2 : gb(v) ? 3 : 4);
+  return english.sort((a, b) => rank(a) - rank(b) || Number(b.localService) - Number(a.localService))[0] || null;
+}

@@ -2,6 +2,14 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.69.0 · The story of the Sol Crystal
+
+Mr. Saymaz tells a light story across the three arenas in illustrated cut-scenes: an intro for each arena, an introduction before each guardian's first fight, a scene after each win and a finale. Lines are written at two levels (Grades 5–6 and 7–8), each with a Turkish translation behind TR, and are read aloud with a British male voice where the device has one. He also reacts to knock-outs and to running out of lives. See [release notes](docs/releases/RELEASE-v0.69.0.md).
+
+## 0.68.0 · British and American spellings, long words fit
+
+Word runs and the misspelled-word task accept British and American spellings (organise/organize, colour/color, centre/center…). The word panel no longer runs off the screen for long words. See [release notes](docs/releases/RELEASE-v0.68.0.md).
+
 ## 0.67.0 · Lean deploy and readable source
 
 The deploy folder shrank from 135 MB to about 43 MB, the code is readable again, and dist/ is now built from src/. See [release notes](docs/releases/RELEASE-v0.67.0.md).

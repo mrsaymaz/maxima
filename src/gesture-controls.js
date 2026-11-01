@@ -34,7 +34,7 @@ export function classifyGesture(dx, dy, ms, lifted = false) {
   return lifted && d < TAP_MOVE && ms <= TAP_TIME ? 'tap' : null;
 }
 const EXCLUDED =
-  '.danger-lesson,#shrine-layer,button,a,input,select,textarea,label,.modal,.modal-backdrop,#joystick,.task-panel,.guardian-finisher,.play-status,.topbar,.controls-tutorial';
+  '.danger-lesson,.story-scene,#shrine-layer,button,a,input,select,textarea,label,.modal,.modal-backdrop,#joystick,.task-panel,.guardian-finisher,.play-status,.topbar,.controls-tutorial';
 // Where gestures act: a run, the free trail (clearings and gate fights), or the guardian arena; null elsewhere.
 export function gestureContext(world, doc = globalThis.document) {
   const body = doc?.body?.classList;

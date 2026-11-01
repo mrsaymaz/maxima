@@ -1,6 +1,6 @@
 # solMaxima · by Mr. Saymaz
 
-Version 0.67.0 · Lean deploy and readable source
+Version 0.69.0 · The story of the Sol Crystal
 
 solMaxima is a 3D English-learning runner for Turkish students in Grades 5–8. A team creature runs between English gates. Correct answers open the gates and evolve the creature through Levels 0–10, and each arena ends with a guardian fight with English wards. It runs in the browser on phones, tablets and computers, installs as an app and works offline.
 

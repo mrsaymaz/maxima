@@ -30,7 +30,9 @@ import { fetchJSON, LessonLibrary } from './asset-network.js';
 import { PerformanceMonitor } from './performance-monitor.js';
 import { loadingNotice, clearLoading, recoveryNotice } from './loading-ui.js';
 import { LanguageCoach, languageFeedbackMarkup, guidancePlan, questionFocus } from './language-feedback.js';
-import { englishVoice, spokenRequest } from './voice-preference.js';
+import { englishVoice, spokenRequest, storyVoice } from './voice-preference.js';
+import { playScene } from './story-scene.js';
+import { STORY_SCENES, STORY_ORDER, sceneSeen, markSeen, introScene, guardianScene, winScenes, reaction } from './story.js';
 import { acceptedLines, pieceLine, revealMarkup, revealTime } from './task-voice.js';
 import { otherSpellings } from './spelling-variants.js';
 import { lessonPlan, runDangerLesson } from './danger-lessons.js';
@@ -1069,7 +1071,7 @@ function journal(tab = journalTab) {
         ? `${leagueCard()}<div class="journal-card"><h3>${icon('coin')} ${coinText()} coins</h3><p>Coins buy hats, coats and camp decorations. Purchases are shared by all your teams.</p></div>
   <div class="journal-rows"><button data-do="trails"><span class="row-icon" aria-hidden="true">🎒</span><span>Wardrobe<small>Looks for ${esc(partner().name)}</small></span></button>${j.level ? '<button data-do="evolution-replay-earned"><span class="row-icon" aria-hidden="true">✨</span><span>Replay latest evolution<small>Watch your last level-up again</small></span></button>' : ''}</div>`
         : tab === 'settings'
-          ? `<div class="journal-rows"><button data-do="controls"><span class="row-icon" aria-hidden="true">🎮</span><span>Controls<small>Joystick side, buttons, tutorial</small></span></button><button data-do="graphics"><span class="row-icon" aria-hidden="true">🖥️</span><span>Graphics and performance</span></button><button data-do="music"><span class="row-icon" aria-hidden="true">🎵</span><span>Music</span><span class="row-value">${save.music === false ? 'off' : 'on'}</span></button><button data-do="read-aloud"><span class="row-icon" aria-hidden="true">🗣️</span><span>Read English aloud</span><span class="row-value">${save.readAloud === false ? 'off' : 'on'}</span></button>${typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function' ? `<button data-do="haptics"><span class="row-icon" aria-hidden="true">📳</span><span>Vibration</span><span class="row-value">${save.haptics === false ? 'off' : 'on'}</span></button>` : ''}<button data-do="export"><span class="row-icon" aria-hidden="true">💾</span><span>Export backup</span></button><button data-do="import"><span class="row-icon" aria-hidden="true">📂</span><span>Import backup</span></button><button data-do="restart"><span class="row-icon" aria-hidden="true">↺</span><span>Restart this unit</span></button></div>`
+          ? `<div class="journal-rows"><button data-do="controls"><span class="row-icon" aria-hidden="true">🎮</span><span>Controls<small>Joystick side, buttons, tutorial</small></span></button><button data-do="graphics"><span class="row-icon" aria-hidden="true">🖥️</span><span>Graphics and performance</span></button><button data-do="music"><span class="row-icon" aria-hidden="true">🎵</span><span>Music</span><span class="row-value">${save.music === false ? 'off' : 'on'}</span></button><button data-do="story"><span class="row-icon" aria-hidden="true">📜</span><span>The Sol Crystal story<small>Watch Mr. Saymaz\'s scenes again</small></span></button><button data-do="read-aloud"><span class="row-icon" aria-hidden="true">🗣️</span><span>Read English aloud</span><span class="row-value">${save.readAloud === false ? 'off' : 'on'}</span></button>${typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function' ? `<button data-do="haptics"><span class="row-icon" aria-hidden="true">📳</span><span>Vibration</span><span class="row-value">${save.haptics === false ? 'off' : 'on'}</span></button>` : ''}<button data-do="export"><span class="row-icon" aria-hidden="true">💾</span><span>Export backup</span></button><button data-do="import"><span class="row-icon" aria-hidden="true">📂</span><span>Import backup</span></button><button data-do="restart"><span class="row-icon" aria-hidden="true">↺</span><span>Restart this unit</span></button></div>`
           : `${beat ? `<div class="journal-card"><h3>${esc(beat.title)}</h3><p>${esc(beat.text)}${beat.discovered ? ' · Discovery found' : ''}</p></div>` : ''}
   <div class="journal-card"><h3>${esc(partner().name)} · Level ${j.level}</h3><p>${esc(unit().title)} · Grade ${unit().grade}</p><div class="journal-meter" aria-hidden="true"><i style="width:${Math.round(g.progress * 100)}%"></i></div><p>${esc(goalText(g))}</p></div>
   <div class="journal-card"><h3>${esc(AREAS[save.area].name)} · Run ${(j.runCount || 0) + 1}</h3><p>${esc(expeditionTitle(save.area, chapter, CHAPTERS[chapter][0]))}<br><strong>Next:</strong> ${esc(chestPending(e) ? 'Open the reward chest' : next?.object || 'Choose a path at the fork')}</p></div>
@@ -1105,6 +1107,9 @@ async function enter({ reuseForm = false } = {}) {
   world.paused = false;
   const day = markPlayed(save);
   persist();
+  // The first time in each arena, Mr. Saymaz tells its part of the story.
+  if (!state().pendingEvolution && !state().battle && storyPending([introScene(save.area)]))
+    await playStory(introScene(save.area));
   if (day.first && save.tutorial) toast(welcomeLine(day, day.gap));
   voice.load().catch(() => {});
   const pending = state().pendingEvolution;
@@ -1341,7 +1346,7 @@ function frame() {
     runSummary(p);
     return;
   }
-  world.paused = screen !== 'play' || !!task || modal || resultCard || locked || tutorialOpen || lessonOpen;
+  world.paused = screen !== 'play' || !!task || modal || resultCard || locked || tutorialOpen || lessonOpen || storyOpen;
   if (screen !== 'play' || task || modal || resultCard) return;
   const e = state(),
     chapter = chapterOf(e),
@@ -1648,6 +1653,93 @@ function readAloud(text) {
   }
   voice.stop();
   browserSpeak(text, { quiet: true });
+}
+// Mr. Saymaz speaks his story lines with a British male voice where the device has one (storyVoice).
+function speakStory(text) {
+  text = String(text || '').trim();
+  if (!text || save.readAloud === false || !speechSupported) return;
+  try {
+    voice.stop();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text),
+      chosen = storyVoice(speechSynthesis.getVoices());
+    u.lang = chosen?.lang || 'en-GB';
+    if (chosen) u.voice = chosen;
+    u.rate = unit().grade >= 7 ? 0.95 : 0.88;
+    u.pitch = 0.95;
+    gameAudio.reading = true;
+    gameAudio.silence();
+    u.onend = u.onerror = () => {
+      gameAudio.reading = false;
+    };
+    speechSynthesis.speak(u);
+  } catch {
+    gameAudio.reading = false;
+  }
+}
+function stopStorySpeech() {
+  try {
+    speechSynthesis?.cancel?.();
+  } catch {}
+  gameAudio.reading = false;
+}
+// Phones only allow speech that starts in a tap; the first tap anywhere unlocks it for the story.
+if (typeof window !== 'undefined' && speechSupported)
+  window.addEventListener?.(
+    'pointerdown',
+    () => {
+      try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0;
+        speechSynthesis.speak(u);
+      } catch {}
+    },
+    { once: true, capture: true },
+  );
+// Story cut-scenes (story.js, story-scene.js): each plays once, over the paused game; it resolves when it ends.
+let storyOpen = false;
+async function playStory(id, { replay = false } = {}) {
+  if (!STORY_SCENES[id] || storyOpen || (!replay && sceneSeen(save, id))) return false;
+  if (typeof document === 'undefined' || typeof document.body?.appendChild !== 'function') return false;
+  if (!replay) {
+    markSeen(save, id);
+    persist();
+  }
+  storyOpen = true;
+  if (world) {
+    world.paused = true;
+    world.setInput?.(0, 0);
+  }
+  try {
+    await playScene(id, { grade: unit().grade, onLine: speakStory, onStop: stopStorySpeech });
+  } finally {
+    storyOpen = false;
+    if (world && screen === 'play' && !task && !modal) world.paused = false;
+  }
+  return true;
+}
+async function playStories(ids) {
+  for (const id of ids) await playStory(id);
+}
+// Whether any of these scenes would play now (unseen, and a page to show it on).
+const storyPending = ids =>
+  !storyOpen &&
+  typeof document !== 'undefined' &&
+  typeof document.body?.appendChild === 'function' &&
+  ids.some(id => STORY_SCENES[id] && !sceneSeen(save, id));
+// Runs `then` after the scenes, or straight away when there is nothing to show.
+function afterStory(ids, then) {
+  if (!storyPending(ids)) return then();
+  void playStories(ids).then(then);
+}
+function storyMenu() {
+  const seen = STORY_ORDER.filter(id => sceneSeen(save, id));
+  showModal(
+    'The Sol Crystal story',
+    seen.length
+      ? `<p>Watch Mr. Saymaz's story again.</p><div class="journal-rows">${seen.map(id => `<button data-do="story-replay" data-value="${id}"><span class="row-icon" aria-hidden="true">📜</span><span>${esc(STORY_SCENES[id].title)}<small>${esc(['Whisperwood', 'Skyreach', 'Stormglass'][STORY_SCENES[id].area])}</small></span></button>`).join('')}</div>`
+      : '<p>Your story begins when you enter Whisperwood.</p>',
+  );
 }
 let revealTimer = 0;
 function showReveal(r) {
@@ -2305,9 +2397,10 @@ async function outOfLives() {
     renderPlay();
     toNextRun();
     ensureTicket();
+    speakStory(reaction('out', unit().grade)?.en);
     showModal(
       'Out of lives',
-      `<div class="out-of-lives"><div class="guide-note">${guideFigure('think')}<p class="guide-bubble">Don't worry, every explorer falls sometimes. Read the warnings and try again!</p></div><p class="lives-big" aria-hidden="true">${heartsHtml(0)}</p><p>The path starts again from its first gate${j.level < from ? `, and your creature is back to Level ${j.level}` : ''}.${lost ? ` The ${lost} coins collected on this attempt are lost.` : ''}</p><p><b>Your English progress is kept.</b> Watch for the word runs: each word you complete gives an extra life.</p><button class="primary-action wide" data-do="close-modal">Start the path again</button></div>`,
+      `<div class="out-of-lives"><div class="guide-note">${guideFigure('think')}<p class="guide-bubble">${esc(reaction('out', unit().grade)?.en || '')}</p></div><p class="lives-big" aria-hidden="true">${heartsHtml(0)}</p><p>The path starts again from its first gate${j.level < from ? `, and your creature is back to Level ${j.level}` : ''}.${lost ? ` The ${lost} coins collected on this attempt are lost.` : ''}</p><p><b>Your English progress is kept.</b> Watch for the word runs: each word you complete gives an extra life.</p><button class="primary-action wide" data-do="close-modal">Start the path again</button></div>`,
     );
   } finally {
     restarting = false;
@@ -2608,6 +2701,11 @@ function guardianEvent(kind, data) {
       toast(
         `Knocked out! ${lives()} ${lives() === 1 ? 'life' : 'lives'} left · the guardian recovers to its last broken ward.`,
       );
+      const said = reaction('knockout', unit().grade, lives());
+      if (said) {
+        guideCameo(said.en, { pose: said.pose, ms: 3200 });
+        speakStory(said.en);
+      }
     } else toast('Back to safe ground. Guardian damage, English work and coins are saved.');
   }
   if (['boss-hit', 'finisher', 'hurt', 'retry', 'seal', 'victory', 'ward', 'ward-broken', 'special-hit'].includes(kind))
@@ -2736,6 +2834,11 @@ function showBattle({ skipShrine = false } = {}) {
   const e = state();
   if (!guardianReady(journey(), e)) return false;
   if (!skipShrine && !e.battle && showShrine()) return true;
+  // The guardian's introduction plays before its first fight.
+  if (!e.battle && storyPending([guardianScene(save.area)])) {
+    void playStory(guardianScene(save.area)).then(() => showBattle({ skipShrine: true }));
+    return true;
+  }
   // Resume an old, partially solved guardian board exactly as saved. New fights use live combat.
   if (e.battle && !e.battle.version && (e.active || e.battle.round > 0)) return showLegacyBattle();
   const resume = e.battle?.version === 2;
@@ -2827,7 +2930,10 @@ function guardianFrame() {
       persist();
       if (b.tough) claimUlti(won.id, info);
       const p = state().pendingEvolution;
-      void evolution(journey().completed, { from: p.from, to: p.to, path: true });
+      // Mr. Saymaz celebrates (and, after the last arena, the finale plays) before the evolution.
+      afterStory(winScenes(save.area), () =>
+        void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
+      );
     }
     return;
   }
@@ -2950,7 +3056,9 @@ function completeBattleTask() {
     if (winGuardian(journey(), e)) {
       persist();
       const p = e.pendingEvolution;
-      void evolution(journey().completed, { from: p.from, to: p.to, path: true });
+      afterStory(winScenes(save.area), () =>
+        void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
+      );
     }
     return;
   }
@@ -3481,6 +3589,13 @@ async function act(event) {
       persist();
       soundUpdate();
       closeModal();
+      break;
+    case 'story':
+      storyMenu();
+      break;
+    case 'story-replay':
+      closeModal();
+      void playStory(d.value, { replay: true });
       break;
     case 'read-aloud':
       save.readAloud = save.readAloud === false;
