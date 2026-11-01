@@ -162,7 +162,7 @@ export class TrailWorld extends World{
   const r=this.nav.runner,run=r?.running&&r.section?.run,veil=!!run&&r.s<run.length-run.real-1,dt=Math.min(.05,this.trackVeilClock?(this.time-this.trackVeilClock):0);this.trackVeilClock=this.time;
   // The veil eases in and out (plants sink into the ground and grow back) instead of vanishing at once, and the
   // fog draws in while the track slides so new track pieces emerge from haze rather than popping in.
-  if(veil&&!this.trackVeil){const field=this.environmentField,targets=[...(field?.children||[]).filter(c=>c.name==='valley-meadow'),this.crowns,this.treeTrunks,this.dressing,this.edgeGrassMesh,this.nearPathDetails,this.legacyVerge,this.expeditionArt,this.arenaArtGroups?.[this.area]].filter(o=>o?.isObject3D);this.trackVeil=targets.map(o=>[o,o.visible,o.scale.y]);this.fogBase={near:this.scene.fog.near,far:this.scene.fog.far};this.veilAmount=0;}
+  if(veil&&!this.trackVeil){const field=this.environmentField,targets=[...(field?.children||[]).filter(c=>c.name==='valley-meadow'),this.crowns,this.treeTrunks,this.dressing,this.edgeGrassMesh,this.nearPathDetails,this.legacyVerge,this.expeditionArt,this.arenaArtGroups?.[this.area]].filter(o=>o?.isObject3D);this.trackVeil=targets.map(o=>[o,o.visible,o.scale.y]);this.fogBase={near:this.scene.fog?.near??30,far:this.scene.fog?.far??140};this.veilAmount=0;}
   if(!this.trackVeil)return;
   this.veilAmount=Math.max(0,Math.min(1,(this.veilAmount||0)+(veil?1:-1)*dt*2.4));const a=this.veilAmount,k=a*a*(3-2*a),grow=Math.max(.001,1-k);
   for(const[o,was,y]of this.trackVeil){o.visible=was&&a<.999;o.scale.y=y*grow;}
@@ -171,8 +171,8 @@ export class TrailWorld extends World{
   // ride along under the creature's feet while the track slides. They step aside with the plants; checked every frame
   // because a run's scenery (the final chase's, for one) can be built after the veil began.
   this.veilFixed(grow,a<.999,!veil);
-  this.scene.fog.near=this.fogBase.near+(22-this.fogBase.near)*k;this.scene.fog.far=this.fogBase.far+(82-this.fogBase.far)*k;
-  if(!veil&&a<=0){this.veilFixed(1,true);for(const[o,was,y]of this.trackVeil){o.visible=was;o.scale.y=y;}for(const c of this.environmentField?.children||[])if(c.name.startsWith('environment-cluster'))c.scale.y=1;this.scene.fog.near=this.fogBase.near;this.scene.fog.far=this.fogBase.far;this.trackVeil=null;}
+  if(this.scene.fog){this.scene.fog.near=this.fogBase.near+(22-this.fogBase.near)*k;this.scene.fog.far=this.fogBase.far+(82-this.fogBase.far)*k;}
+  if(!veil&&a<=0){this.veilFixed(1,true);for(const[o,was,y]of this.trackVeil){o.visible=was;o.scale.y=y;}for(const c of this.environmentField?.children||[])if(c.name.startsWith('environment-cluster'))c.scale.y=1;if(this.scene.fog){this.scene.fog.near=this.fogBase.near;this.scene.fog.far=this.fogBase.far;}this.trackVeil=null;}
  }
  // Runner power-up looks: a shield bubble around the creature, and a dash trail in the creature's element colour.
  updateRunnerFx(runner){

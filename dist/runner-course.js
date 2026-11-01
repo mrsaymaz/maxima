@@ -43,11 +43,14 @@ function wordRun(section,r,run,from){
  const direction=section.chapter%2?'en-tr':'tr-en',target=direction==='tr-en'?'en':'tr';
  const fits=wordBank.filter(w=>w[target].length>=3&&w[target].length<=8);if(!fits.length)return null;
  const word=fits[Math.floor(r()*fits.length)%fits.length],answer=word[target],tokens=[],coins=[];let s=from;
- [...answer].forEach((letter,slot)=>{const lane=Math.floor(r()*3)%3,pool=[...ALPHABET[target]].filter(c=>c!==letter);
+ // The first letter is given (shown in the word panel from the start), so synonyms such as student / pupil are not
+ // a guess: rows of letters start from the second letter.
+ const given=1;
+ [...answer].forEach((letter,slot)=>{if(slot<given)return;const lane=Math.floor(r()*3)%3,pool=[...ALPHABET[target]].filter(c=>c!==letter);
   for(let i=0;i<3;i++)tokens.push({id:`${section.id}:letter:${slot}:${i}`,slot,s,lane:i,letter:i===lane?letter:pool[Math.floor(r()*pool.length)%pool.length],correct:i===lane});
   const gap=speedAt(run,s+speedAt(run,s)*ROW_SECONDS)*ROW_SECONDS;if(slot<answer.length-1)for(let i=0;i<4;i++)coins.push({id:`${section.id}:word-coin:${slot}:${i}`,s:s+gap*(.3+i*.12),lateral:LANES[(slot+i)%3===1?1:(slot%2?0:2)],y:.58});
   s+=gap;});
- return{word:{id:word.id,direction,prompt:direction==='tr-en'?word.tr:word.en,answer,language:target,tokens,bonusId:section.id+':word'},coins,end:s};
+ return{word:{id:word.id,direction,prompt:direction==='tr-en'?word.tr:word.en,answer,language:target,given,tokens,bonusId:section.id+':word'},coins,end:s};
 }
 
 // Beats: a hurdle to jump, a bar to slide under, a hole to dodge or jump, a swamp that slows, or a coin stretch.

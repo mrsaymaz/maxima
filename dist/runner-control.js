@@ -226,7 +226,7 @@ export class RunnerControl{
   }
  }
  closeWord(section){const word=section.run.word;if(!word||this.wordsDone.has(section.id))return;this.wordsDone.add(section.id);this.events.word?.(word,this.progress_(word),section);}
- progress_(word){return[...word.answer].map((c,i)=>this.filled.get(word.tokens.find(t=>t.slot===i&&t.correct).id)?c:null);}
+ progress_(word){return[...word.answer].map((c,i)=>i<(word.given||0)||this.filled.get(word.tokens.find(t=>t.slot===i&&t.correct)?.id)?c:null);}
  // After a fall in a run: back a few metres, standing, in an open lane, so the hole can be read and the run goes on.
  // A stepping-stone stream sends the creature back to its bank, lined up with the first stone.
  afterRetry(nav){

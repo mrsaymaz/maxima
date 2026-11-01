@@ -308,3 +308,23 @@ body .modal:not(.lesson-browser) p,body .modal:not(.lesson-browser) .journal-car
 .launch-team:nth-child(2) .ulti-icon{animation-delay:.8s}.launch-team:nth-child(3) .ulti-icon{animation-delay:1.6s}.launch-team:nth-child(4) .ulti-icon{animation-delay:2.4s}
 @keyframes ulti-shimmer{0%,70%,100%{filter:drop-shadow(0 0 3px #5fe3ff88) brightness(1)}80%{filter:drop-shadow(0 0 8px #bff8ff) brightness(1.45)}}
 @media(prefers-reduced-motion:reduce){.life-flash,.heart-crack .half,.heart-fly,.chest-burst i,.chest-burst b{animation-duration:.01s}.ulti-icon{animation:none!important}}
+
+/* 0.61: centre call-outs ("Gate ahead!", "Perfect!", chase warnings) in the game's display face: a toned gradient,
+   a thick dark outline with a 3D drop, a punchy entrance, a light sweep across the letters and a glow behind. */
+#runner-flash{--a:#fff7c2;--b:#ffd23f;--c:#ff9a1f;--glow:#ffc94a;font:400 clamp(34px,10vw,52px)/1.05 MaximaDisplay,system-ui,sans-serif!important;letter-spacing:1.5px;text-align:center;white-space:nowrap;max-width:92vw;
+ color:transparent!important;-webkit-text-stroke:0!important;background:linear-gradient(100deg,var(--a) 0%,var(--b) 38%,var(--c) 62%,var(--b) 76%,#ffffff 82%,var(--b) 88%,var(--c) 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;
+ text-shadow:none!important;filter:drop-shadow(0 0 0 #0b1a33) drop-shadow(2px 0 0 #0b1a33) drop-shadow(-2px 0 0 #0b1a33) drop-shadow(0 2px 0 #0b1a33) drop-shadow(0 -2px 0 #0b1a33) drop-shadow(0 5px 0 #0b1a33) drop-shadow(0 8px 10px #0008) drop-shadow(0 0 16px color-mix(in srgb,var(--glow) 70%,transparent))}
+#runner-flash.long{white-space:normal;width:min(84vw,520px);font-size:clamp(22px,6.4vw,34px)!important;line-height:1.1}
+#runner-flash.great{--a:#fffbe0;--b:#ffd43a;--c:#ff9a1f;--glow:#ffc94a}
+#runner-flash.swamp{--a:#f6ffe0;--b:#a8ff4f;--c:#2fc25a;--glow:#8dff4a}
+#runner-flash.stumble,#runner-flash:not(.great):not(.swamp){--a:#fff1ea;--b:#ff8a5c;--c:#ff3d5a;--glow:#ff6a4a}
+#runner-flash.show{animation:flash-pop .9s cubic-bezier(.2,1.5,.4,1) forwards,flash-sweep .9s ease-in-out forwards!important}
+#runner-flash.long.show{animation:flash-pop-long 1.4s cubic-bezier(.2,1.4,.4,1) forwards,flash-sweep 1.2s ease-in-out forwards!important}
+@keyframes flash-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-6deg)}16%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(2deg)}30%{transform:translate(-50%,-50%) scale(.96) rotate(0)}42%{transform:translate(-50%,-50%) scale(1.02)}78%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-64%) scale(1.04)}}
+@keyframes flash-pop-long{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}24%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-58%)}}
+@keyframes flash-sweep{0%{background-position:100% 0}100%{background-position:0 0}}
+@media(prefers-reduced-motion:reduce){#runner-flash.show,#runner-flash.long.show{animation:none!important;opacity:1;transform:translate(-50%,-50%)}}
+/* The same look for "+10 streak!" and other praise pops. */
+.fx-float.fx-praise{font-family:MaximaDisplay,system-ui,sans-serif!important;font-weight:400!important;letter-spacing:1px;color:#ffe27a!important;-webkit-text-stroke:0!important;text-shadow:2px 0 0 #3a1d00,-2px 0 0 #3a1d00,0 2px 0 #3a1d00,0 -2px 0 #3a1d00,0 4px 0 #3a1d00,0 6px 10px #0008!important}
+/* Word runs: the given first letter is set in gold, so it reads as a hint rather than a collected letter. */
+#runner-word .runner-slots span.given{background:linear-gradient(#ffe9a3,#e9b94e);color:#3a2600;box-shadow:inset 0 -3px 0 #b8862a,0 0 10px #ffd75a88}

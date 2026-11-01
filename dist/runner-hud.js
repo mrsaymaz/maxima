@@ -9,7 +9,7 @@ const LABEL={en:'Collect the English word',tr:'Collect the Turkish word'};
 export function showWord(word){
  const p=ensure();if(!p)return;clearTimeout(hidden);p.className='';p.hidden=false;
  doc().body.classList.add('runner-word');p.setAttribute('aria-label',`${LABEL[word.language]}: ${word.prompt}`);
- p.innerHTML=`<small>${LABEL[word.language]}</small><strong lang="${word.direction==='tr-en'?'tr':'en'}">${word.prompt}</strong><em>→ ${word.language.toUpperCase()}</em><div class="runner-slots">${[...word.answer].map(()=>'<span>&nbsp;</span>').join('')}</div>`;
+ p.innerHTML=`<small>${LABEL[word.language]}</small><strong lang="${word.direction==='tr-en'?'tr':'en'}">${word.prompt}</strong><em>→ ${word.language.toUpperCase()}</em><div class="runner-slots">${[...word.answer].map((c,i)=>i<(word.given||0)?`<span class="filled given" title="Given letter">${c.toLocaleUpperCase(word.language)}</span>`:'<span>&nbsp;</span>').join('')}</div>`;
 }
 export function showProgress(letters,{wrong=false,language='en'}={}){
  const p=ensure();if(!p||p.hidden)return;const slots=p.querySelectorAll('.runner-slots span');
@@ -28,7 +28,7 @@ export function controlHint(touch){if(hinted)return null;hinted=true;return touc
 let flashEl=null,flashTimer=null;
 export function flash(text,tone='stumble'){
  const d=doc();if(!d?.body)return;if(!flashEl?.isConnected){flashEl=d.createElement('div');flashEl.id='runner-flash';flashEl.setAttribute('aria-hidden','true');d.body.append(flashEl);}
- flashEl.textContent=text;flashEl.className='';void flashEl.offsetWidth;flashEl.className='show '+tone;clearTimeout(flashTimer);flashTimer=setTimeout(()=>{flashEl.className='';},700);
+ flashEl.textContent=text;flashEl.dataset.text=text;flashEl.className='';void flashEl.offsetWidth;flashEl.className='show '+tone+(String(text).length>16?' long':'');clearTimeout(flashTimer);flashTimer=setTimeout(()=>{flashEl.className='';},String(text).length>16?1400:900);
 }
 // Vertical progress to the next gate along the right edge: the gate at the top, the creature climbing toward it.
 let bar=null;

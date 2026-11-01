@@ -32,9 +32,10 @@ test('runs are ten times their stretch, speed up toward the gate, stay inside th
   for(let i=1;i<beats.length;i++)assert.ok((beats[i].at-beats[i-1].end)/speedAt(run,beats[i].at)>=(mode==='challenge'?.6:.8),'enough reaction time between beats');
   for(const c of run.coins)assert.ok(c.s<=run.length&&LANES.includes(c.lateral));
   if(index%4===2){const word=run.word;assert.ok(word,'every third run of a chapter is a word run');
+   assert.equal(word.given,1,'the first letter is given');assert.equal(word.tokens.filter(t=>t.slot===0).length,0,'no letter row for the given letter');
    const slots=[...word.answer].map((c,i)=>word.tokens.filter(t=>t.slot===i));
-   slots.forEach((row,i)=>{assert.equal(row.length,3);assert.equal(row.filter(t=>t.correct).length,1);assert.equal(row.find(t=>t.correct).letter,word.answer[i]);assert.ok(row.filter(t=>!t.correct).every(t=>t.letter!==word.answer[i]));
-    if(i){const gap=row[0].s-slots[i-1][0].s;assert.ok(gap/speedAt(run,row[0].s)>=2.5,'time to switch lanes between letter rows');assert.ok(run.coins.some(c=>c.s>slots[i-1][0].s&&c.s<row[0].s),'coins between letter rows');}});
+   slots.forEach((row,i)=>{if(i<word.given)return;assert.equal(row.length,3);assert.equal(row.filter(t=>t.correct).length,1);assert.equal(row.find(t=>t.correct).letter,word.answer[i]);assert.ok(row.filter(t=>!t.correct).every(t=>t.letter!==word.answer[i]));
+    if(i>word.given){const gap=row[0].s-slots[i-1][0].s;assert.ok(gap/speedAt(run,row[0].s)>=2.5,'time to switch lanes between letter rows');assert.ok(run.coins.some(c=>c.s>slots[i-1][0].s&&c.s<row[0].s),'coins between letter rows');}});
    assert.ok(['rule','whistle','kural','düdük'].includes(word.answer),'single words only');assert.ok(!run.obstacles.some(o=>o.s>word.tokens[0].s-2&&o.s<word.tokens.at(-1).s+2),'no obstacles among the letters');}
  }
 });
@@ -104,7 +105,7 @@ test('the word closes as soon as it is spelled or its last row is passed, not at
  for(const t of word.tokens.filter(t=>t.correct)){r.s=t.s;r.lat=LANES[t.lane];r.collide(nav);}
  assert.deepEqual(closed,[word.answer],'closes on the last correct letter');r.finish(section,nav);assert.equal(closed.length,1,'and only once');
  const other=withRun(6),missed=[],r2=new RunnerControl();r2.events={word:(w,letters)=>missed.push(letters)};const nav2=navFor(other);r2.engage(nav2);
- r2.s=other.run.word.tokens.at(-1).s+2;r2.collide(nav2);assert.equal(missed.length,1,'closes once the last row is behind');assert.ok(missed[0].every(c=>c===null));
+ r2.s=other.run.word.tokens.at(-1).s+2;r2.collide(nav2);assert.equal(missed.length,1,'closes once the last row is behind');assert.equal(missed[0][0],other.run.word.answer[0],'the given letter counts');assert.ok(missed[0].slice(1).every(c=>c===null));
 });
 test('Low graphics keeps the track readable with far fewer objects; the HUD helpers are safe without a page',async()=>{
  const{makeRunnerScenery}=await import('../dist/runner-props.js');const{flash,runProgress}=await import('../dist/runner-hud.js');
