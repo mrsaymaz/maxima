@@ -20,15 +20,15 @@ test('every line has an easier version for Grades 5–6, a richer one for Grades
 });
 test('each scene is seen once and remembered in the save',()=>{const save={};assert.equal(sceneSeen(save,'intro-0'),false);markSeen(save,'intro-0');markSeen(save,'intro-0');assert.deepEqual(save.story.seen,['intro-0']);assert.ok(sceneSeen(save,'intro-0'));});
 test('a cut-scene shows Mr. Saymaz, the line, a Turkish toggle and the Sol Crystal; it reads each line and ends on the last Next',async()=>{
- const html=sceneMarkup('guardian-1',{grade:8,index:0,showTr:true});assert.match(html,/saymaz-point/);assert.match(html,/Galecrest Warden, riding the storm winds/);assert.match(html,/story-tr" lang="tr"/);assert.match(html,/story-foe/);assert.match(html,/class="shard lit"/);
+ const html=sceneMarkup('guardian-1',{grade:8,index:0,showTr:true});assert.match(html,/saymaz-point/);assert.match(html,/Galecrest Warden, riding the storm winds/);assert.match(html,/story-tr" lang="tr"/);assert.match(html,/sa-guardian/);assert.match(html,/sa-piece sa-piece-0 on/);
  assert.match(sceneMarkup('guardian-1',{grade:8,index:2}),/>Fight!</);assert.match(sceneMarkup('finale',{grade:5,index:2}),/The end/);
  const handlers={},root={className:'',innerHTML:'',classList:{add(){}},setAttribute(){},addEventListener(t,f){handlers[t]=f;},querySelector:()=>null,remove(){root.removed=true;}};
  const doc={createElement:()=>root,body:{appendChild(){}}},said=[];let stopped=0;
- const done=playScene('intro-0',{doc,win:{addEventListener(){}},grade:5,onLine:t=>said.push(t),onStop:()=>stopped++});
+ const done=playScene('intro-0',{doc,win:{addEventListener(){}},grade:5,typeSpeed:0,onLine:t=>said.push(t),onStop:()=>stopped++});
  const press=what=>handlers.click({target:{closest:s=>s==='[data-story]'?{dataset:{story:what}}:null}});
  press('tr');assert.equal(said.length,1,'Turkish does not repeat the line');press('listen');assert.equal(said.length,2);
  for(let i=0;i<4;i++)press('next');assert.equal(await done,true);assert.equal(stopped,1);assert.deepEqual(said.slice(2),sceneLines('intro-0',5).slice(1).map(l=>l.en));
- const skipped=playScene('win-0',{doc,win:{addEventListener(){}},grade:5});press('skip');assert.equal(await skipped,false);
+ const skipped=playScene('win-0',{doc,win:{addEventListener(){}},grade:5,typeSpeed:0});press('skip');assert.equal(await skipped,false);
 });
 test('Mr. Saymaz speaks with a British male voice when the device has one',()=>{const v=(name,lang)=>({name,lang,localService:true});
  assert.equal(storyVoice([v('Samantha','en-US'),v('Daniel','en-GB'),v('Serena','en-GB')]).name,'Daniel');

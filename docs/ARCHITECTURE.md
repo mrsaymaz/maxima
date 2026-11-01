@@ -46,7 +46,7 @@ Sizes are the readable line counts in `src/`.
 | `corridor-app.js` (3.8k lines) | The app. Holds the save, the active task and screen state. Handles taps (`data-do` actions), the frame loop hooks, runner events, gate tasks (`submit`), lives, chests, evolution, guardian flow, journal, settings and the first-time lessons. One module with shared state; see "Next refactors". |
 | `launch-ui.js`, `camp-ui.js`, `ui-icons.js`, `lives-ui.js`, `loading-ui.js` | Markup for the opening screen, camp, Wordex, wardrobe, summaries, icons, hearts and loading. |
 | `guide.js` | Mr. Saymaz: poses, opening-screen line, pop-ins during play. |
-| `story.js`, `story-scene.js` | The Sol Crystal story: scenes at two reading levels with Turkish, and the cut-scene player (read aloud by `storyVoice`). |
+| `story.js`, `story-scene.js`, `story-art.js` | The Sol Crystal story: scenes at two reading levels with Turkish; the cut-scene player (typewriter, read aloud by `storyVoice`); the generated vector art (landscapes, guardians, crystal, particles). |
 | `spelling-variants.js` | British and American spellings accepted as equal (word runs, misspelled-word task). |
 | `controls-tutorial.js`, `danger-lessons.js`, `creature-sketch.js` | Controls tutorial and first-time danger lessons with the simplified creature. |
 | `gesture-controls.js`, `touch-stick.js`, `control-layout.js`, `runner-input.js`, `creature-controls.js` | Touch gestures, joystick, safe-area layout, keys. |

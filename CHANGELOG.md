@@ -2,6 +2,10 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.70.0 · The story, beautifully drawn
+
+The story's cut-scenes are redrawn as layered paper-cut vector landscapes for each arena and the finale. The guardians are colossi drawn like their 3D figures, and the Sol Crystal comes back piece by piece. A cinematic frame adds black bars, a storybook title card, a glass dialogue box with typewriter text, parallax and particles. Layouts are tuned for phones and wide screens. See [release notes](docs/releases/RELEASE-v0.70.0.md).
+
 ## 0.69.0 · The story of the Sol Crystal
 
 Mr. Saymaz tells a light story across the three arenas in illustrated cut-scenes: an intro for each arena, an introduction before each guardian's first fight, a scene after each win and a finale. Lines are written at two levels (Grades 5–6 and 7–8), each with a Turkish translation behind TR, and are read aloud with a British male voice where the device has one. He also reacts to knock-outs and to running out of lives. See [release notes](docs/releases/RELEASE-v0.69.0.md).
