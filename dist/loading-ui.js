@@ -1,5 +1,5 @@
 // The loading screen keeps the solMaxima logo and wordmark; only its message line changes.
-export function loadingNotice(text){const el=globalThis.document?.getElementById?.('load-note');if(!el)return;const keep=[...el.querySelectorAll?.('.load-logo,.load-wordmark')||[]];el.replaceChildren(...keep,document.createTextNode(text),document.createElement('span'));el.classList.remove('hidden');}
+export function loadingNotice(text){const el=globalThis.document?.getElementById?.('load-note');if(!el)return;const keep=[...el.querySelectorAll?.('.load-logo,.load-wordmark')||[]],img=el.querySelector?.('.load-guide img'),line=document.createElement('span');line.className='load-guide';if(img)line.append(img);line.append(document.createTextNode(text));el.replaceChildren(...keep,line,document.createElement('span'));el.classList.remove('hidden');}
 export function clearLoading(){globalThis.document?.getElementById?.('load-note')?.classList.add('hidden');}
 export function recoveryNotice(world,kind){
  for(const selector of ['#ui','#task-layer','#modal-layer','.topbar']){const node=document.querySelector(selector);if(node)node.inert=kind!=='running';}

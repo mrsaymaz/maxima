@@ -1,5 +1,5 @@
 {
- "hash": "0bb0ea5d043c",
+ "hash": "1f4ddc9f0abb",
  "files": [
   "./",
   "index.html",
@@ -76,6 +76,8 @@
   "guardian-stage.js",
   "guardian-ui.js",
   "guardian.css",
+  "guide.css",
+  "guide.js",
   "journey-director.js",
   "juice.css",
   "jump-tuning.js",
@@ -183,6 +185,12 @@
   "icons/apple-touch-icon.png",
   "icons/icon-192.png",
   "icons/icon-512.png",
-  "icons/maskable-512.png"
+  "icons/maskable-512.png",
+  "assets/guide/saymaz-bust.webp",
+  "assets/guide/saymaz-cheer.webp",
+  "assets/guide/saymaz-full.webp",
+  "assets/guide/saymaz-point.webp",
+  "assets/guide/saymaz-smile.webp",
+  "assets/guide/saymaz-think.webp"
  ]
 }

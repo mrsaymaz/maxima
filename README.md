@@ -1,18 +1,20 @@
 # solMaxima · by Mr. Saymaz
 
-Version 0.64.0 · Learning by doing
+Version 0.65.0 · Mr. Saymaz, your guide
 
 ## Netlify deployment
 
 The game is prebuilt: `dist/index.html`, local modules, all creature assets and language packs ship in this source package. `npm run build` validates that output; it does not compile or recreate a missing `dist` directory.
 
-**Manual upload (recommended):** use `solMaxima-v0.64.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
+**Manual upload (recommended):** use `solMaxima-v0.65.0-Netlify-Drop.zip`. Extract it into a folder and upload the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data` to the site's manual deploy dropzone. Its configuration publishes the current directory (`.`), and its small build command only checks that the prebuilt entry files are present. Do not select an outer folder containing only another Maxima folder.
 
 **Repository deployment:** use the complete source package. Put `package.json`, `netlify.toml`, `scripts` and `dist` together at the repository root. Leave Netlify's base/package directory unset (repository root), use build command `npm run build` and publish directory `dist`. Commit the whole prebuilt `dist` folder. If the project is deliberately in a subfolder, set the base directory to that folder. The source `netlify.toml` declares the command and publish directory explicitly.
 
 Both packages contain identical gameplay files. Deploying to the same site preserves browser saves; a new site address has separate browser storage.
 
 ## Runner paths (the game)
+
+**0.65.0:** Mr. Saymaz joins the game as its illustrated guide. He welcomes students on the opening screen, hosts the controls tutorial and danger lessons, and pops in for wins, chests and lost lives. He also appears in the joystick note, How to play, the Out of lives screen and the loading screen. Six poses in `dist/assets/guide` (about 40 KB each, cached offline). See `docs/RELEASE-v0.65.0.md`.
 
 **0.64.0:** crystal walls ring the creature with "Tap me!", and the first crystal wall, rolling boulders and each guardian chase attack (Roots, Seed pods, Canopy Slam…) pause the run for a short lesson with a simplified creature. The controls tutorial uses the same creature. The first gate fights and guardian arenas point at the joystick. Gate tasks read the English aloud (recorded voice for words, a female American or British browser voice for sentences). Sentence-order tasks show the Turkish only once the sentence is built, and the misspelled-word task shows the correct spelling. See `docs/RELEASE-v0.64.0.md`.
 

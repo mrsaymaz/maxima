@@ -1,5 +1,6 @@
 import{classifyGesture}from'./gesture-controls.js';
 import{sketchScene,sketchAct}from'./creature-sketch.js';
+import{guideFigure}from'./guide.js';
 // First-time danger lessons (0.64.0). The first time a student meets a danger on a run (a crystal wall, rolling
 // boulders, or each of the guardian's chase attacks such as Roots), the run pauses on the warning. A card shows the
 // danger with a simplified creature and asks for the move. Doing the move (a swipe, or a tap on the creature)
@@ -47,7 +48,7 @@ export function lessonPlan(key,{lane=1,attack=null,warnLane=null}={}){
 }
 export function lessonMarkup(plan,{color,touch=true}={}){
  const keys=touch?'':` <small>(keyboard: ${plan.want.includes('up')?'↑ / Space':''}${plan.want.some(w=>w==='left'||w==='right')?' ← →':''}${plan.want.includes('tap')?' J / F':''})</small>`;
- return`<div class="lesson-tag">New danger · learn the move</div><h2>${plan.title}</h2><p>${plan.text}</p>${sketchScene({demo:plan.demo,lane:plan.lane,color,danger:plan.danger,safe:plan.safe,hazard:plan.hazard,caption:plan.title,loop:plan.demo==='wave'})}<div class="lesson-try" role="status"><span class="hand" aria-hidden="true">${plan.hand}</span><span>${plan.prompt}${keys}</span></div><button class="lesson-skip" data-lesson="skip" hidden>Carry on</button>`;
+ return`<div class="lesson-tag">New danger · learn the move</div><div class="guide-host">${guideFigure('point',{cls:'host-figure'})}<div class="guide-bubble"><h2>${plan.title}</h2><p>${plan.text}</p></div></div>${sketchScene({demo:plan.demo,lane:plan.lane,color,danger:plan.danger,safe:plan.safe,hazard:plan.hazard,caption:plan.title,loop:plan.demo==='wave'})}<div class="lesson-try" role="status"><span class="hand" aria-hidden="true">${plan.hand}</span><span>${plan.prompt}${keys}</span></div><button class="lesson-skip" data-lesson="skip" hidden>Carry on</button>`;
 }
 const KEYS={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'up',w:'up',' ':'up',ArrowDown:'down',s:'down',j:'tap',f:'tap',Enter:'tap'};
 // Shows a lesson over the paused run and resolves with the gesture the student made (or null after "Carry on").
@@ -59,7 +60,7 @@ export function runDangerLesson(plan,{doc=globalThis.document,win=globalThis.win
  doc.body.appendChild(root);
  const controller=new AbortController(),options={signal:controller.signal};let start=null,finished=false;
  const skipTimer=setTimeout(()=>{const b=root.querySelector?.('[data-lesson="skip"]');if(b)b.hidden=false;},7000);
- const close=kind=>{if(finished)return;finished=true;clearTimeout(skipTimer);controller.abort();root.classList?.add('done');root.querySelector?.('.sketch-scene')?.classList?.remove('loop');if(kind)sketchAct(root,kind);const t=root.querySelector?.('.lesson-try span:last-child');if(t&&kind)t.textContent='Great!';setTimeout(()=>{root.remove();onDone(kind);},kind?420:0);};
+ const close=kind=>{if(finished)return;finished=true;clearTimeout(skipTimer);controller.abort();root.classList?.add('done');root.querySelector?.('.sketch-scene')?.classList?.remove('loop');if(kind)sketchAct(root,kind);const t=root.querySelector?.('.lesson-try span:last-child');if(t&&kind)t.textContent='Great!';const host=root.querySelector?.('.host-figure');if(host&&kind)host.src='assets/guide/saymaz-smile.webp';setTimeout(()=>{root.remove();onDone(kind);},kind?420:0);};
  const attempt=kind=>{if(!finished&&plan.want.includes(kind))close(kind);};
  root.addEventListener('click',e=>{if(e.target.closest?.('[data-lesson="skip"]'))close(null);},options);
  root.addEventListener('pointerdown',e=>{if(e.target.closest?.('button'))return;e.preventDefault?.();start={x:e.clientX,y:e.clientY,t:e.timeStamp,id:e.pointerId,fired:false};},options);

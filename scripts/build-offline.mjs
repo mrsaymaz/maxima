@@ -12,8 +12,8 @@ const PREVIEWS=new Set(['environment-preview.js','partner-preview.js','task-prev
 export function shellFiles(dist=DIST){
  const top=fs.readdirSync(dist).filter(f=>/\.(js|css)$/.test(f)&&!PREVIEWS.has(f)).sort();
  const walk=dir=>fs.readdirSync(path.join(dist,dir),{withFileTypes:true}).flatMap(d=>d.isDirectory()?walk(path.join(dir,d.name)):[path.join(dir,d.name)]);
- const vendor=walk('vendor').filter(f=>f.endsWith('.js')),fonts=walk('assets/fonts').filter(f=>/\.(woff2?|ttf|otf)$/.test(f)),icons=walk('icons');
- return['./','index.html','manifest.webmanifest','icon.svg','data/lesson-catalog.json',...top,...vendor,...fonts,...icons].map(f=>f.split(path.sep).join('/'));
+ const vendor=walk('vendor').filter(f=>f.endsWith('.js')),fonts=walk('assets/fonts').filter(f=>/\.(woff2?|ttf|otf)$/.test(f)),icons=walk('icons'),guide=walk('assets/guide').filter(f=>f.endsWith('.webp'));
+ return['./','index.html','manifest.webmanifest','icon.svg','data/lesson-catalog.json',...top,...vendor,...fonts,...icons,...guide].map(f=>f.split(path.sep).join('/'));
 }
 export function shellHash(files,dist=DIST){
  const h=crypto.createHash('sha256');for(const f of files){if(f==='./')continue;h.update(f);h.update(fs.readFileSync(path.join(dist,f)));}

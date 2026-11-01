@@ -1,5 +1,6 @@
 import{classifyGesture}from'./gesture-controls.js';
 import{sketchScene,sketchAct}from'./creature-sketch.js';
+import{guideFigure}from'./guide.js';
 // The controls tutorial: a short practice before play. Each step shows a simplified creature (creature-sketch.js) on a
 // small track with a moving hand, and waits until the student does the gesture on the practice pad (or presses the
 // matching key); the creature then does the move. The joystick step shows the joystick moving the creature.
@@ -14,7 +15,7 @@ const HANDS={side:'👉',up:'☝️',down:'👇',tap:'👆'};
 const KEYS={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'up',w:'up',' ':'up',ArrowDown:'down',s:'down',j:'tap',f:'tap',Enter:'tap'};
 export function tutorialMarkup(index,{left=false,touch=true,done=false,color}={}){
  const step=TUTORIAL_STEPS[index],last=index===TUTORIAL_STEPS.length-1,stickText=step.stick?step.text.replace('the joystick',`the joystick on the ${left?'left':'right'}`):step.text;
- return `<div class="tutorial-step">Controls · ${index+1} of ${TUTORIAL_STEPS.length}</div><h2>${step.title}</h2><p>${stickText}${touch?'':` <small>(keyboard: ${step.keys})</small>`}</p>
+ return `<div class="tutorial-step">Controls · ${index+1} of ${TUTORIAL_STEPS.length}</div><div class="guide-host">${guideFigure(last?'cheer':index===0?'full':'point',{cls:'host-figure'})}<div class="guide-bubble"><h2>${step.title}</h2><p>${stickText}${touch?'':` <small>(keyboard: ${step.keys})</small>`}</p></div></div>
  <div class="tutorial-pad${done?' done':''}" data-tutorial-pad>${sketchScene({demo:step.demo,color,stick:left?'left':'right',caption:step.title})}${step.stick?'':`<span class="tutorial-hand ${step.hand}" aria-hidden="true">${done?'✅':HANDS[step.hand]}</span>`}</div>
  <div class="tutorial-dots" aria-hidden="true">${TUTORIAL_STEPS.map((_,i)=>`<i class="${i<=index?'on':''}"></i>`).join('')}</div>
  <div class="tutorial-actions">${last?`<button class="primary-action" data-tutorial="next">Let's go!</button>`:`<button data-tutorial="skip">Skip</button>${step.want?'':`<button class="primary-action" data-tutorial="next">Next</button>`}`}</div>`;
@@ -25,7 +26,7 @@ export function runControlsTutorial({doc=globalThis.document,win=globalThis.wind
  const render=()=>{root.innerHTML=tutorialMarkup(index,{left,touch,done,color});root.querySelector('[data-tutorial="next"],[data-tutorial="skip"]')?.focus?.();};
  const finish=skipped=>{controller.abort();clearTimeout(timer);root.remove();onDone({skipped,step:TUTORIAL_STEPS[index].id});};
  const advance=()=>{done=false;if(index<TUTORIAL_STEPS.length-1){index++;render();}else finish(false);};
- const practise=kind=>{const step=TUTORIAL_STEPS[index];if(done||!step.want?.includes(kind))return;done=true;onPractice(step.id);const pad=root.querySelector?.('[data-tutorial-pad]');if(pad){pad.classList?.add('done');const hand=pad.querySelector?.('.tutorial-hand');if(hand)hand.textContent='✅';sketchAct(pad,kind);}else render();timer=setTimeout(advance,650);};
+ const practise=kind=>{const step=TUTORIAL_STEPS[index];if(done||!step.want?.includes(kind))return;done=true;onPractice(step.id);const pad=root.querySelector?.('[data-tutorial-pad]');if(pad){pad.classList?.add('done');const hand=pad.querySelector?.('.tutorial-hand');if(hand)hand.textContent='✅';const host=root.querySelector?.('.host-figure');if(host)host.src='assets/guide/saymaz-smile.webp';sketchAct(pad,kind);}else render();timer=setTimeout(advance,650);};
  root.addEventListener('click',e=>{const b=e.target.closest?.('[data-tutorial]');if(!b)return;if(b.dataset.tutorial==='skip')finish(true);else advance();},options);
  root.addEventListener('pointerdown',e=>{if(e.target.closest?.('button'))return;start={x:e.clientX,y:e.clientY,t:e.timeStamp,id:e.pointerId,fired:false};},options);
  root.addEventListener('pointermove',e=>{if(!start||start.fired||e.pointerId!==start.id)return;const kind=classifyGesture(e.clientX-start.x,e.clientY-start.y,e.timeStamp-start.t);if(kind){start.fired=true;practise(kind);}},options);
