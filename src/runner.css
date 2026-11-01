@@ -19,7 +19,14 @@ body.runner-running #joystick {
   text-align: center;
   box-shadow: 0 3px 0 #1b294f;
   pointer-events: none;
+  /* Long words: the letter row moves under the prompt instead of running off the screen. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  row-gap: 5px;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 #runner-word[hidden] {
   display: none;
@@ -44,6 +51,10 @@ body.runner-word .play-dock .traversal-hint {
 }
 #runner-word strong {
   display: inline-block;
+  /* A long Turkish prompt wraps inside itself and keeps "→ EN" beside it. */
+  white-space: normal;
+  min-width: 0;
+  max-width: calc(100vw - 100px);
   font:
     800 17px/1.2 system-ui,
     -apple-system,
@@ -51,16 +62,27 @@ body.runner-word .play-dock .traversal-hint {
   margin: 0 8px 0 0;
   vertical-align: middle;
 }
+/* The prompt and "→ EN" stay together on the first row; a long prompt wraps inside itself. */
+.runner-prompt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+}
 .runner-slots {
   display: inline-flex;
   gap: 3px;
   vertical-align: middle;
   flex-wrap: nowrap;
+  /* The letters always sit on their own row under the prompt, centred. */
+  flex-basis: 100%;
+  justify-content: center;
 }
 .runner-slots span {
   display: grid;
   place-items: center;
-  width: clamp(16px, 5.2vw, 24px);
+  /* --letters is set by runner-hud.js: very long words get narrower slots, so one row always fits the screen. */
+  width: min(clamp(16px, 5.2vw, 24px), calc((100vw - 54px) / var(--letters, 8) - 3px));
   height: clamp(20px, 6.4vw, 28px);
   border-radius: 6px;
   background: #e4dabc;

@@ -32,6 +32,7 @@ import { loadingNotice, clearLoading, recoveryNotice } from './loading-ui.js';
 import { LanguageCoach, languageFeedbackMarkup, guidancePlan, questionFocus } from './language-feedback.js';
 import { englishVoice, spokenRequest } from './voice-preference.js';
 import { acceptedLines, pieceLine, revealMarkup, revealTime } from './task-voice.js';
+import { otherSpellings } from './spelling-variants.js';
 import { lessonPlan, runDangerLesson } from './danger-lessons.js';
 import { sketchColor } from './creature-sketch.js';
 import { guideFigure, guideCameo, hideGuideCameo } from './guide.js';
@@ -650,12 +651,20 @@ function runnerEvents() {
         cue('correct');
         buzz(HAPTICS.correct);
         if (gained) rewardCoins(gained);
-        if (word.language === 'en') speak(word.answer);
+        // The spelling the student collected (British or American), and the other accepted spelling.
+        const spelled = letters.join(''),
+          also = word.language === 'en' ? otherSpellings(spelled).filter(v => v.length) : [];
+        if (word.language === 'en') speak(spelled);
         guideCameo(['Brilliant spelling!', 'Word complete. Super!', 'You got it!'][word.answer.length % 3], {
           pose: 'cheer',
         });
-        toast(`${word.answer.toUpperCase()} = ${word.prompt} · word complete!${gained ? ` +${gained} coins` : ''}`);
-      } else toast(`The word was ${word.answer} (${word.prompt}). Try the next word run!`);
+        toast(
+          `${spelled.toUpperCase()} = ${word.prompt} · word complete!${also.length ? ` (also ${also.map(v => v.toUpperCase()).join(' / ')})` : ''}${gained ? ` +${gained} coins` : ''}`,
+        );
+      } else
+        toast(
+          `The word was ${word.answer}${otherSpellings(word.answer).length ? ` (or ${otherSpellings(word.answer).join(' / ')})` : ''} (${word.prompt}). Try the next word run!`,
+        );
     },
     swamp: o => {
       cue('land');

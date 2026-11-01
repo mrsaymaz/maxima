@@ -1,5 +1,5 @@
 {
- "hash": "811674db2305",
+ "hash": "94299ac2a024",
  "files": [
   "./",
   "index.html",
@@ -144,6 +144,7 @@
   "special-icons.js",
   "specials-ui.js",
   "specials.js",
+  "spelling-variants.js",
   "spring-visitor.js",
   "style.css",
   "surface-materials.js",

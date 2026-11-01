@@ -31,7 +31,7 @@ test('English sentences, questions with answers and English words are read after
 });
 test('the misspelled-word task shows and reads the correct spelling after the student finds the mistake',()=>{
  const t=makeTask(unit,'spelling','n','s'),q=t.rounds[0],b=clone(t),r=actTask(t,{kind:'choice',text:q.answer});const said=acceptedLines(b,t,{kind:'choice',text:q.answer},r);
- assert.deepEqual(said.reveal,{kind:'spelling',label:'Correct spelling',en:q.correction,wrong:q.answer});assert.equal(said.say,q.correction);
+ assert.deepEqual(said.reveal,{kind:'spelling',label:'Correct spelling',en:q.correction,wrong:q.answer,also:q.alsoCorrect||[]});assert.equal(said.say,q.correction);
  const html=revealMarkup(said.reveal);assert.match(html,new RegExp(`<s[^>]*>${q.answer}</s>`));assert.match(html,new RegExp(`<strong lang="en">${q.correction}</strong>`));assert.equal((html.match(/<i style/g)||[]).length,q.correction.replace(/ /g,'').length);
  assert.ok(revealTime(said.reveal)>=2600);
 });

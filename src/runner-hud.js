@@ -23,8 +23,9 @@ export function showWord(word) {
   p.className = '';
   p.hidden = false;
   doc().body.classList.add('runner-word');
+  p.style?.setProperty?.('--letters', String([...word.answer].length));
   p.setAttribute('aria-label', `${LABEL[word.language]}: ${word.prompt}`);
-  p.innerHTML = `<small>${LABEL[word.language]}</small><strong lang="${word.direction === 'tr-en' ? 'tr' : 'en'}">${word.prompt}</strong><em>→ ${word.language.toUpperCase()}</em><div class="runner-slots">${[...word.answer].map((c, i) => (i < (word.given || 0) ? `<span class="filled given" title="Given letter">${c.toLocaleUpperCase(word.language)}</span>` : '<span>&nbsp;</span>')).join('')}</div>`;
+  p.innerHTML = `<small>${LABEL[word.language]}</small><span class="runner-prompt"><strong lang="${word.direction === 'tr-en' ? 'tr' : 'en'}">${word.prompt}</strong><em>→ ${word.language.toUpperCase()}</em></span><div class="runner-slots">${[...word.answer].map((c, i) => (i < (word.given || 0) ? `<span class="filled given" title="Given letter">${c.toLocaleUpperCase(word.language)}</span>` : '<span>&nbsp;</span>')).join('')}</div>`;
 }
 export function showProgress(letters, { wrong = false, language = 'en' } = {}) {
   const p = ensure();

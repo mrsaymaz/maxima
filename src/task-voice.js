@@ -74,7 +74,13 @@ export function acceptedLines(before, after, action, result) {
     case 'spelling':
       return {
         say: q.correction,
-        reveal: { kind: 'spelling', label: 'Correct spelling', en: q.correction, wrong: q.answer },
+        reveal: {
+          kind: 'spelling',
+          label: 'Correct spelling',
+          en: q.correction,
+          wrong: q.answer,
+          also: q.alsoCorrect || [],
+        },
       };
     case 'answer':
       return { say: `${clean(q.prompt)} ${sentence(q.answer)}`, reveal: null };
@@ -104,7 +110,7 @@ const escape = s =>
 export function revealMarkup(r) {
   if (!r) return '';
   if (r.kind === 'spelling')
-    return `<small>${escape(r.label)}</small><div class="reveal-spelling"><s lang="en" aria-label="Misspelled: ${escape(r.wrong)}">${escape(r.wrong)}</s><span aria-hidden="true">→</span><strong lang="en">${escape(r.en)}</strong></div><div class="reveal-letters" aria-hidden="true">${[...String(r.en)].map((c, i) => (c === ' ' ? '<i class="gap"></i>' : `<i style="--i:${i * 70}">${escape(c)}</i>`)).join('')}</div><button class="reveal-listen" data-reveal-listen aria-label="Listen again">🔊</button>`;
+    return `<small>${escape(r.label)}</small><div class="reveal-spelling"><s lang="en" aria-label="Misspelled: ${escape(r.wrong)}">${escape(r.wrong)}</s><span aria-hidden="true">→</span><strong lang="en">${escape(r.en)}</strong></div><div class="reveal-letters" aria-hidden="true">${[...String(r.en)].map((c, i) => (c === ' ' ? '<i class="gap"></i>' : `<i style="--i:${i * 70}">${escape(c)}</i>`)).join('')}</div>${r.also?.length ? `<em class="reveal-also">Also correct: <b lang="en">${r.also.map(escape).join(' / ')}</b> (British and American spellings)</em>` : ''}<button class="reveal-listen" data-reveal-listen aria-label="Listen again">🔊</button>`;
   return `<small>${escape(r.label)}</small><strong lang="en">${escape(r.en)}</strong>${r.tr ? `<em lang="tr"><b>TR</b> ${escape(r.tr)}</em>` : ''}<button class="reveal-listen" data-reveal-listen aria-label="Listen again">🔊</button>`;
 }
 // How long a reveal card stays: long enough to read the sentence, at least 2.6 s.

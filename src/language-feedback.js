@@ -227,7 +227,8 @@ export class LanguageCoach {
           : `Fitted ${after.used.length} of ${q.correct.length} fragments. Read the joined beginning.`;
     else if (q.kind === 'repair')
       cue = after.round === before.round ? 'Fault found. Now choose its replacement.' : `Repaired: ${q.correct}`;
-    else if (before.type === 'spelling') cue = `Correct spelling: ${q.correction}`;
+    else if (before.type === 'spelling')
+      cue = `Correct spelling: ${q.correction}${q.alsoCorrect?.length ? ` (also ${q.alsoCorrect.join(' / ')})` : ''}`;
     else if (before.type === 'answer' && f) cue = `${f.word.replace(/^./, s => s.toUpperCase())} answered: ${q.answer}`;
     else if (q.kind === 'sequence') cue = 'Packed in the requested order.';
     else if (q.kind === 'multi') cue = 'Every requested item delivered. No extras.';

@@ -2,6 +2,7 @@ import { pictureCandidates } from './picture-selection.js';
 import { curriculumNumberPool } from './curriculum-numbers.js';
 import { practiceSelector, finishTaskLayout } from './practice-selection.js';
 import { activity } from './expedition.js';
+import { sameWord, otherSpellings } from './spelling-variants.js';
 export function rngFor(text) {
   let n = 2166136261;
   for (const c of String(text)) n = Math.imul(n ^ c.charCodeAt(0), 16777619);
@@ -61,7 +62,8 @@ export function plausibleMisspelling(word, depth = 0, words = []) {
       candidates.push(word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2));
   for (let i = 1; i < word.length - 1; i++)
     if (/[aeiou]/i.test(word[i])) candidates.push(word.slice(0, i) + word.slice(i + 1));
-  return candidates.find(w => w !== word && !used.has(w.toLowerCase())) || corrupt(word);
+  // A British or American spelling of the same word is correct English, never a misspelling (colour → color).
+  return candidates.find(w => w !== word && !used.has(w.toLowerCase()) && !sameWord(w, word)) || corrupt(word);
 }
 function splitSentence(s) {
   const cut = Math.max(1, Math.ceil(s.blocks.length / 2));
@@ -344,7 +346,10 @@ export function makeTask(unit, type, nodeId, seed = nodeId, seen = {}, level = 0
           vocab.filter(w => w.en !== v.en && w.en !== wrong),
           2,
         ).map(w => w.en);
-      return choice(v.id, 'Which word is misspelled?', wrong, others, { correction: v.en });
+      return choice(v.id, 'Which word is misspelled?', wrong, others, {
+        correction: v.en,
+        alsoCorrect: otherSpellings(v.en),
+      });
     });
   if (type === 'listen-multi' || type === 'instructions')
     task.rounds = Array.from({ length: 3 }, (_, i) => {

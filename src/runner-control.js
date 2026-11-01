@@ -1,4 +1,5 @@
 import { courseCoordinates, localPoint } from './traversal-layout.js';
+import { letterFits } from './spelling-variants.js';
 import {
   LANES,
   LANE_HALF,
@@ -666,9 +667,11 @@ export class RunnerControl {
         if (this.taken.has(t.id) || Math.abs(this.s - t.s) > 0.75 || Math.abs(this.lat - LANES[t.lane]) > LANE_HALF)
           continue;
         this.taken.add(t.id);
-        if (t.correct) this.filled.set(t.id, true);
+        // With two accepted spellings, a letter counts if it keeps one of them possible (centre / center).
+        const ok = word.variants?.length > 1 ? letterFits(word.answer, t.slot, t.letter, this.progress_(word)) : t.correct;
+        if (ok) this.filled.set(t.id, t.letter);
         for (const other of word.tokens) if (other.slot === t.slot) this.taken.add(other.id);
-        this.events.letter?.(t, word, this.progress_(word));
+        this.events.letter?.({ ...t, correct: ok }, word, this.progress_(word));
       }
     // The word panel closes as soon as the word is complete or its last letter row is behind the creature.
     if (word && (this.progress_(word).every(Boolean) || this.s > word.tokens.at(-1).s + 1.5))
@@ -709,9 +712,11 @@ export class RunnerControl {
     this.events.word?.(word, this.progress_(word), section);
   }
   progress_(word) {
-    return [...word.answer].map((c, i) =>
-      i < (word.given || 0) || this.filled.get(word.tokens.find(t => t.slot === i && t.correct)?.id) ? c : null,
-    );
+    return [...word.answer].map((c, i) => {
+      if (i < (word.given || 0)) return c;
+      const hit = word.tokens.find(t => t.slot === i && this.filled.has(t.id));
+      return hit ? (typeof this.filled.get(hit.id) === 'string' ? this.filled.get(hit.id) : hit.letter) : null;
+    });
   }
   // After a fall in a run: back a few metres, standing, in an open lane, so the hole can be read and the run goes on.
   // A stepping-stone stream sends the creature back to its bank, lined up with the first stone.

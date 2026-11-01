@@ -1,4 +1,5 @@
 import { RUNNER } from './runner-mode.js';
+import { sameLengthSpellings } from './spelling-variants.js';
 import { perChapter, shortPath } from './path-shape.js';
 
 // Runner sections (runner mode). Between gates the creature runs on its own in three lanes along a long moving
@@ -90,19 +91,26 @@ function wordRun(section, r, run, from) {
   // The first letter is given (shown in the word panel from the start), so synonyms such as student / pupil are not
   // a guess: rows of letters start from the second letter.
   const given = 1;
+  // British and American spellings of the same length are both correct (organise / organize): where they differ,
+  // the row holds both letters and neither one is ever used as a wrong letter (spelling-variants.js).
+  const variants = target === 'en' ? sameLengthSpellings(answer) : [answer];
   [...answer].forEach((letter, slot) => {
     if (slot < given) return;
-    const lane = Math.floor(r() * 3) % 3,
-      pool = [...ALPHABET[target]].filter(c => c !== letter);
-    for (let i = 0; i < 3; i++)
+    const right = [...new Set(variants.map(v => v[slot]))],
+      first = Math.floor(r() * 3) % 3,
+      lanes = right.length > 1 ? [first, (first + 1 + (Math.floor(r() * 2) % 2)) % 3] : [first],
+      pool = [...ALPHABET[target]].filter(c => !right.includes(c));
+    for (let i = 0; i < 3; i++) {
+      const k = lanes.indexOf(i);
       tokens.push({
         id: `${section.id}:letter:${slot}:${i}`,
         slot,
         s,
         lane: i,
-        letter: i === lane ? letter : pool[Math.floor(r() * pool.length) % pool.length],
-        correct: i === lane,
+        letter: k >= 0 ? right[k] : pool[Math.floor(r() * pool.length) % pool.length],
+        correct: k >= 0,
       });
+    }
     const gap = speedAt(run, s + speedAt(run, s) * ROW_SECONDS) * ROW_SECONDS;
     if (slot < answer.length - 1)
       for (let i = 0; i < 4; i++)
@@ -120,6 +128,7 @@ function wordRun(section, r, run, from) {
       direction,
       prompt: direction === 'tr-en' ? word.tr : word.en,
       answer,
+      variants,
       language: target,
       given,
       tokens,
