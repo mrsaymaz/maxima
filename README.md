@@ -66,6 +66,7 @@ Players download only what they use. Reaching the opening screen takes about 3.2
 | `npm test` | Test suite (runner mode); `npm run test:classic` for classic-only tests |
 | `npm run build` | Build `src/` → `dist/`, refresh the offline shell, verify |
 | `npm run verify` | Check `dist/` only: files, lessons, models, offline shell (used by Netlify) |
+| `npm run package` | Zip `dist/` with a `_headers` file for Netlify Drop or another static host (`release/`, not committed) |
 | `npm run offline` | Refresh `dist/offline-shell.json` and the service-worker hash |
 | `npm run creatures:web` | Rebuild the compressed creatures from `art/` (needs `@gltf-transform/cli` 4.x and KTX-Software `toktx` on PATH) |
 | `npm run portraits` | Rebuild `dist/assets/portraits/*.webp` from `art/portraits/*.png` (Python with Pillow) |
@@ -88,7 +89,10 @@ Players download only what they use. Reaching the opening screen takes about 3.2
 - Netlify publishes the committed `dist/` after checking it, so always commit a fresh `npm run build`.
 - `netlify.toml` also sets cache headers: hashed creature files are cached for a year, and the service worker and shell list are always revalidated.
 
-**Manual upload (Netlify Drop or any static host).** Upload the contents of `dist/`: the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data`.
+**Manual upload (Netlify Drop or any static host).**
+- Run `npm run package` after `npm run build`. It verifies `dist/` and writes `release/solMaxima-v<version>-Netlify-Drop.zip`.
+- The zip's top level is the site itself, plus a `_headers` file with the same cache rules as `netlify.toml`, because drag-and-drop deploys don't read `netlify.toml`.
+- On [app.netlify.com/drop](https://app.netlify.com/drop), drop the zip, or its extracted folder: the folder whose immediate contents include `index.html`, `corridor-app.js`, `assets` and `data`.
 
 Deploying to the same site address keeps players' browser saves; a new address starts with fresh storage.
 

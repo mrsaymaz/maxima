@@ -16,7 +16,8 @@
   "portraits": "python3 scripts/build-portraits.py",
   "curriculum": "python3 scripts/expand-curriculum.py && node scripts/split-lessons.mjs",
   "split:lessons": "node scripts/split-lessons.mjs",
-  "rig": "node scripts/build-creature-rigs.mjs"
+  "rig": "node scripts/build-creature-rigs.mjs",
+  "package": "node scripts/package-drop.mjs"
  },
  "devDependencies": {
   "esbuild": "^0.25.12",
