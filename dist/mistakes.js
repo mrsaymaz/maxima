@@ -40,7 +40,7 @@ export function explainMistake(task,action,unit){
  }
  const q=t.rounds?.[t.round];if(!q)return null;const chosen=action?.text??'';
  switch(t.type){
-  case'sentence':return{answer:q.answer,tr:sentenceTr(unit,q.id),reason:q.answer.trim().endsWith('?')?'Questions begin with the question word or helper verb.':`Next comes “${q.correct[t.used.length]}”. English order: who → does what → the rest.`,ids:[q.id]};
+  case'sentence':return{answer:q.answer,tr:'',reason:q.answer.trim().endsWith('?')?'Questions begin with the question word or helper verb.':`Next comes “${q.correct[t.used.length]}”. English order: who → does what → the rest.`,ids:[q.id]};
   case'ending':return{answer:`${q.prompt.replace(/…$/,'')} ${q.answer}`,tr:q.context||'',reason:'Only this ending completes the meaning of the sentence.',ids:[q.id]};
   case'gap':return{answer:q.answer,tr:sentenceTr(unit,q.id),reason:grammarReason(q.answer,chosen),ids:[q.id]};
   case'correct':{const d=diffWords(q.answer,chosen);return{answer:q.answer,tr:q.context||sentenceTr(unit,q.id),reason:d.answer&&chosen?grammarReason(d.answer.replace(/[.!?]$/,''),d.chosen.replace(/[.!?]$/,'')):'Check the verb form and word order against the subject.',ids:[q.id]};}

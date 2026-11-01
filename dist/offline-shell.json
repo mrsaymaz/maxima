@@ -1,5 +1,5 @@
 {
- "hash": "f630db51d684",
+ "hash": "0bb0ea5d043c",
  "files": [
   "./",
   "index.html",
@@ -44,8 +44,10 @@
   "cosmetics.js",
   "creature-contact.js",
   "creature-controls.js",
+  "creature-sketch.js",
   "curriculum-numbers.js",
   "daily.js",
+  "danger-lessons.js",
   "device-report.js",
   "elemental-attacks.js",
   "elemental-fx.js",
@@ -147,6 +149,7 @@
   "task-gates.js",
   "task-occlusion.js",
   "task-presentation.js",
+  "task-voice.js",
   "terrain-response.js",
   "touch-stick.js",
   "trail-camera-collision.js",

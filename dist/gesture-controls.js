@@ -11,7 +11,7 @@ export function saveControls(c,store=globalThis.localStorage){try{store?.setItem
 export function applyControls(c,doc=globalThis.document){if(!doc?.body)return;doc.body.classList.toggle('show-buttons',!!c.buttons);doc.body.classList.toggle('left-hand',!!c.left);}
 // A swipe once the finger has moved far enough; a tap when it lifts quickly without moving.
 export function classifyGesture(dx,dy,ms,lifted=false){const d=Math.hypot(dx,dy);if(d>=SWIPE)return Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');return lifted&&d<TAP_MOVE&&ms<=TAP_TIME?'tap':null;}
-const EXCLUDED='#shrine-layer,button,a,input,select,textarea,label,.modal,.modal-backdrop,#joystick,.task-panel,.guardian-finisher,.play-status,.topbar,.controls-tutorial';
+const EXCLUDED='.danger-lesson,#shrine-layer,button,a,input,select,textarea,label,.modal,.modal-backdrop,#joystick,.task-panel,.guardian-finisher,.play-status,.topbar,.controls-tutorial';
 // Where gestures act: a run, the free trail (clearings and gate fights), or the guardian arena; null elsewhere.
 export function gestureContext(world,doc=globalThis.document){
  const body=doc?.body?.classList;if(!body?.contains('playing')||body.contains('in-task')||body.contains('in-guardian-finisher')||body.contains('cinematic')||body.contains('in-shrine')||doc.querySelector('.modal-backdrop'))return null;

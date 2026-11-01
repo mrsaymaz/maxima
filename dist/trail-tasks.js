@@ -26,7 +26,8 @@ export function makeTask(unit,type,nodeId,seed=nodeId,seen={},level=0,practice=n
   if(pairs.length<3)throw Error(`${unit.id}: ${type} needs three distinct records`);task.pairs=pairs;task.leftOrder=shuffle([0,1,2],r);task.rightOrder=shuffle([0,1,2],r);return finish(task);
  }
  task.kind='rounds';const choice=(id,prompt,answer,options,extra={})=>({id,prompt,answer,options:shuffle(unique([answer,...options],x=>x),r),...extra});
- if(type==='sentence')task.rounds=take(unit.sentences).map(s=>({id:s.id,kind:'blocks',prompt:depth>=5?'Restore the complete English sentence.':s.tr||'Build a complete English sentence.',answer:s.blocks.join(' '),blocks:shuffle(s.blocks.map((text,index)=>({text,index})),r),correct:s.blocks.slice()}));
+ // Sentence order shows no Turkish while the student builds: the meaning (q.meaning) is revealed once it is complete.
+ if(type==='sentence')task.rounds=take(unit.sentences).map(s=>({id:s.id,kind:'blocks',prompt:s.blocks.join(' ').trim().endsWith('?')?'Put the blocks in order to build the English question.':'Put the blocks in order to build the English sentence.',meaning:s.tr||'',answer:s.blocks.join(' '),blocks:shuffle(s.blocks.map((text,index)=>({text,index})),r),correct:s.blocks.slice()}));
  // A free prefix (e.g. “Could you…”) has many valid continuations. These
  // mechanisms ask for a specific supplied meaning, always visible on the object.
  // Untranslated sentences remain available for full sentence construction.
