@@ -8,6 +8,7 @@ A completed area, meaning a won guardian fight at the end of a six-gate area, ad
 
 - **The team** is the creature's team (`gryffindor`, `hufflepuff`, `slytherin`, `ravenclaw`).
 - **The grade** comes from the selected lesson (unit).
+- **A named student** (0.73.0, League v11.7.0): the win counts for the student's own class grade and League team from the Roster tab, whatever creature or lesson they played, and Ulti_Log records their Class, Student ID and name.
 - Ulti cannot be spent. They fade after the number of hours the League keeps them (7 days = 168 hours).
 - Nothing else earns Ulti:
   - not coins;
@@ -38,7 +39,8 @@ With `ultiApi: ''` the copy is practice-only: no League card, no Ulti messages a
 
 ## Requests
 
-- **Start:** when an area is played, the game sends `{action:'start', game:'solmaxima', grade, team, arena, pace, unit, device}`.
+- **Roster:** `{action:'roster', grade}` (no key or PIN) returns `{classes, students:[{id, name, className, team}]}`, active students only, for "Who are you?". The last answer is cached on the device.
+- **Start:** when an area is played, the game sends `{action:'start', game:'solmaxima', grade, team, arena, pace, unit, device, student?}`. `student` is the chosen Student ID (e.g. `5-A:slytherin:0`) and is left out for unnamed play.
   - `arena` is 0–2 and `pace` is `relaxed` or `challenge`.
   - The ticket is kept in this browser under the area's run, so a paused or reloaded game can still claim.
   - If the device is offline, it asks again after each gate.

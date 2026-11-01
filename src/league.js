@@ -40,6 +40,8 @@ export function arenaPoints(settings, pace, arena) {
   return Number.isFinite(v) ? v : null;
 }
 
+// A League Student ID, as the Roster tab writes them (e.g. "5-A:slytherin:3").
+export const validStudentId = id => typeof id === 'string' && /^[A-Za-z0-9:_-]{1,100}$/.test(id);
 function randomId(length = 24) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
     bytes = new Uint8Array(length);
@@ -160,7 +162,9 @@ export function createLeague({
     s.outbox = s.outbox.filter(item => item && t - item.at <= OUTBOX_MS);
   }
   // A ticket when an area begins, kept under the area's run id so a paused or reloaded game can still claim. null offline.
-  async function start({ runId, grade, team, arena, pace, unit = '' }) {
+  // League v11.7.0: the student's Student ID (from the roster) goes into the ticket; the League then gives the win to
+  // that student's class grade and League team, and logs who earned it.
+  async function start({ runId, grade, team, arena, pace, unit = '', student = '' }) {
     if (!enabled) return null;
     const existing = state().tickets[runId];
     if (existing) return existing.ticket;
@@ -175,11 +179,18 @@ export function createLeague({
         .replace(/[^A-Za-z0-9_-]/g, '')
         .slice(0, 24),
       device: device(),
+      ...(validStudentId(student) ? { student } : {}),
     });
     if (reply.kind !== 'ok' || typeof reply.data.ticket !== 'string') return null;
     const s = state();
     forgetOld(s);
-    s.tickets[runId] = { ticket: reply.data.ticket, at: now(), grade, team };
+    s.tickets[runId] = {
+      ticket: reply.data.ticket,
+      at: now(),
+      grade,
+      team,
+      ...(validStudentId(student) ? { student } : {}),
+    };
     save(s);
     return reply.data.ticket;
   }
@@ -208,6 +219,9 @@ export function createLeague({
         deviceWins: d.deviceWins,
         reason: d.reason || null,
         duplicate: !!d.duplicate,
+        // The grade and team the League actually credited (a named student's own class grade and team).
+        ...([5, 6, 7, 8].includes(d.grade) ? { grade: d.grade } : {}),
+        ...(LEAGUE_TEAMS.includes(d.team) ? { team: d.team } : {}),
       };
     }
     if (reply.kind === 'refused') return { state: 'refused', reason: reply.data?.reason || 'refused' };
@@ -250,7 +264,48 @@ export function createLeague({
     return results;
   }
   const outbox = () => state().outbox.slice();
-  return { enabled, device, refresh, snapshot, start, renew, ticketFor, ticketAge, claim, flush, outbox };
+  // League v11.7.0: a grade's classes and active students ({id, name, className, team}), for "Who are you?".
+  // The last answer is kept on the device, so the list also opens offline.
+  const cachedRoster = grade => {
+    const r = state().rosters?.[grade];
+    return r && Array.isArray(r.students)
+      ? { classes: r.classes || [], students: r.students, at: r.at, online: false }
+      : null;
+  };
+  async function roster(grade) {
+    if (!enabled || ![5, 6, 7, 8].includes(Number(grade))) return null;
+    const reply = await request({ action: 'roster', grade: Number(grade) });
+    if (reply.kind === 'ok' && Array.isArray(reply.data.students)) {
+      const students = reply.data.students.filter(
+        p =>
+          validStudentId(p?.id) &&
+          typeof p.name === 'string' &&
+          /^[5-8]-[A-Z]$/.test(p.className) &&
+          LEAGUE_TEAMS.includes(p.team),
+      );
+      const classes = [...new Set(students.map(p => p.className))].sort();
+      const s = state();
+      s.rosters = { ...(s.rosters || {}), [grade]: { classes, students, at: now() } };
+      save(s);
+      return { classes, students, at: now(), online: true };
+    }
+    return cachedRoster(grade);
+  }
+  return {
+    enabled,
+    device,
+    refresh,
+    snapshot,
+    start,
+    renew,
+    ticketFor,
+    ticketAge,
+    claim,
+    flush,
+    outbox,
+    roster,
+    cachedRoster,
+  };
 }
 // What the student reads after a win (same wording as Wordramp, for an area instead of a race).
 export function ultiMessage(result, { grade, team }) {

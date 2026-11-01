@@ -54,6 +54,7 @@ Sizes are the readable line counts in `src/`.
 | `language-feedback.js`, `task-voice.js`, `voice.js`, `voice-preference.js`, `mistakes.js`, `question-cues.js` | Feedback after answers, read-aloud and reveal cards, recorded voice, voice choice, mistake explanations. |
 | `app-shell.js`, `runtime-lifecycle.js`, `device-report.js` | Install, offline registration, full screen, wake lock, pausing on interruption, local device report. |
 | `league.js`, `ulti-icon.js` | English League (Ulti points) client. |
+| `student-picker.js`, `student.css` | "Who are you?": the student picks their name from the League roster (their grade and team's classmates), so Ulti wins name who earned them. |
 
 ### Game state (pure, no DOM)
 | Module | Role |

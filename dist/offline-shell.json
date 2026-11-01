@@ -1,5 +1,5 @@
 {
- "hash": "c73068bb7220",
+ "hash": "881134ca6457",
  "files": [
   "./",
   "index.html",
@@ -150,6 +150,8 @@
   "story-scene.js",
   "story.css",
   "story.js",
+  "student-picker.js",
+  "student.css",
   "style.css",
   "surface-materials.js",
   "task-gates.js",

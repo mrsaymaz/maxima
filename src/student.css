@@ -1,0 +1,285 @@
+/* "Who are you?" (0.73.0): the class and name picker (student-picker.js) and the "Playing as" line on the opening
+   screen. Team colours match the launch team shields (launch-ui.js ELEMENTS). */
+.team-gryffindor {
+  --team-a: #ff9d64;
+  --team-b: #e56337;
+}
+.team-hufflepuff {
+  --team-a: #f6d97e;
+  --team-b: #ddb344;
+}
+.team-slytherin {
+  --team-a: #aad98b;
+  --team-b: #6eb274;
+}
+.team-ravenclaw {
+  --team-a: #82d9ec;
+  --team-b: #42accb;
+}
+
+/* Opening screen: in the footer links row, in place of "Team progress saves on this device". */
+.launch-footer-links .launch-student {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 40px;
+  margin: 0;
+  padding: 4px 6px 4px 10px;
+  border: 2px solid #1b294f;
+  border-radius: 999px;
+  background: #fffdf0;
+  box-shadow: 0 2px 0 #1b294f;
+  color: #1b294f;
+  font:
+    800 13px/1.2 MaximaRound,
+    system-ui,
+    sans-serif;
+  text-align: left;
+  text-decoration: none;
+}
+.launch-footer-links .launch-student span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launch-footer-links .launch-student em {
+  font-style: normal;
+}
+.launch-footer-links .launch-student small {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e6effa;
+  color: #237fcb;
+  font-weight: 900;
+  font-size: 12px;
+}
+.launch-footer-links .launch-student.is-empty {
+  border-style: dashed;
+  background: #fff7dc;
+  color: #52658d;
+}
+.team-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--team-b, #52658d);
+  box-shadow: inset 0 0 0 3px var(--team-a, #e6effa);
+  border: 2px solid #1b294f;
+}
+
+/* The picker modal. */
+.modal.student-modal {
+  width: min(560px, 100%);
+}
+.modal.student-modal h2 {
+  margin-bottom: 8px;
+}
+.student-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.student-ask {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+.student-ask .guide-figure {
+  height: 104px;
+  flex: none;
+  margin-bottom: -4px;
+}
+.modal .student-ask .guide-bubble {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1b294f;
+  opacity: 1;
+}
+.student-ask .guide-bubble:before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  bottom: 18px;
+  border: 8px solid transparent;
+  border-right: 10px solid #1b294f;
+  border-left: 0;
+}
+.student-grades,
+.student-classes,
+.student-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.student-picker button {
+  font-family: MaximaRound, system-ui, sans-serif;
+  cursor: pointer;
+}
+.student-grade {
+  flex: 1;
+  min-width: 70px;
+  padding: 8px 6px;
+  border: 2px solid #e7d5ac77;
+  border-radius: 12px;
+  background: #0f2e2a;
+  color: #f4edda;
+  font-weight: 800;
+  font-size: 14px;
+}
+.student-grade.is-selected {
+  background: #f3cf61;
+  border-color: #f3cf61;
+  color: #1b294f;
+}
+.student-class {
+  flex: 1 1 120px;
+  min-height: 64px;
+  border: 4px solid #1b294f;
+  border-radius: 18px;
+  background: linear-gradient(#86dbff, #2989d1);
+  box-shadow:
+    inset 0 -5px 0 #1c64a8,
+    0 4px 0 #0b1d2a;
+  color: white;
+  font:
+    400 28px MaximaDisplay,
+    system-ui,
+    sans-serif;
+  text-shadow: 0 2px 0 #1b4888;
+}
+.student-names {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  max-height: min(46dvh, 420px);
+  overflow-y: auto;
+  padding: 2px 2px 6px;
+}
+.student-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 6px 10px;
+  border: 3px solid #1b294f;
+  border-radius: 14px;
+  background: #fffdf0;
+  box-shadow: 0 3px 0 #0b1d2a;
+  color: #1b294f;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.15;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.student-name i {
+  flex: none;
+  width: 12px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(var(--team-a), var(--team-b));
+}
+.student-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 4px solid #1b294f;
+  border-left: 14px solid var(--team-b, #52658d);
+  border-radius: 18px;
+  background: #fffdf0;
+  color: #1b294f;
+}
+.student-card b {
+  font:
+    400 26px/1.1 MaximaDisplay,
+    system-ui,
+    sans-serif;
+}
+.student-card span {
+  font-weight: 800;
+  color: #52658d;
+}
+.student-card small {
+  font-size: 13px;
+  line-height: 1.35;
+  color: #2c3a52;
+}
+.student-row {
+  justify-content: space-between;
+}
+.student-row .primary-action {
+  flex: 1;
+  min-height: 48px;
+  border: 3px solid #1b294f;
+  border-radius: 14px;
+  background: linear-gradient(#ffe27a, #f3b93d);
+  box-shadow: 0 4px 0 #0b1d2a;
+  color: #1b294f;
+  font-weight: 900;
+  font-size: 17px;
+}
+.student-picker .secondary {
+  min-height: 44px;
+  padding: 6px 14px;
+  border: 2px solid #e7d5ac77;
+  border-radius: 12px;
+  background: transparent;
+  color: #f4edda;
+  font-weight: 800;
+}
+.student-note {
+  margin: 4px 0;
+  font-size: 15px !important;
+  color: #f4edda !important;
+}
+.student-skip {
+  align-self: center;
+  border: 0;
+  background: none;
+  color: #cbdccc;
+  font-size: 13px;
+  text-decoration: underline;
+}
+@media (max-width: 599px) {
+  .modal.student-modal {
+    padding: 18px 14px;
+  }
+  .student-ask .guide-figure {
+    height: 84px;
+  }
+  .modal .student-ask .guide-bubble {
+    font-size: 14px;
+  }
+  .student-names {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .student-name {
+    font-size: 14px;
+  }
+  .launch-footer-links .launch-student {
+    font-size: 12px;
+  }
+  .launch-footer-links .launch-student em {
+    display: none;
+  }
+  .launch-footer-links .launch-student.is-empty small {
+    display: none;
+  }
+}
+@media (max-height: 620px) {
+  .student-ask .guide-figure {
+    height: 70px;
+  }
+  .student-names {
+    max-height: 40dvh;
+  }
+}

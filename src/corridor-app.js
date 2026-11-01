@@ -33,7 +33,24 @@ import { LanguageCoach, languageFeedbackMarkup, guidancePlan, questionFocus } fr
 import { englishVoice, spokenRequest, storyVoice } from './voice-preference.js';
 import { playScene } from './story-scene.js';
 import { installTranslateGuard, translateNoticeMarkup } from './translate-guard.js';
-import { STORY_SCENES, STORY_ORDER, sceneSeen, markSeen, introScene, guardianScene, winScenes, reaction } from './story.js';
+import {
+  classStepMarkup,
+  nameStepMarkup,
+  confirmMarkup,
+  studentLineMarkup,
+  pickerClasses,
+  TEAM_NAMES,
+} from './student-picker.js';
+import {
+  STORY_SCENES,
+  STORY_ORDER,
+  sceneSeen,
+  markSeen,
+  introScene,
+  guardianScene,
+  winScenes,
+  reaction,
+} from './story.js';
 import { acceptedLines, pieceLine, revealMarkup, revealTime } from './task-voice.js';
 import { otherSpellings } from './spelling-variants.js';
 import { lessonPlan, runDangerLesson } from './danger-lessons.js';
@@ -291,6 +308,12 @@ function showModal(title, html, { kind = '' } = {}) {
   $('.modal .close')?.focus();
 }
 function closeModal() {
+  // Closing "Who are you?" without choosing leaves the opening screen as it was.
+  if (picker) {
+    const done = picker.resolve;
+    picker = null;
+    done?.(false);
+  }
   modal = false;
   $('#modal-layer').innerHTML = '';
   if (world) world.paused = false;
@@ -868,6 +891,7 @@ function setupContext() {
     portrait: partnerPortrait(partner().id, j.level),
     level: j.level,
     element: partner().element,
+    studentLine: league.enabled ? studentLineMarkup(save.student) : '',
     nickname: save.nickname,
     unitTitle: u.title,
     unitNumber: units.filter(x => x.grade === u.grade).findIndex(x => x.id === u.id) + 1,
@@ -1357,7 +1381,15 @@ function frame() {
     return;
   }
   world.paused =
-    screen !== 'play' || !!task || modal || resultCard || locked || tutorialOpen || lessonOpen || storyOpen || translationActive;
+    screen !== 'play' ||
+    !!task ||
+    modal ||
+    resultCard ||
+    locked ||
+    tutorialOpen ||
+    lessonOpen ||
+    storyOpen ||
+    translationActive;
   if (screen !== 'play' || task || modal || resultCard) return;
   const e = state(),
     chapter = chapterOf(e),
@@ -2225,7 +2257,12 @@ const leagueInfo = (e = state()) => ({
   arena: e.area,
   pace: save.mode === 'challenge' ? 'challenge' : 'relaxed',
   unit: save.selected,
+  student: save.student?.id || '',
 });
+// Where this device's wins count: a named student's own class grade and League team; otherwise the lesson grade and
+// the creature's team.
+const ultiTarget = () =>
+  save.student ? { grade: save.student.grade, team: save.student.team } : { grade: unit().grade, team: partner().id };
 function ensureTicket() {
   const e = state();
   if (!league.enabled || !shortPath(e) || journey().guardians.includes(e.area)) return;
@@ -2236,7 +2273,10 @@ function ensureTicket() {
 }
 async function claimUlti(runId, info) {
   const result = await league.claim(runId).catch(() => ({ state: 'retry' }));
-  const msg = ultiMessage(result, info);
+  const msg = ultiMessage(result, {
+    grade: result.grade ?? (save.student?.grade || info.grade),
+    team: result.team ?? (save.student?.team || info.team),
+  });
   if (msg) showUlti(msg);
   league.refresh(info.grade).catch(() => {});
 }
@@ -2598,6 +2638,115 @@ const STUMBLE_TIPS = {
   thorns: 'Run where the thorns are down.',
 };
 const stumbleTip = type => STUMBLE_TIPS[type] || 'Jump the hurdles: ↑ or swipe up.';
+// "Who are you?" (student-picker.js): with the English League on, a student taps their name from the League roster
+// once on this device (when PLAY is pressed, after choosing team and lesson), so each Ulti win names who earned it.
+// The list is the chosen lesson grade's classes and, in the class, the chosen team's names only; one class opens by
+// itself. "Show everyone" lists every grade and team. The League gives a named student's wins to their own class
+// grade and team.
+let picker = null;
+function ensureStudent() {
+  if (!league.enabled || save.student || save.studentSkip) return Promise.resolve(true);
+  return openStudentPicker({ fromPlay: true });
+}
+function openStudentPicker({ fromPlay = false } = {}) {
+  if (!league.enabled || typeof document === 'undefined' || typeof document.body?.appendChild !== 'function')
+    return Promise.resolve(true);
+  return new Promise(resolve => {
+    picker = {
+      grade: unit().grade,
+      team: partner().id,
+      all: false,
+      className: null,
+      autoClass: false,
+      studentId: null,
+      roster: null,
+      loading: true,
+      fromPlay,
+      resolve,
+    };
+    renderPicker();
+    void loadPickerRoster();
+  });
+}
+async function loadPickerRoster() {
+  const p = picker;
+  if (!p) return;
+  p.roster = league.cachedRoster(p.grade);
+  p.loading = !p.roster;
+  renderPicker();
+  const fresh = await league.roster(p.grade).catch(() => null);
+  if (picker !== p) return;
+  p.roster = fresh || p.roster;
+  p.loading = false;
+  p.offline = !fresh?.online && !p.roster?.students?.length;
+  renderPicker();
+}
+function renderPicker() {
+  const p = picker;
+  if (!p) return;
+  const figure = guideFigure(p.studentId ? 'smile' : 'point', { cls: 'student-figure' }),
+    students = p.roster?.students || [],
+    chosen = students.find(s => s.id === p.studentId),
+    classes = pickerClasses(p.roster?.classes || [], students, p.team, p.all);
+  // A grade with one class (6-C, 7-A, 8-B) goes straight to the names (not in "everyone", which has grade tabs).
+  if (!p.className && !p.loading && !p.all && classes.length === 1) {
+    p.className = classes[0];
+    p.autoClass = true;
+  }
+  const html = chosen
+    ? confirmMarkup({ student: chosen, figure })
+    : p.className
+      ? nameStepMarkup({
+          className: p.className,
+          team: p.team,
+          all: p.all,
+          students,
+          canGoBack: !p.autoClass,
+          figure,
+        })
+      : classStepMarkup({
+          grade: p.grade,
+          team: p.team,
+          all: p.all,
+          classes: p.roster?.classes || [],
+          students,
+          loading: p.loading,
+          offline: p.offline,
+          figure,
+        });
+  const resolve = p.resolve;
+  picker = null; // showModal must not treat a step change as closing the picker
+  showModal('Who are you?', html, { kind: 'student-modal' });
+  picker = p;
+  p.resolve = resolve;
+}
+function finishPicker(ok) {
+  const done = picker?.resolve;
+  picker = null;
+  closeModal();
+  done?.(ok);
+}
+async function confirmStudent() {
+  const p = picker,
+    s = p?.roster?.students?.find(x => x.id === p.studentId);
+  if (!s) return;
+  save.student = {
+    id: s.id,
+    name: s.name,
+    className: s.className,
+    team: s.team,
+    grade: Number(s.className.charAt(0)),
+    at: Date.now(),
+  };
+  save.studentSkip = false;
+  persist();
+  finishPicker(true);
+  // Chosen from the opening screen, their League team's creature is selected for them (they can still switch). From
+  // PLAY they have just chosen a creature, so it stays: the League credits their own team either way.
+  if (!p.fromPlay && partner().id !== s.team && PARTNERS.some(x => x.id === s.team)) await selectPartner(s.team);
+  toast(`Welcome, ${s.name}! Your wins count for Grade ${save.student.grade} ${TEAM_NAMES[s.team]}.`);
+  if (screen === 'home') renderHome();
+}
 // Browser translation (translate-guard.js): while a page translation is active the game pauses behind a notice in
 // English and Turkish, answers do not count, and the save keeps a count for the teacher.
 let translationActive = false,
@@ -2661,7 +2810,8 @@ function boostMeter(r) {
     boostMeterEl.id = 'boost-meter';
     boostMeterEl.setAttribute('role', 'meter');
     boostMeterEl.setAttribute('aria-label', 'Boost fuel');
-    boostMeterEl.innerHTML = '<span class="bolt" aria-hidden="true">⚡</span><span class="track"><i></i></span><small></small>';
+    boostMeterEl.innerHTML =
+      '<span class="bolt" aria-hidden="true">⚡</span><span class="track"><i></i></span><small></small>';
     document.body.appendChild(boostMeterEl);
   }
   const fuel = Math.max(0, Math.min(1, r.boostFuel(nav))),
@@ -2845,7 +2995,9 @@ function shrineHtml() {
     balance: save.wallet?.balance || 0,
     level: journey().level,
     owned: e.specials || [],
-    ulti: pts ? { points: pts, grade: unit().grade, team: p.name, icon: ultiIcon() } : null,
+    ulti: pts
+      ? { points: pts, grade: ultiTarget().grade, team: TEAM_NAMES[ultiTarget().team] || p.name, icon: ultiIcon() }
+      : null,
   });
 }
 // The shrine stands on the path at the end of the chase (shrine-stage.js); its tags follow the pedestals on screen.
@@ -3033,8 +3185,9 @@ function guardianFrame() {
       if (b.tough) claimUlti(won.id, info);
       const p = state().pendingEvolution;
       // Mr. Saymaz celebrates (and, after the last arena, the finale plays) before the evolution.
-      afterStory(winScenes(save.area), () =>
-        void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
+      afterStory(
+        winScenes(save.area),
+        () => void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
       );
     }
     return;
@@ -3158,8 +3311,9 @@ function completeBattleTask() {
     if (winGuardian(journey(), e)) {
       persist();
       const p = e.pendingEvolution;
-      afterStory(winScenes(save.area), () =>
-        void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
+      afterStory(
+        winScenes(save.area),
+        () => void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
       );
     }
     return;
@@ -3340,7 +3494,68 @@ async function act(event) {
   if (locked && !['evo-sound', 'evo-skip'].includes(d.do)) return;
   switch (d.do) {
     case 'enter':
+      if (!(await ensureStudent())) break;
       await enter();
+      break;
+    case 'student':
+      await openStudentPicker();
+      if (screen === 'home') renderHome();
+      break;
+    case 'student-grade':
+      if (picker) {
+        picker.grade = Number(d.value);
+        picker.className = null;
+        picker.autoClass = false;
+        void loadPickerRoster();
+      }
+      break;
+    case 'student-all':
+      if (picker) {
+        picker.all = true;
+        picker.className = null;
+        picker.autoClass = false;
+        picker.studentId = null;
+        renderPicker();
+      }
+      break;
+    case 'student-retry':
+      if (picker) void loadPickerRoster();
+      break;
+    case 'student-class':
+      if (picker) {
+        picker.className = d.value;
+        renderPicker();
+      }
+      break;
+    case 'student-pick':
+      if (picker) {
+        picker.studentId = d.value;
+        renderPicker();
+      }
+      break;
+    case 'student-back':
+      if (picker) {
+        picker.className = null;
+        picker.autoClass = false;
+        picker.studentId = null;
+        renderPicker();
+      }
+      break;
+    case 'student-back-names':
+      if (picker) {
+        picker.studentId = null;
+        renderPicker();
+      }
+      break;
+    case 'student-confirm':
+      await confirmStudent();
+      break;
+    case 'student-skip':
+      if (picker) {
+        save.studentSkip = true;
+        persist();
+        finishPicker(true);
+      }
       break;
     case 'next-area':
       if (state().phase === 'closed' && save.area < unlocked(journey())) {
@@ -3601,8 +3816,9 @@ async function act(event) {
       break;
     }
     case 'go': {
-      const name =
-        ($('#onboard-name')?.value || onboardName || save.nickname || '').trim().slice(0, 24) || partner().name;
+      const typed = $('#onboard-name')?.value;
+      if (!(await ensureStudent())) break;
+      const name = (typed || onboardName || save.nickname || '').trim().slice(0, 24) || partner().name;
       save.nickname = name;
       save.partnerNames ??= {};
       save.partnerNames[partner().id] = name;

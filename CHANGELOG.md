@@ -2,6 +2,10 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.73.0 · Who are you?
+
+With the English League on, PLAY first asks "Who are you?". The list comes from the League's Roster tab. Students see only their grade's classes and, in their class, only their own team's names (a one-class grade skips straight to the names). "Show everyone" lists every grade and team. The choice is kept on the device and shown on the opening screen with a Change button. Each area's ticket carries the Student ID, so the League's Ulti_Log shows the student's class and name, and their wins count for their own class grade and League team. Needs English League v11.7.0. See [release notes](docs/releases/RELEASE-v0.73.0.md).
+
 ## 0.72.0 · Keeping the English in English
 
 Pages tell browsers not to translate them (translate="no", notranslate). If a tool translates the page anyway, the game pauses behind a bilingual notice from Mr. Saymaz with steps for each browser, answers do not count, and the save counts the incident. Text cannot be selected during play, so the long-press "Translate" never appears, and the right-click menu is off. See [release notes](docs/releases/RELEASE-v0.72.0.md).
