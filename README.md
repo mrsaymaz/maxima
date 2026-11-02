@@ -66,7 +66,7 @@ Players download only what they use. Reaching the opening screen takes about 3.2
 | `npm test` | Test suite (runner mode); `npm run test:classic` for classic-only tests |
 | `npm run build` | Build `src/` → `dist/`, refresh the offline shell, verify |
 | `npm run verify` | Check `dist/` only: files, lessons, models, offline shell (the build command on Netlify and Vercel) |
-| `npm run package` | Zip `dist/` with a `_headers` file for Netlify Drop or another static host (`release/`, not committed) |
+| `npm run package` | Zip `dist/` for drag-and-drop deploys: a Netlify Drop zip (with `_headers`) and a Vercel zip (with a headers-only `vercel.json`) in `release/`, not committed |
 | `npm run offline` | Refresh `dist/offline-shell.json` and the service-worker hash |
 | `npm run creatures:web` | Rebuild the compressed creatures from `art/` (needs `@gltf-transform/cli` 4.x and KTX-Software `toktx` on PATH) |
 | `npm run portraits` | Rebuild `dist/assets/portraits/*.webp` from `art/portraits/*.png` (Python with Pillow) |
@@ -87,7 +87,8 @@ Players download only what they use. Reaching the opening screen takes about 3.2
 - Import the GitHub repository in Vercel. `vercel.json` sets everything: no framework, build command `npm run verify`, output directory `dist`.
 - Vercel publishes the committed `dist/` after checking it, so always commit a fresh `npm run build`. Choose the branch to deploy as the production branch in the project settings.
 - `vercel.json` has the same cache headers as `netlify.toml` (a test keeps the two files in step).
-- Without Git: `npx vercel deploy --prod` from the repository folder (the Vercel command-line tool). Vercel has no drag-and-drop zip upload.
+- **Production branch:** Vercel publishes the repository's default branch to the main address. Set the branch that holds the current version under Settings → Git → Production Branch (other branches become preview addresses).
+- **Without Git:** run `npm run package` and drop `release/solMaxima-v<version>-Vercel-Drop.zip` (or its extracted folder) on Vercel's new-project page ("drag and drop your project, or choose a file or a folder"). The zip's top level is the site with a `vercel.json` that carries only the cache headers, because a dropped folder is published as it is. The Vercel command-line tool (`npx vercel deploy --prod`) works too.
 - The English League stays on Netlify: its `/api/ulti` accepts requests from any site, so `config.js` needs no change.
 
 **Netlify from the repository.**
