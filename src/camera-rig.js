@@ -85,9 +85,12 @@ export class CreatureCamera {
       hz = bodyBounds
         ? Math.abs(Math.sin(heading)) * bodyBounds.halfWidth + Math.abs(Math.cos(heading)) * bodyBounds.halfDepth
         : half,
+      // While exploring and running, the camera frames only part of a jump's height, so a big form's leap does not
+      // push the camera back (the creature rises into the open sky above it for a moment instead).
+      boxFoot = view === 'explore' ? footY * 0.45 : footY,
       playerBox = {
-        min: { x: player.x - hx, y: footY, z: player.z - hz },
-        max: { x: player.x + hx, y: footY + rig.height, z: player.z + hz },
+        min: { x: player.x - hx, y: boxFoot, z: player.z - hz },
+        max: { x: player.x + hx, y: boxFoot + rig.height, z: player.z + hz },
       };
     if (view === 'explore') {
       // Aim well ahead of the creature so it sits in the lower third with the route above it.

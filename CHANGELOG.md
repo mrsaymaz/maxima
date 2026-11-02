@@ -2,6 +2,10 @@
 
 Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](docs/releases). Design notes from 0.19–0.46 are in [`docs/history`](docs/history).
 
+## 0.75.0 · Replays from the start, gentler jumps
+
+Replaying a won arena now takes the creature back to that arena's starting level (Whisperwood 0, Skyreach 4, Stormglass 8). It grows again at the same gates with the full evolution films, and a won rematch gives the guardian's level again (4, 8 or 10) along with Ulti. The student confirms first. Going back to an unfinished arena returns the level earned there. Big forms jump lower and land sooner (Level 10: 1.9 m instead of 3.5 m, 1.1 s in the air instead of 1.5 s). The camera no longer backs away mid-jump and frames the biggest forms a little closer. Levels 0–4 jump as before. See [release notes](docs/releases/RELEASE-v0.75.0.md).
+
 ## 0.74.0 · Play it again
 
 A won arena can be played again for practice: "Play Whisperwood again" on the opening screen starts a new route with a fresh gate order and new tasks from the same lesson. Coins and English practice count, the creature keeps its level, and the run ends with a guardian rematch. Winning the rematch completes the area again and earns Ulti like any completed area, within the League's daily limits. The rematch can be skipped. See [release notes](docs/releases/RELEASE-v0.74.0.md).

@@ -3,7 +3,13 @@ import { gateCount, perChapter, chapterCount, chapterOf, slotOf, shortPath } fro
 import { RUNNER, stretchZ } from './runner-mode.js';
 import { validGuardian, guardianDefeated } from './guardian-combat.js';
 import { newFormatPlan, validPractice } from './practice-selection.js';
-import { upgradePathGrowth, recordPathGrowth, recordGuardianGrowth, validPathGrowth } from './path-growth.js';
+import {
+  upgradePathGrowth,
+  recordPathGrowth,
+  recordGuardianGrowth,
+  validPathGrowth,
+  pathLevel,
+} from './path-growth.js';
 import { validPartners, validTeamProgress, allJourneyMaps } from './partners.js';
 import { freshWallet, validTravel, validWallet } from './traversal.js';
 import { masteryReady, validMastery } from './mastery.js';
@@ -101,8 +107,9 @@ export const guardianReady = (j, e = j.expeditions?.[unlocked(j)]) =>
       j.level === [3, 7, 9][e.area]
     : ready(j) && gate(j) && !j.completed && !j.guardians.includes(j.level === 2 ? 0 : j.level === 5 ? 1 : 2);
 // Practice replays (0.74.0): a won arena can be played again from its first gate, with a fresh gate order and new
-// tasks from the same lesson. The creature keeps its level (a replay never grows it or lowers it). The run ends with
-// a guardian rematch once the last chest is open; winning it completes the area again and earns Ulti (corridor-app).
+// tasks from the same lesson. From 0.75.0 the creature goes back to that arena's starting level (0, 4 or 8) and grows
+// again at the same gates, with the full evolutions. The run ends with a guardian rematch once the last chest is open;
+// winning it gives the guardian's level again (4, 8 or 10) and earns Ulti (corridor-app). Unlocked arenas stay open.
 export const rematchReady = (j, e) =>
   j.progressionVersion === 2 &&
   !!e &&
@@ -123,7 +130,26 @@ export function startReplay(j, unitId, area) {
   if (j.progressionVersion !== 2 || !j.guardians.includes(area)) return null;
   const e = (j.expeditions[area] = freshExpedition(j, unitId, area));
   e.replay = true;
+  j.level = pathLevel(0, area, gateCount(e));
+  j.levelArea = area;
+  e.level = j.level;
   return e;
+}
+// Entering an expedition puts the creature at that arena's level: a replay under way follows its own gates; going
+// back to the first arena not yet won (after a replay elsewhere) returns the level earned there. True if it changed.
+export function syncArenaLevel(j, e) {
+  if (j.progressionVersion !== 2 || !e) return false;
+  const from = j.level;
+  if (e.replay === true && e.phase !== 'closed') {
+    if (j.levelArea !== e.area) {
+      j.level = pathLevel(e.index, e.area, gateCount(e));
+      j.levelArea = e.area;
+    }
+  } else if (!e.replay && !j.guardians.includes(e.area) && j.levelArea !== undefined) {
+    j.level = pathLevel(e.index, e.area, gateCount(e));
+    delete j.levelArea;
+  }
+  return j.level !== from;
 }
 export const progress = j => TASK_TYPES.reduce((n, k) => n + Math.min(j.sets[k] || 0, required(j)), 0);
 export const maximum = j => TASK_TYPES.length * required(j);
@@ -351,6 +377,8 @@ export function winGuardian(j, e) {
       e.rematchWon = true;
       e.phase = 'closed';
       j.rematches = (j.rematches || 0) + 1;
+      j.levelArea = e.area;
+      recordGuardianGrowth(j, e);
       return true;
     }
     if (!guardianReady(j, e) || !guardianDefeated(e.battle)) return false;
@@ -439,7 +467,7 @@ function validJourneys(journeys, units) {
       (j.progressionVersion !== 2 &&
         ((j.level >= 3 && !j.guardians.includes(0)) || (j.level >= 6 && !j.guardians.includes(1)))) ||
       (j.guardians.includes(1) && !j.guardians.includes(0)) ||
-      (j.completed && (j.level !== 10 || !j.guardians.includes(2)))
+      (j.completed && ((j.levelArea === undefined && j.level !== 10) || !j.guardians.includes(2)))
     )
       return false;
     for (const e of Object.values(j.expeditions)) {

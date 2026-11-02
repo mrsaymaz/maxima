@@ -69,7 +69,14 @@ import { guardianHud, guardianFinisher, guardianControls } from './guardian-ui.j
 import { lessonMarkup } from './launch-ui.js';
 import { LESSON_TOPICS } from './lesson-topics.js';
 import { upgradePractice, notePracticeMistake, completePractice } from './practice-selection.js';
-import { upgradePathGrowth, pathGrowthState, pathLevel, recordPathGrowth } from './path-growth.js';
+import {
+  upgradePathGrowth,
+  pathGrowthState,
+  pathLevel,
+  recordPathGrowth,
+  arenaStart,
+  arenaBoss,
+} from './path-growth.js';
 import { routePreview, forkHint, sceneBeat } from './journey-director.js';
 import { expeditionTitle } from './expedition-composition.js';
 import { icon } from './ui-icons.js';
@@ -107,6 +114,7 @@ import {
   fightReady,
   canReplay,
   startReplay,
+  syncArenaLevel,
   freshExpedition,
   expedition,
   currentType,
@@ -904,6 +912,7 @@ function setupContext() {
     completed: j.completed,
     replaying: !!e.replay && e.phase !== 'closed',
     replayable: canReplay(j, save.area),
+    replayLevel: arenaStart(save.area),
     nextArea: e.phase === 'closed' && save.area < unlocked(j) ? save.area + 1 : null,
     nextAreaTitle: AREAS[Math.min(2, save.area + 1)].name,
     resume: !!(e.index || e.active || e.checkpoint || e.battle || e.choices.some(Boolean)),
@@ -1127,6 +1136,11 @@ function journal(tab = journalTab) {
 async function enter({ reuseForm = false } = {}) {
   document.body.classList.remove('opening', 'onboarding');
   locked = true;
+  // After a practice replay elsewhere, the creature takes this arena's level (expedition.js syncArenaLevel).
+  if (syncArenaLevel(journey(), state())) {
+    reuseForm = false;
+    persist();
+  }
   syncWorld();
   try {
     if (!reuseForm) {
@@ -1153,7 +1167,11 @@ async function enter({ reuseForm = false } = {}) {
   voice.load().catch(() => {});
   const pending = state().pendingEvolution;
   if (pending) {
-    await evolution(!!pending.boss && journey().completed, { from: pending.from, to: pending.to, path: true });
+    await evolution(!!pending.boss && journey().completed && pending.to === 10, {
+      from: pending.from,
+      to: pending.to,
+      path: true,
+    });
     return;
   }
   if (state().battle) {
@@ -2267,12 +2285,21 @@ const leagueInfo = (e = state()) => ({
   student: save.student?.id || '',
 });
 // Practice replays (0.74.0, expedition.js startReplay): a won arena starts again from its first gate with a new gate
-// order and new tasks from the same lesson. Coins, English practice and Ulti count (Ulti on the rematch win, within
-// the League's limits); the creature's level and the unlocked arenas do not change. The run ends with a guardian
-// rematch, which can be skipped (then no Ulti).
-async function replayArena(area) {
+// order and new tasks from the same lesson. From 0.75.0 the creature goes back to the arena's starting level (after
+// a confirmation) and grows again with the full evolutions. Coins, English practice and Ulti count (Ulti on the
+// rematch win, within the League's limits); unlocked arenas stay open. The rematch can be skipped (then no Ulti).
+async function replayArena(area, { confirmed = false } = {}) {
   const j = journey();
   if (![0, 1, 2].includes(area) || !canReplay(j, area) || locked) return false;
+  const start = arenaStart(area);
+  if (!confirmed && j.level > start) {
+    showModal(
+      `Play ${AREAS[area].name} again?`,
+      `<div class="replay-done"><div class="guide-note">${guideFigure('point')}<p class="guide-bubble">In ${esc(AREAS[area].name)} your creature starts again at Level ${start}, and grows again at the gates, just like the first time!</p></div><p>${esc(partner().name)} is Level ${j.level} now. It goes back to <b>Level ${start}</b> and can grow to <b>Level ${arenaBoss(area)}</b> by beating ${esc(AREAS[area].guardian)} again. A won rematch earns Ulti. Your other arenas stay open.</p><div class="replay-actions"><button class="secondary" data-do="close-modal">Not now</button><button class="primary-action" data-do="replay-confirm" data-area="${area}">Yes, play again</button></div></div>`,
+      { kind: 'replay-modal' },
+    );
+    return false;
+  }
   closeModal();
   if (!(await ensureStudent())) return false;
   save.area = area;
@@ -2287,17 +2314,12 @@ async function replayArena(area) {
   toast(`Practice run · ${AREAS[area].name}: new gates, same lesson.`);
   return true;
 }
-async function rematchWon() {
-  const area = save.area;
-  if (world.guardianStage) {
-    world.setView(false);
-    gameAudio.music?.update?.('explore', 0);
-  }
-  await home();
+// After a won rematch and its evolution: the area is complete again.
+function replayDone(area, level) {
   cue('reward');
   showModal(
     'Rematch won!',
-    `<div class="replay-done"><div class="guide-note">${guideFigure('cheer')}<p class="guide-bubble">Well done! You beat ${esc(AREAS[area].guardian)} again. Practice makes perfect!</p></div><p>Practice runs keep your coins and your English progress, and a won rematch earns Ulti like any completed area. Your creature's level stays as it is.</p><div class="replay-actions"><button class="secondary" data-do="close-modal">Back to camp</button>${canReplay(journey(), area) ? `<button class="primary-action" data-do="replay" data-area="${area}">Play ${esc(AREAS[area].name)} again</button>` : ''}</div></div>`,
+    `<div class="replay-done"><div class="guide-note">${guideFigure('cheer')}<p class="guide-bubble">Well done! You beat ${esc(AREAS[area].guardian)} again, and ${esc(partner().name)} is Level ${level} again. Practice makes perfect!</p></div><p>Your coins and English practice are saved, and the win counts for Ulti like any completed area.</p><div class="replay-actions"><button class="secondary" data-do="close-modal">Back to camp</button>${canReplay(journey(), area) ? `<button class="primary-action" data-do="replay-confirm" data-area="${area}">Play ${esc(AREAS[area].name)} again</button>` : ''}</div></div>`,
     { kind: 'replay-modal' },
   );
 }
@@ -2482,9 +2504,9 @@ async function outOfLives() {
       save.wallet.balance = Math.max(0, save.wallet.balance - lost);
       save.wallet.total = Math.max(0, save.wallet.total - lost);
     }
-    // A practice replay restarts as a replay: the creature keeps its level.
+    // A practice replay restarts as a replay, back at the arena's starting level like a first play-through.
     const replay = !!e.replay && j.guardians.includes(area);
-    if (!replay) j.level = pathLevel(0, area, SHORT.gates);
+    j.level = pathLevel(0, area, SHORT.gates);
     const fresh = replay
       ? startReplay(j, save.selected, area)
       : (j.expeditions[area] = freshExpedition(j, save.selected, area));
@@ -3231,15 +3253,11 @@ function guardianFrame() {
     if (winGuardian(journey(), state())) {
       persist();
       if (b.tough) claimUlti(won.id, info);
-      if (won.replay) {
-        void rematchWon();
-        return;
-      }
       const p = state().pendingEvolution;
       // Mr. Saymaz celebrates (and, after the last arena, the finale plays) before the evolution.
       afterStory(
         winScenes(save.area),
-        () => void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
+        () => void evolution(journey().completed && p.to === 10, { from: p.from, to: p.to, path: true }),
       );
     }
     return;
@@ -3362,14 +3380,10 @@ function completeBattleTask() {
   if (b.round === 3) {
     if (winGuardian(journey(), e)) {
       persist();
-      if (e.replay) {
-        void rematchWon();
-        return;
-      }
       const p = e.pendingEvolution;
       afterStory(
         winScenes(save.area),
-        () => void evolution(journey().completed, { from: p.from, to: p.to, path: true }),
+        () => void evolution(journey().completed && p.to === 10, { from: p.from, to: p.to, path: true }),
       );
     }
     return;
@@ -3485,7 +3499,7 @@ async function finishEvolution() {
       setTimeout(() => document.body.classList.remove('returning-to-play'), 520);
       persist();
       toast(
-        save.area < unlocked(journey())
+        save.area < unlocked(journey()) && !state().replay
           ? 'New arena unlocked. Your current expedition is saved; visit camp to choose an arena.'
           : 'New form, same expedition. Your next path is ahead.',
       );
@@ -3496,7 +3510,8 @@ async function finishEvolution() {
   persist();
   performanceMonitor.sample(world, undefined, { force: true, label: 'evolution-finished' });
   warmNextForm();
-  if (old.path && old.to === 10) toast('Unit journey complete · Level 10 awakened · all three arenas restored!');
+  if (old.path && state().replay && state().rematchWon) replayDone(save.area, old.to);
+  else if (old.path && old.to === 10) toast('Unit journey complete · Level 10 awakened · all three arenas restored!');
   else if (old.path && state().phase === 'closed') toast(`Level ${old.to} awakened · next arena unlocked.`);
 }
 function exportSave() {
@@ -3661,6 +3676,9 @@ async function act(event) {
       break;
     case 'replay':
       await replayArena(d.area != null ? Number(d.area) : save.area);
+      break;
+    case 'replay-confirm':
+      await replayArena(Number(d.area), { confirmed: true });
       break;
     case 'rematch-skip': {
       const e = state();
@@ -4301,7 +4319,7 @@ async function boot() {
     performanceMonitor.markReady();
     if (state().pendingEvolution) {
       const p = state().pendingEvolution;
-      await evolution(!!p.boss && journey().completed, { from: p.from, to: p.to, path: true });
+      await evolution(!!p.boss && journey().completed && p.to === 10, { from: p.from, to: p.to, path: true });
     }
     soundUpdate();
     persist();

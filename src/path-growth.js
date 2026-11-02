@@ -60,11 +60,22 @@ const completedSteps = j =>
 export function upgradePathGrowth(j) {
   return j;
 }
+// Practice replays (0.75.0): replaying a won arena takes the creature back to that arena's starting level
+// (0, 4 or 8), and it grows again at the same gates. j.levelArea names the arena the level belongs to while it
+// comes from a replay; without it the level follows the first arena not yet won.
+export const arenaStart = area => ARENA_GROWTH[area].start;
+export const arenaBoss = area => ARENA_GROWTH[area].boss;
+export const levelArea = j => (Number.isInteger(j.levelArea) ? j.levelArea : activeArea(j));
 export function recordPathGrowth(j, e) {
   const from = j.level;
-  // A revisited arena can never grow a creature or count the same task twice.
-  if (!j.completed && e.area === activeArea(j) && !j.guardians.includes(e.area))
-    j.level = Math.max(j.level, pathLevel(e.index, e.area, gateCount(e)));
+  // A replay under way grows the creature again; a first play-through grows it in the arena it is opening.
+  const replay = e.replay === true && e.phase !== 'closed' && j.levelArea === e.area,
+    first =
+      !j.completed &&
+      e.area === activeArea(j) &&
+      !j.guardians.includes(e.area) &&
+      (j.levelArea === undefined || j.levelArea === e.area);
+  if (replay || first) j.level = Math.max(j.level, pathLevel(e.index, e.area, gateCount(e)));
   j.pathSteps = completedSteps(j);
   if (j.level > from) e.pendingEvolution = { from, to: j.level, checkpoint: e.index };
   return { evolved: j.level > from, from, to: j.level };
@@ -77,12 +88,12 @@ export function recordGuardianGrowth(j, e) {
   return { from, to: j.level };
 }
 export function pathGrowthState(j) {
-  const area = activeArea(j),
+  const area = levelArea(j),
     e = j.expeditions?.[area],
     gates = gateCount(e),
     plan = growthPlan(area, gates),
     steps = e?.index || 0,
-    complete = j.completed && j.level === 10;
+    complete = j.completed && j.level === 10 && j.levelArea === undefined;
   const nextMilestone = plan.milestones.find(([, to]) => to > j.level),
     boss = !complete && !nextMilestone;
   const [target, next] = nextMilestone || [gates, plan.boss];
@@ -106,6 +117,16 @@ export function validPathGrowth(j) {
   if (j.progressionVersion !== 2 || !Number.isInteger(j.pathSteps) || j.pathSteps < 0 || j.pathSteps > TOTAL_PATH_STEPS)
     return false;
   if (j.guardians.length > 3 || j.guardians.some((area, i) => area !== i)) return false;
+  // A level from a practice replay stays inside that won arena's range (its start up to its guardian's level).
+  if (j.levelArea !== undefined) {
+    const la = j.levelArea;
+    if (!Number.isInteger(la) || !j.guardians.includes(la) || j.completed !== j.guardians.includes(2)) return false;
+    if (j.level < ARENA_GROWTH[la].start || j.level > ARENA_GROWTH[la].boss) return false;
+    if (j.pathSteps !== completedSteps(j)) return false;
+    const active = activeArea(j);
+    for (const e of Object.values(j.expeditions || {})) if (e.area > active && e.index > 0) return false;
+    return true;
+  }
   const area = activeArea(j),
     plan = ARENA_GROWTH[area];
   const gates = gateCount(j.expeditions?.[area]);

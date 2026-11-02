@@ -33,8 +33,9 @@ export function cameraSettings(level, mobile = false, view = 'explore') {
         ? [1.3 + 1.6 * growth, 2.8 + 3.0 * growth]
         : view === 'battle'
           ? [3.6 + 1.8 * growth, 5.4 + 2.7 * growth]
-          : [1.0 + 1.25 * growth, 3.05 + 2.9 * growth];
+          : [1.0 + 1.1 * growth, 3.05 + 2.4 * growth];
   // Exploration sits low and further back, aimed ahead of the creature so it occupies the lower third and the route stays visible.
+  // The biggest forms are framed a little closer than before 0.75.0 (Level 10: 5.45 m back, was 5.95 m).
   return {
     height,
     radius: CREATURE_RADII[level] ?? CREATURE_RADII[0],
