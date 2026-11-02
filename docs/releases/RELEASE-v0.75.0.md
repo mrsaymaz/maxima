@@ -32,10 +32,15 @@ Checked in the browser: a Level 10 jump on a run now peaks at 1.9 m (old build: 
 - While exploring and running, the camera frames only part of the jump height, so a leap no longer pushes it back.
 - The biggest forms are framed a little closer: Level 10 sits 5.45 m behind instead of 5.95 m, and 2.1 m above instead of 2.25 m. Small forms are unchanged.
 
+## 4. Ready for Vercel
+
+`vercel.json` mirrors `netlify.toml`: no framework, build command `npm run verify` (checks the committed `dist/`), output directory `dist`, and the same 13 cache-header rules (creature models cached for a year, the service worker and offline shell list always revalidated). `tests/vercel-config-075.test.mjs` fails if the two files drift apart. The English League stays on Netlify; its `/api/ulti` accepts requests from any site.
+
 ## Code
 
 - `src/expedition.js`: `startReplay` sets the arena's starting level, `syncArenaLevel` (on entering an arena), the rematch calls `recordGuardianGrowth`, and the save checks.
 - `src/path-growth.js`: `arenaStart`, `arenaBoss`, `levelArea`; growth during replays; the growth bar follows the replayed arena; the save checks for replay levels.
 - `src/corridor-app.js`: the confirmation, `syncArenaLevel` in `enter()`, rematch wins use the normal win and evolution flow, `replayDone` after the evolution, and out of lives in a replay resets to the arena start.
 - `src/jump-tuning.js` (`JUMP_KNEE`), `src/camera-rig.js` (jump framing), `src/world-layout.js` (exploration camera growth).
+- `vercel.json`, with `tests/vercel-config-075.test.mjs` keeping it in step with `netlify.toml`.
 - Tests: `tests/arena-replay-074.test.mjs`, which now covers levels.

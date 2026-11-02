@@ -4,7 +4,7 @@ Newest first. Each release from 0.47.0 on has full notes in [`docs/releases`](do
 
 ## 0.75.0 · Replays from the start, gentler jumps
 
-Replaying a won arena now takes the creature back to that arena's starting level (Whisperwood 0, Skyreach 4, Stormglass 8). It grows again at the same gates with the full evolution films, and a won rematch gives the guardian's level again (4, 8 or 10) along with Ulti. The student confirms first. Going back to an unfinished arena returns the level earned there. Big forms jump lower and land sooner (Level 10: 1.9 m instead of 3.5 m, 1.1 s in the air instead of 1.5 s). The camera no longer backs away mid-jump and frames the biggest forms a little closer. Levels 0–4 jump as before. See [release notes](docs/releases/RELEASE-v0.75.0.md).
+Replaying a won arena now takes the creature back to that arena's starting level (Whisperwood 0, Skyreach 4, Stormglass 8). It grows again at the same gates with the full evolution films, and a won rematch gives the guardian's level again (4, 8 or 10) along with Ulti. The student confirms first. Going back to an unfinished arena returns the level earned there. Big forms jump lower and land sooner (Level 10: 1.9 m instead of 3.5 m, 1.1 s in the air instead of 1.5 s). The camera no longer backs away mid-jump and frames the biggest forms a little closer. Levels 0–4 jump as before. A `vercel.json` with the same build settings and cache headers as `netlify.toml` lets the game be deployed to Vercel. See [release notes](docs/releases/RELEASE-v0.75.0.md).
 
 ## 0.74.0 · Play it again
 

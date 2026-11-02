@@ -65,7 +65,7 @@ Players download only what they use. Reaching the opening screen takes about 3.2
 | `npm start` | Local server for `dist/` |
 | `npm test` | Test suite (runner mode); `npm run test:classic` for classic-only tests |
 | `npm run build` | Build `src/` → `dist/`, refresh the offline shell, verify |
-| `npm run verify` | Check `dist/` only: files, lessons, models, offline shell (used by Netlify) |
+| `npm run verify` | Check `dist/` only: files, lessons, models, offline shell (the build command on Netlify and Vercel) |
 | `npm run package` | Zip `dist/` with a `_headers` file for Netlify Drop or another static host (`release/`, not committed) |
 | `npm run offline` | Refresh `dist/offline-shell.json` and the service-worker hash |
 | `npm run creatures:web` | Rebuild the compressed creatures from `art/` (needs `@gltf-transform/cli` 4.x and KTX-Software `toktx` on PATH) |
@@ -83,7 +83,14 @@ Players download only what they use. Reaching the opening screen takes about 3.2
 
 ## Deploying
 
-**Netlify from the repository (recommended).**
+**Vercel from the repository.**
+- Import the GitHub repository in Vercel. `vercel.json` sets everything: no framework, build command `npm run verify`, output directory `dist`.
+- Vercel publishes the committed `dist/` after checking it, so always commit a fresh `npm run build`. Choose the branch to deploy as the production branch in the project settings.
+- `vercel.json` has the same cache headers as `netlify.toml` (a test keeps the two files in step).
+- Without Git: `npx vercel deploy --prod` from the repository folder (the Vercel command-line tool). Vercel has no drag-and-drop zip upload.
+- The English League stays on Netlify: its `/api/ulti` accepts requests from any site, so `config.js` needs no change.
+
+**Netlify from the repository.**
 - Leave the base directory unset (the repository root).
 - Build command: `npm run verify`. Publish directory: `dist`. Both are already set in `netlify.toml`.
 - Netlify publishes the committed `dist/` after checking it, so always commit a fresh `npm run build`.
